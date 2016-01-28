@@ -61,7 +61,7 @@ GDT64.Selector.Data         equ     0x10    ; 64-bit long mode (data)
 ;      [56:63]      Base address bits [24:31]
 ;
 ;=============================================================================
-struc GDT
+struc GDT.Descriptor
 
     .LimitLow:              resw    1
     .BaseLow:               resw    1

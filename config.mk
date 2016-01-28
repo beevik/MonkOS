@@ -5,30 +5,6 @@
 #----------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------
-# Tool configuration
-#----------------------------------------------------------------------------
-TARGET      :=  x86_64-elf
-
-CC          :=  $(TARGET)-gcc
-
-CCFLAGS     :=  -std=gnu11 -m64 -Og -mno-red-zone -mno-mmx -mno-sse \
-                -mno-sse2 -ffreestanding -fno-asynchronous-unwind-tables \
-                -g -Wall -Wextra -Qn
-
-AS          :=  nasm
-
-ASFLAGS     :=  -f elf64
-
-LDFLAGS     :=  -m64 -ffreestanding -g -nostdlib -z max-page-size=0x1000
-
-DOXYGEN     :=  doxygen
-
-MAKE_FLAGS  := --quiet
-
-QEMU        :=  qemu-system-x86_64
-
-
-#----------------------------------------------------------------------------
 # Project directories
 #----------------------------------------------------------------------------
 DIR_BUILD   :=  $(DIR_ROOT)/build
@@ -36,6 +12,30 @@ DIR_BOOT    :=  $(DIR_ROOT)/boot
 DIR_KERNEL  :=  $(DIR_ROOT)/kernel
 DIR_DOCS    :=  $(DIR_ROOT)/docs
 DIR_SCRIPT  :=  $(DIR_ROOT)/scripts
+
+
+#----------------------------------------------------------------------------
+# Tool configuration
+#----------------------------------------------------------------------------
+TARGET      :=  x86_64-elf
+
+CC          :=  $(TARGET)-gcc
+
+CCFLAGS     :=  -std=gnu11 -m64 -mno-red-zone -mno-mmx -mno-sse \
+                -mno-sse2 -ffreestanding -fno-asynchronous-unwind-tables \
+                -I$(DIR_KERNEL)/include -g -Wall -Wextra -Qn
+
+AS          :=  nasm
+
+ASFLAGS     :=  -f elf64
+
+LDFLAGS     :=  -m64 -ffreestanding -g -nostdlib -z max-page-size=0x1000 -lgcc
+
+DOXYGEN     :=  doxygen
+
+MAKE_FLAGS  := --quiet
+
+QEMU        :=  qemu-system-x86_64
 
 
 #----------------------------------------------------------------------------

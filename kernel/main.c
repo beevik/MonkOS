@@ -14,6 +14,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <strings.h>
+#include <interrupt.h>
 
 #if defined(__linux__)
 #   error "This code must be compiled with a cross-compiler."
@@ -22,8 +24,10 @@
 /// Kernel main entry point. This is the first function called by the
 /// kernel bootstrapper in start.asm.
 void
-kmain ()
+kmain()
 {
+    isr_init();
+
     // Return here, causing the system to hang. The rest of the kernel
     // will go here.
 }

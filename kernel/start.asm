@@ -18,7 +18,9 @@ bits 64
 ; code address (0x00101000 in our case).
 section .start
     global _start
+
     extern kmain        ; Exported by main.c
+    extern memzero      ; Exported by strings.asm
     extern _BSS_START   ; Linker-generated symbol
     extern _BSS_SIZE    ; Linker-generated symbol
 
@@ -31,7 +33,9 @@ section .start
 _start:
 
     ; Zero out the kernel's bss section.
-    call    ClearBSS
+    mov     rdi,    _BSS_START
+    mov     rsi,    _BSS_SIZE
+    call    memzero
 
     ; Call the kernel's main entry point. This function should never
     ; return.
@@ -42,40 +46,3 @@ _start:
         cli
         hlt
         jmp     .hang
-
-
-;=============================================================================
-; ClearBSS
-;
-; Zero out the entire bss section. Use the _BSS constants defined by the
-; linker to discover the extents of the bss section.
-;
-; Killed registers:
-;   None
-;=============================================================================
-ClearBSS:
-
-    ; Preserve registers
-    push    rdi
-    push    rax
-    push    rcx
-
-    xor     eax,    eax
-
-    ; Clear 8 bytes at a time.
-    mov     rdi,    _BSS_START
-    mov     rcx,    _BSS_SIZE
-    shr     rcx,    3               ; _BSS_SIZE / 8
-    rep     stosq
-
-    ; Clear 1 byte at a time for the remainder.
-    mov     rcx,    _BSS_SIZE
-    and     rcx,    7               ; _BSS_SIZE modulo 8
-    rep     stosb
-
-    ; Restore registers
-    pop     rcx
-    pop     rax
-    pop     rdi
-
-    ret

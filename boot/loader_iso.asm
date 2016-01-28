@@ -236,8 +236,11 @@ bits 64
     ;-------------------------------------------------------------------------
     .launch64:
 
-        ; Set up the data segment registers.
-        mov     ax,     GDT64.Selector.Data
+        ; Set up the data segment registers. Note that in 64-bit mode
+        ; the CPU treats cs, ds, es, and ss as zero regardless of what
+        ; we store there.  (gs and fs are exceptions; they can be used
+        ; as real segment registers.)
+        xor     ax,     ax
         mov     ds,     ax
         mov     es,     ax
         mov     fs,     ax
@@ -1167,57 +1170,57 @@ align 4
 GDT32.Table:
 
     ; Null descriptor
-    istruc GDT
-        at GDT.LimitLow,            dw      0x0000
-        at GDT.BaseLow,             dw      0x0000
-        at GDT.BaseMiddle,          db      0x00
-        at GDT.Access,              db      0x00
-        at GDT.LimitHighFlags,      db      0x00
-        at GDT.BaseHigh,            db      0x00
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,            dw      0x0000
+        at GDT.Descriptor.BaseLow,             dw      0x0000
+        at GDT.Descriptor.BaseMiddle,          db      0x00
+        at GDT.Descriptor.Access,              db      0x00
+        at GDT.Descriptor.LimitHighFlags,      db      0x00
+        at GDT.Descriptor.BaseHigh,            db      0x00
     iend
 
     ; 32-bit protected mode - code segment descriptor (selector = 0x08)
     ; (Base=0, Limit=4GiB-1, RW=1, DC=0, EX=1, PR=1, Priv=0, SZ=1, GR=1)
-    istruc GDT
-        at GDT.LimitLow,            dw      0xffff
-        at GDT.BaseLow,             dw      0x0000
-        at GDT.BaseMiddle,          db      0x00
-        at GDT.Access,              db      10011010b
-        at GDT.LimitHighFlags,      db      11001111b
-        at GDT.BaseHigh,            db      0x00
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,            dw      0xffff
+        at GDT.Descriptor.BaseLow,             dw      0x0000
+        at GDT.Descriptor.BaseMiddle,          db      0x00
+        at GDT.Descriptor.Access,              db      10011010b
+        at GDT.Descriptor.LimitHighFlags,      db      11001111b
+        at GDT.Descriptor.BaseHigh,            db      0x00
     iend
 
     ; 32-bit protected mode - data segment descriptor (selector = 0x10)
     ; (Base=0, Limit=4GiB-1, RW=1, DC=0, EX=0, PR=1, Priv=0, SZ=1, GR=1)
-    istruc GDT
-        at GDT.LimitLow,            dw      0xffff
-        at GDT.BaseLow,             dw      0x0000
-        at GDT.BaseMiddle,          db      0x00
-        at GDT.Access,              db      10010010b
-        at GDT.LimitHighFlags,      db      11001111b
-        at GDT.BaseHigh,            db      0x00
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,            dw      0xffff
+        at GDT.Descriptor.BaseLow,             dw      0x0000
+        at GDT.Descriptor.BaseMiddle,          db      0x00
+        at GDT.Descriptor.Access,              db      10010010b
+        at GDT.Descriptor.LimitHighFlags,      db      11001111b
+        at GDT.Descriptor.BaseHigh,            db      0x00
     iend
 
     ; 16-bit protected mode - code segment descriptor (selector = 0x18)
     ; (Base=0, Limit=1MiB-1, RW=1, DC=0, EX=1, PR=1, Priv=0, SZ=0, GR=0)
-    istruc GDT
-        at GDT.LimitLow,            dw      0xffff
-        at GDT.BaseLow,             dw      0x0000
-        at GDT.BaseMiddle,          db      0x00
-        at GDT.Access,              db      10011010b
-        at GDT.LimitHighFlags,      db      00000001b
-        at GDT.BaseHigh,            db      0x00
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,            dw      0xffff
+        at GDT.Descriptor.BaseLow,             dw      0x0000
+        at GDT.Descriptor.BaseMiddle,          db      0x00
+        at GDT.Descriptor.Access,              db      10011010b
+        at GDT.Descriptor.LimitHighFlags,      db      00000001b
+        at GDT.Descriptor.BaseHigh,            db      0x00
     iend
 
     ; 16-bit protected mode - data segment descriptor (selector = 0x20)
     ; (Base=0, Limit=1MiB-1, RW=1, DC=0, EX=0, PR=1, Priv=0, SZ=0, GR=0)
-    istruc GDT
-        at GDT.LimitLow,            dw      0xffff
-        at GDT.BaseLow,             dw      0x0000
-        at GDT.BaseMiddle,          db      0x00
-        at GDT.Access,              db      10010010b
-        at GDT.LimitHighFlags,      db      00000001b
-        at GDT.BaseHigh,            db      0x00
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,            dw      0xffff
+        at GDT.Descriptor.BaseLow,             dw      0x0000
+        at GDT.Descriptor.BaseMiddle,          db      0x00
+        at GDT.Descriptor.Access,              db      10010010b
+        at GDT.Descriptor.LimitHighFlags,      db      00000001b
+        at GDT.Descriptor.BaseHigh,            db      0x00
     iend
 
 GDT32.Table.Size    equ     ($ - GDT32.Table)
@@ -1234,33 +1237,33 @@ align 8
 GDT64.Table:
 
     ; Null descriptor
-    istruc GDT
-        at GDT.LimitLow,            dw      0x0000
-        at GDT.BaseLow,             dw      0x0000
-        at GDT.BaseMiddle,          db      0x00
-        at GDT.Access,              db      0x00
-        at GDT.LimitHighFlags,      db      0x00
-        at GDT.BaseHigh,            db      0x00
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,            dw      0x0000
+        at GDT.Descriptor.BaseLow,             dw      0x0000
+        at GDT.Descriptor.BaseMiddle,          db      0x00
+        at GDT.Descriptor.Access,              db      0x00
+        at GDT.Descriptor.LimitHighFlags,      db      0x00
+        at GDT.Descriptor.BaseHigh,            db      0x00
     iend
 
     ; 64-bit long mode code segment descriptor (selector = 0x08)
-    istruc GDT
-        at GDT.LimitLow,            dw      0x0000
-        at GDT.BaseLow,             dw      0x0000
-        at GDT.BaseMiddle,          db      0x00
-        at GDT.Access,              db      10011010b
-        at GDT.LimitHighFlags,      db      00100000b
-        at GDT.BaseHigh,            db      0x00
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,            dw      0x0000
+        at GDT.Descriptor.BaseLow,             dw      0x0000
+        at GDT.Descriptor.BaseMiddle,          db      0x00
+        at GDT.Descriptor.Access,              db      10011010b
+        at GDT.Descriptor.LimitHighFlags,      db      00100000b
+        at GDT.Descriptor.BaseHigh,            db      0x00
     iend
 
     ; 64-bit long mode data segment descriptor (selector = 0x10)
-    istruc GDT
-        at GDT.LimitLow,            dw      0x0000
-        at GDT.BaseLow,             dw      0x0000
-        at GDT.BaseMiddle,          db      0x00
-        at GDT.Access,              db      10010010b
-        at GDT.LimitHighFlags,      db      00000000b
-        at GDT.BaseHigh,            db      0x00
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,            dw      0x0000
+        at GDT.Descriptor.BaseLow,             dw      0x0000
+        at GDT.Descriptor.BaseMiddle,          db      0x00
+        at GDT.Descriptor.Access,              db      10010010b
+        at GDT.Descriptor.LimitHighFlags,      db      00000000b
+        at GDT.Descriptor.BaseHigh,            db      0x00
     iend
 
 GDT64.Table.Size    equ     ($ - GDT64.Table)
