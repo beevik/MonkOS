@@ -1,9 +1,6 @@
 ;=============================================================================
-; @file strings.asm
-;
-; String and memory manipulation functions.
-;
-; All functions use the 64-bit calling convention of the System V ABI.
+; @file     strings.asm
+; @brief    String and memory manipulation functions.
 ;
 ; Copyright 2016 Brett Vickers.
 ; Use of this source code is governed by a BSD-style license that can
@@ -14,33 +11,24 @@ bits 64
 
 section .text
 
-    global memcopy
+    global memcpy
     global memmove
     global memset
     global memzero
 
 
-;=============================================================================
-; memcopy
-;
-; Copy a number of bytes from the source address to the destination address.
-; If the memory areas overlap, this function's behavior is undefined.
-;
-; Input registers:
-;   rdi     destination address
-;   rsi     source address
-;   rdx     number of bytes to copy
-;
-; Return registers:
-;   rax     destination address
-;
-; Killed registers:
-;   rcx
-;=============================================================================
-memcopy:
-
-    ; Clear the direction flag so copying is left-to-right.
-    cld
+;-----------------------------------------------------------------------------
+; @function     memcpy
+; @brief        Copy bytes from one memory region to another.
+; @details      If the memory regions overlap, this function's behavior
+;               is undefined, and you should use memmove instead.
+; @reg[in]      rdi     Address of the destination memory area.
+; @reg[in]      rsi     Address of the source memory area.
+; @reg[in]      rdx     Number of bytes to copy.
+; @reg[out]     rax     Destination address.
+; @regskilled   rcx
+;-----------------------------------------------------------------------------
+memcpy:
 
     ; Preserve destination address because we have to return it.
     mov     rax,    rdi
@@ -54,23 +42,16 @@ memcopy:
     ret
 
 
-;=============================================================================
-; memmove
-;
-; Copy a number of bytes from the source address to the destination address,
-; even if the memory areas overlap.
-;
-; Input registers:
-;   rdi     destination address
-;   rsi     source address
-;   rdx     number of bytes to copy
-;
-; Return registers:
-;   rax     destination address
-;
-; Killed registers:
-;   rcx
-;=============================================================================
+;-----------------------------------------------------------------------------
+; @function     memmove
+; @brief        Move bytes from one memory region to another, even if the
+;               regions overlap.
+; @reg[in]      rdi     Address of the destination memory area.
+; @reg[in]      rsi     Address of the source memory area.
+; @reg[in]      rdx     Number of bytes to copy.
+; @reg[out]     rax     Destination address.
+; @regskilled   rcx
+;-----------------------------------------------------------------------------
 memmove:
 
     ; Preserve destination address because we have to return it.
@@ -114,9 +95,6 @@ memmove:
 
     .fast:
 
-        ; Clear the direction flag so copying is left-to-right.
-        cld
-
         ; Do a byte-by-byte move.
         mov     rcx,    rdx
         rep     movsb
@@ -126,23 +104,15 @@ memmove:
         ret
 
 
-;=============================================================================
-; memset
-;
-; Set a number of bytes to a given character value starting at the
-; destination address.
-;
-; Input registers:
-;   rdi     destination address
-;   rsi     character
-;   rdx     number of bytes
-;
-; Return registers:
-;   rax     destination address
-;
-; Killed registers:
-;   r8, rcx
-;=============================================================================
+;-----------------------------------------------------------------------------
+; @function     memset
+; @brief        Fill a region of memory with a single byte value.
+; @reg[in]      rdi     Address of the destination memory area.
+; @reg[in]      rsi     Value of the byte used to fill memory.
+; @reg[in]      rdx     Number of bytes to fill.
+; @reg[out]     rax     Destination address.
+; @regskilled   r8, rcx
+;-----------------------------------------------------------------------------
 memset:
 
     ; Preserve the original destination address.
@@ -160,21 +130,14 @@ memset:
     ret
 
 
-;=============================================================================
-; memzero
-;
-; Set a number of bytes to zero starting at the destination address.
-;
-; Input registers:
-;   rdi     destination address
-;   rsi     number of bytes to zero
-;
-; Return registers:
-;   rax     destination address
-;
-; Killed registers:
-;   r8, rcx
-;=============================================================================
+;-----------------------------------------------------------------------------
+; @function     memzero
+; @brief        Fill a region of memory with zeroes.
+; @reg[in]      rdi     Address of the destination memory area.
+; @reg[in]      rsi     Number of bytes to set to zero.
+; @reg[out]     rax     Destination address.
+; @regskilled   r8, rcx
+;-----------------------------------------------------------------------------
 memzero:
 
     ; Preserve the original destination address.

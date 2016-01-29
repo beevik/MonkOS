@@ -1,9 +1,7 @@
 ;=============================================================================
-; @file start.asm
-;
-; The kernel launcher.
-;
-; The boot loader launches the kernel by jumping to _start.
+; @file     start.asm
+; @brief    The kernel launcher.
+; @details  The boot loader launches the kernel by jumping to _start.
 ;
 ; Copyright 2016 Brett Vickers.
 ; Use of this source code is governed by a BSD-style license that can
@@ -25,12 +23,15 @@ section .start
     extern _BSS_SIZE    ; Linker-generated symbol
 
 
-;=============================================================================
-; _start
-;
-; Kernel entry point, called by the boot loader.
-;=============================================================================
+;-----------------------------------------------------------------------------
+; @function     _start
+; @brief        Kernel entry point, called by the boot loader.
+;-----------------------------------------------------------------------------
 _start:
+
+    ; The System V ABI requires the direction flag to be clear on function
+    ; entry.
+    cld
 
     ; Zero out the kernel's bss section.
     mov     rdi,    _BSS_START

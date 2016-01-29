@@ -32,6 +32,8 @@ understand the numerous and various aspects of bootloader and OS development:
   * [Bare Bones guide](http://wiki.osdev.org/Bare_Bones)
   * [Setting up long mode](http://wiki.osdev.org/Setting_Up_Long_Mode)
   * [IOS 9660](http://wiki.osdev.org/ISO_9660)
+* [The System V ABI](http://www.sco.com/developers/gabi/latest/contents.html)
+  * [AMD64 supplement](http://www.x86-64.org/documentation/abi.pdf)
 * [The El Torito specification](http://download.intel.com/support/motherboards/desktop/sb/specscdrom.pdf)
 * [The Xeos project](https://github.com/macmade/XEOS)
 * [BareMetal OS](https://github.com/ReturnInfinity/BareMetal)

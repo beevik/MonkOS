@@ -172,6 +172,70 @@ load:
         mov     si,     String.Status.KernelLoaded
         call    DisplayStatusString
 
+        ; Disable interrupts and leave them disabled until the kernel
+        ; launches. The kernel is responsible for setting up an interrupt
+        ; table before re-enabling interrupts.
+        cli
+
+    ;-------------------------------------------------------------------------
+    ; Set up the 8259 programmable interrupt controller (PIC)
+    ;-------------------------------------------------------------------------
+    .setupPIC:
+
+        ; Save IRQ masks.
+        in      al,     0x21
+        mov     cl,     al          ; cl = cached mask from data port 0x21
+        in      al,     0xa1
+        mov     ch,     al          ; ch = cached mask from data port 0xa1
+
+        ; Start PIC initialization.
+        mov     al,     0x11        ; 0x11 = INIT + ICW4_not_needed
+        out     0x20,   al
+        call    .wait
+        out     0xa0,   al
+        call    .wait
+
+        ; Remap master PIC IRQs 0 thru 7 to interrupt numbers 0x20 thru 0x27.
+        mov     al,     0x20        ; 0x20 = interrupt offset 32
+        out     0x21,   al
+        call    .wait
+
+        ; Remap slave PIC IRQs 8 thru 15 to interrupt numbers 0x28 thru 0x2f.
+        mov     al,     0x28        ; 0x28 = interrupt offset 40
+        out     0xa1,   al
+        call    .wait
+
+        ; Tell master PIC there is a slave PIC at IRQ 4.
+        mov     al,     4           ; 4 = IRQ 4
+        out     0x21,   al
+        call    .wait
+
+        ; Tell slave PIC its cascade identity (IRQ2).
+        mov     al,     2           ; 2 = IRQ 2
+        out     0xa1,   al
+        call    .wait
+
+        ; Set 8086 mode.
+        mov     al,     1           ; 1 = 8086/8088 mode.
+        out     0x21,   al
+        call    .wait
+        out     0xa1,   al
+        call    .wait
+
+        ; Disable all IRQs. Kernel will re-enable the ones it wants to
+        ; handle later.
+        mov     al,     0xff
+        out     0x21,   al
+        out     0xa1,   al
+
+        jmp     .setupGDT64
+
+        .wait:
+
+            xor     ax,     ax
+            out     0x80,   al
+            ret
+
     ;-------------------------------------------------------------------------
     ; Set up (but don't yet install) the 64-bit GDT
     ;-------------------------------------------------------------------------
@@ -195,11 +259,6 @@ load:
         ; Create page tables that identity-map the first 10MiB of memory.
         ; This should be more than enough to hold the kernel.
         call    SetupPageTables
-
-        ; Disable interrupts and leave them disabled until the kernel
-        ; launches. The kernel is responsible for setting up an interrupt
-        ; table before re-enabling interrupts.
-        cli
 
         ; Enable PAE paging.
         mov     eax,    cr4
@@ -305,12 +364,9 @@ bits 16
 
         call    DisplayErrorString
 
-    .done:
-
-        cli
-
     .hang:
 
+        cli
         hlt
         jmp     .hang
 

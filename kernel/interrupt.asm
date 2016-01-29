@@ -1,7 +1,6 @@
 ;=============================================================================
-; @file interrupt.asm
-;
-; Interrupt descriptor table and service routine functionality.
+; @file     interrupt.asm
+; @brief    Interrupt descriptor table and service routine functionality.
 ;
 ; Copyright 2016 Brett Vickers.
 ; Use of this source code is governed by a BSD-style license that can
@@ -12,11 +11,16 @@ bits 64
 
 section .text
 
-    global isr_init
+    global interrupts_init
+    global interrupts_enable
+    global interrupts_disable
     global isr_set
+    global irq_enable
+    global irq_disable
+    global halt
 
 
-;=============================================================================
+;-----------------------------------------------------------------------------
 ; Interrupt memory layout
 ;
 ;   00001000 - 00001fff     4,096 bytes     Interrupt descriptor table (IDT)
@@ -27,7 +31,7 @@ section .text
 ; of the internet service routine (ISR) thunks. The thunks prepare a jump
 ; to a general-purpose ISR dispatcher, which calls the appropriate ISR
 ; from the kernel-defined ISR table.
-;=============================================================================
+;-----------------------------------------------------------------------------
 
 ; IDT memory range
 Mem.IDT             equ     0x00001000
@@ -42,7 +46,7 @@ Mem.ISR.Thunks      equ     0x00002800
 Mem.ISR.Thunks.Size equ     17 * 256        ; 17 bytes of code per interrupt
 
 
-;=============================================================================
+;-----------------------------------------------------------------------------
 ; IDT descriptor
 ;
 ; Each 64-bit IDT descriptor is a 16-byte structure organized as follows:
@@ -75,7 +79,7 @@ Mem.ISR.Thunks.Size equ     17 * 256        ; 17 bytes of code per interrupt
 ;      [64:95]      Interrupt handler offset bits [32:63]
 ;      [96:127]     Reserved
 ;
-;=============================================================================
+;-----------------------------------------------------------------------------
 struc IDT.Descriptor
 
     .OffsetLo       resw    1
@@ -94,7 +98,7 @@ IDT.Pointer:
     dq  Mem.IDT             ; Address of table copy
 
 
-;=============================================================================
+;-----------------------------------------------------------------------------
 ; ISR.Thunk.Template
 ;
 ; During initialization, the ISR thunk template is copied and modified 256
@@ -104,7 +108,7 @@ IDT.Pointer:
 ; their handlers are called, and others don't. It's also necessary so that
 ; we can push the interrupt number as a parameter to the general-purpose
 ; dispatcher.
-;=============================================================================
+;-----------------------------------------------------------------------------
 
 align 8
 ISR.Thunk.Template:
@@ -112,12 +116,12 @@ ISR.Thunk.Template:
     push    0       ; push the interrupt number. 0 is modified during init.
     push    rax     ; preserve rax here instead of in dispatcher.
     mov     rax,    ISR.Dispatcher
-    jmp     rax
+    jmp     rax     ; do absolute jump to ISR.Dispatcher.
 
 ISR.Thunk.Size   equ     ($ - ISR.Thunk.Template)
 
 
-;=============================================================================
+;-----------------------------------------------------------------------------
 ; ISR.Dispatcher
 ;
 ; A general-purpose ISR dispatch routine that all ISR thunks jump to when
@@ -126,7 +130,7 @@ ISR.Thunk.Size   equ     ($ - ISR.Thunk.Template)
 ; then uses the interrupt number to look up a kernel-defined ISR, which
 ; it then calls with the interrupt number and error code as parameters.
 ; All registers are preserved and restored around the ISR call.
-;=============================================================================
+;-----------------------------------------------------------------------------
 ISR.Dispatcher:
 
     ; Preserve registers.  rax was preserved just before the jmp from the
@@ -161,7 +165,8 @@ ISR.Dispatcher:
 
     .found:
 
-        ; The System V ABI requires the direction flag to be cleared.
+        ; The System V ABI requires the direction flag to be cleared on
+        ; function entry.
         cld
 
         ; Call the ISR with the interrupt (rdi) and error code (rsi).
@@ -190,19 +195,18 @@ ISR.Dispatcher:
         iretq
 
 
-;=============================================================================
-; isr_init
-;
-; Initialize a table of interrupt service routine thunks, one for each
-; of the 256 possible interrupts. Then set up the interrupt descriptor
-; table (IDT) to point to each of the thunks. For interrupts 8 and 10-14,
-; perform some offsetting in the IDT descriptor to skip one of the thunk's
-; push instructions.
-;
-; Killed registers:
-;   rax, rcx, rdx, rsi, rdi, r8
-;=============================================================================
-isr_init:
+;-----------------------------------------------------------------------------
+; @function     interrupts_init
+; @brief        Initialize all interrupt tables.
+; @details      Initialize a table of interrupt service routine thunks, one
+;               for each of the 256 possible interrupts. Then set up the
+;               interrupt descriptor table (IDT) to point to each of the
+;               thunks. For interrupts 8 and 10-14, perform some offsetting
+;               in the IDT descriptor to skip one of the thunk's push
+;               instructions.
+; @regskilled   rax, rcx, rdx, rsi, rdi, r8
+;-----------------------------------------------------------------------------
+interrupts_init:
 
     ; Interrupts must be disabled before mucking with interrupt tables.
     cli
@@ -330,32 +334,44 @@ isr_init:
         ; Install the IDT
         lidt    [IDT.Pointer]
 
-    ;-------------------------------------------------------------------------
-    ; Initialize the PIC controller
-    ;-------------------------------------------------------------------------
-    .initPIC:
-
-        ; Disable the PIC for now.
-        mov     al,     0xff
-        out     0xa1,   al
-        out     0x21,   al
-
     ret
 
 
-;=============================================================================
-; isr_set
-;
-; Set a kernel-defined interrupt service routine for the given interrupt
-; number.
-;
-; Input registers:
-;   rdi     interrupt number
-;   rsi     ISR function address
-;
-; Killed registers:
-;   None
-;=============================================================================
+;-----------------------------------------------------------------------------
+; @function     interrupts_enable
+; @brief        Enable all defined (maskable) interrupt service routines.
+; @details      Do not call this from within an ISR, as the original
+;               interrupt flag will be restored as soon as the ISR returns.
+;-----------------------------------------------------------------------------
+interrupts_enable:
+
+    ; Set the CPU interrupt flag to allow interrupts.
+    sti
+    ret
+
+
+;-----------------------------------------------------------------------------
+; @function     interrupts_disable
+; @brief        Disable all defined (maskable) interrupt service routines.
+; @details      Do not call this from within an ISR, as the original
+;               interrupt flag will be restored as soon as the ISR returns.
+;-----------------------------------------------------------------------------
+interrupts_disable:
+
+    ; Clear the CPU interrupt flag to disallow interrupts.
+    cli
+    ret
+
+
+;-----------------------------------------------------------------------------
+; @function     isr_set
+; @brief        Set a kernel-defined interrupt service routine for the given
+;               interrupt number.
+; @details      Interrupts should be disabled while setting these handlers.
+;               To disable an ISR, set its handler to null.
+; @reg[in]      rdi     Interrupt number
+; @reg[in]      rsi     ISR function address
+;-----------------------------------------------------------------------------
 isr_set:
 
     ; Multiply the interrupt number by 8 to get its ISR table offset.
@@ -368,13 +384,115 @@ isr_set:
     ret
 
 
-;=============================================================================
-; @@@ TEMPORARY
-;=============================================================================
-global isr_test
+;-----------------------------------------------------------------------------
+; @function     irq_enable
+; @brief        Tell the PIC to enable a hardware interrupt.
+; @reg[in]      rdi     IRQ number.
+; @regskilled   rax, rcx, rdx
+;-----------------------------------------------------------------------------
+irq_enable:
 
-isr_test:
+    ; Move IRQ into cl.
+    mov     rcx,    rdi
 
-    sti
-    int     3
+    ; Determine which PIC to update (<8 = master, else slave).
+    cmp     cl,     8
+    jae     .slave
+
+    .master:
+
+        ; Compute the mask ~(1 << IRQ).
+        mov     edx,    1
+        shl     edx,    cl
+        not     edx
+
+        ; Read the current mask.
+        in      al,     0x21
+
+        ; Clear the IRQ bit and update the mask.
+        and     al,     dl
+        out     0x21,   al
+
+        ret
+
+    .slave:
+
+        ; Recursively enable master IRQ2, or else slave IRQs will not work.
+        mov     rdi,    2
+        call    irq_enable
+
+        ; Subtract 8 from the IRQ.
+        sub     cl,     8
+
+        ; Compute the mask ~(1 << IRQ).
+        mov     edx,    1
+        shl     edx,    cl
+        not     edx
+
+        ; Read the current mask.
+        in      al,     0xa1
+
+        ; Clear the IRQ bit and update the mask.
+        and     al,     dl
+        out     0xa1,   al
+
+        ret
+
+
+;-----------------------------------------------------------------------------
+; @function     irq_disable
+; @brief        Tell the PIC to disable a hardware interrupt.
+; @reg[in]      rdi     IRQ number.
+; @regskilled   rax, rcx, rdx
+;-----------------------------------------------------------------------------
+irq_disable:
+
+    ; Move IRQ into cl.
+    mov     rcx,    rdi
+
+    ; Determine which PIC to update (<8 = master, else slave).
+    cmp     cl,     8
+    jae     .slave
+
+    .master:
+
+        ; Compute the mask ~(1 << IRQ).
+        mov     edx,    1
+        shl     edx,    cl
+
+        ; Read the current mask.
+        in      al,     0x21
+
+        ; Set the IRQ bit and update the mask.
+        or      al,     dl
+        out     0x21,   al
+
+        ret
+
+    .slave:
+
+        ; Subtract 8 from the IRQ.
+        sub     cl,     8
+
+        ; Compute the mask ~(1 << IRQ).
+        mov     edx,    1
+        shl     edx,    cl
+
+        ; Read the current mask.
+        in      al,     0xa1
+
+        ; Set the IRQ bit and update the mask.
+        or      al,     dl
+        out     0xa1,   al
+
+        ret
+
+
+;-----------------------------------------------------------------------------
+; @function     halt
+; @brief        Halt the computer until an interrupt arrives.
+;-----------------------------------------------------------------------------
+halt:
+
+    hlt
     ret
