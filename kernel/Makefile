@@ -13,7 +13,7 @@ include $(DIR_ROOT)/config.mk
 # Build targets
 #----------------------------------------------------------------------------
 
-FILES       := main.c start.asm strings.asm interrupt.asm io.asm
+FILES       := main.c start.asm strings.asm interrupt.asm io.asm console.c
 OBJ_FILES   := $(foreach F,$(FILES),$(F:.c=.o))
 OBJ_FILES   := $(foreach F,$(OBJ_FILES),$(F:.asm=.o))
 OBJ_FILES   := $(foreach F,$(OBJ_FILES),$(patsubst %,$(DIR_BUILD)/%,$(F)))
@@ -30,6 +30,10 @@ $(DIR_BUILD)/start.o: start.asm
 	@$(AS) $(ASFLAGS) $< -o $@
 
 $(DIR_BUILD)/main.o: main.c
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(DIR_BUILD)/console.o: console.c
 	@echo "$(TAG) Compiling $<"
 	@$(CC) $(CCFLAGS) -c $< -o $@
 

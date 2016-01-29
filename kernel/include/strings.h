@@ -36,12 +36,34 @@ memmove(void *dest, const void *src, size_t num);
 //  @function   memset
 /// @brief      Fill a region of memory with a single byte value.
 /// @param[in]  dest    Address of the destination memory area.
-/// @param[in]  ch      Value of the byte used to fill memory.
-/// @param[in]  num     Number of bytes to fill.
+/// @param[in]  b       Value of the byte used to fill memory.
+/// @param[in]  num     Number of bytes to set.
 /// @return             Destination address.
 //----------------------------------------------------------------------------
 void *
-memset(void *dest, int ch, size_t num);
+memset(void *dest, int b, size_t num);
+
+//----------------------------------------------------------------------------
+//  @function   memsetw
+/// @brief      Fill a region of memory with a single 16-bit word value.
+/// @param[in]  dest    Address of the destination memory area.
+/// @param[in]  w       Value of the word used to fill memory.
+/// @param[in]  num     Number of words to set.
+/// @return             Destination address.
+//----------------------------------------------------------------------------
+void *
+memsetw(void *dest, int w, size_t num);
+
+//----------------------------------------------------------------------------
+//  @function   memsetd
+/// @brief      Fill a region of memory with a single 32-bit dword value.
+/// @param[in]  dest    Address of the destination memory area.
+/// @param[in]  d       Value of the dword used to fill memory.
+/// @param[in]  num     Number of dwords to set.
+/// @return             Destination address.
+//----------------------------------------------------------------------------
+void *
+memsetd(void *dest, uint32_t d, size_t num);
 
 //----------------------------------------------------------------------------
 //  @function   memzero

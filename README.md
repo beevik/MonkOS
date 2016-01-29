@@ -35,6 +35,8 @@ understand the numerous and various aspects of bootloader and OS development:
 * [The System V ABI](http://www.sco.com/developers/gabi/latest/contents.html)
   * [AMD64 supplement](http://www.x86-64.org/documentation/abi.pdf)
 * [The El Torito specification](http://download.intel.com/support/motherboards/desktop/sb/specscdrom.pdf)
+* [Hardware Level VGA and SVGA Video Programming Information Page](http://www.osdever.net/FreeVGA/vga/vgareg.htm)
+  * [CRT Controller Registers](http://www.osdever.net/FreeVGA/vga/crtcreg.htm)
 * [The Xeos project](https://github.com/macmade/XEOS)
 * [BareMetal OS](https://github.com/ReturnInfinity/BareMetal)
 * [IanOS](http://www.ijack.org.uk/)

@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <interrupt.h>
 #include <io.h>
+#include <console.h>
 
 #if defined(__linux__)
 #   error "This code must be compiled with a cross-compiler."
@@ -53,8 +54,10 @@ handle_irq_keyboard(uint8_t interrupt, uint64_t error)
 void
 kmain()
 {
-    // Return here, causing the system to hang. The rest of the kernel
-    // will go here.
+    // Initialize the console screen.
+    console_init();
+    console_set_textcolor(0, TEXTCOLOR_WHITE, TEXTCOLOR_BLACK);
+    console_clear(0);
 
     // Initialize all interrupt data structures.
     interrupts_init();
@@ -68,7 +71,21 @@ kmain()
     // Turn on interrupt service routines.
     interrupts_enable();
 
+    // Display a welcome message on each virtual console.
+    for (int id = 0; id < MAX_CONSOLES; id++) {
+        console_print(id, "Welcome to \033[e]MonkOS\033[-] (v0.1).\n");
+        console_set_textcolor_fg(id, TEXTCOLOR_LTGRAY);
+    }
+
     for (;;) {
         halt();
+
+        // Output some text to test console scrolling.
+        if (key_irqs % 2 == 0) {
+            char buf[] = "Test \033[e] \033[-]\n";
+            char ch = 'a' + (key_irqs / 2) % 26;
+            buf[9] = ch;
+            console_print(0, buf);
+        }
     }
 }
