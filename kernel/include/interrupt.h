@@ -7,6 +7,19 @@
 //  that can be found in the MonkOS LICENSE file.
 //============================================================================
 
+#pragma once
+
+#include <stdint.h>
+
+// PIC port constants
+#define PIC_PORT_CMD_MASTER     0x20    ///< Command port for master PIC
+#define PIC_PORT_CMD_SLAVE      0xa0    ///< Command port for slave PIC
+#define PIC_PORT_DATA_MASTER    0x21    ///< Data port for master PIC
+#define PIC_PORT_DATA_SLAVE     0xa1    ///< Data port for slave PIC
+
+// PIC commands
+#define PIC_CMD_EOI             0x20    ///< End of interrupt
+
 //----------------------------------------------------------------------------
 //  @function   interrupts_init
 /// @brief      Initialize the interrupt service routine table.

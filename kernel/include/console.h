@@ -7,6 +7,10 @@
 // be found in the MonkOS LICENSE file.
 //============================================================================
 
+#pragma once
+
+#include <stdint.h>
+
 /// The number of available virtual consoles.
 #define MAX_CONSOLES 4
 

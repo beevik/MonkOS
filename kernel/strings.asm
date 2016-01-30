@@ -28,7 +28,7 @@ section .text
 ; @reg[in]      rsi     Address of the source memory area.
 ; @reg[in]      rdx     Number of bytes to copy.
 ; @reg[out]     rax     Destination address.
-; @regskilled   rcx
+; @killedregs   rcx
 ;-----------------------------------------------------------------------------
 memcpy:
 
@@ -52,7 +52,7 @@ memcpy:
 ; @reg[in]      rsi     Address of the source memory area.
 ; @reg[in]      rdx     Number of bytes to copy.
 ; @reg[out]     rax     Destination address.
-; @regskilled   rcx
+; @killedregs   rcx
 ;-----------------------------------------------------------------------------
 memmove:
 
@@ -113,7 +113,7 @@ memmove:
 ; @reg[in]      rsi     Value of the byte used to fill memory.
 ; @reg[in]      rdx     Number of bytes to set.
 ; @reg[out]     rax     Destination address.
-; @regskilled   r8, rcx
+; @killedregs   r8, rcx
 ;-----------------------------------------------------------------------------
 memset:
 
@@ -139,7 +139,7 @@ memset:
 ; @reg[in]      rsi     Value of the word used to fill memory.
 ; @reg[in]      rdx     Number of words to set.
 ; @reg[out]     rax     Destination address.
-; @regskilled   r8, rcx
+; @killedregs   r8, rcx
 ;-----------------------------------------------------------------------------
 memsetw:
 
@@ -165,7 +165,7 @@ memsetw:
 ; @reg[in]      rsi    Value of the dword used to fill memory.
 ; @reg[in]      rdx    Number of dwords to set.
 ; @reg[out]     rax    Destination address.
-; @regskilled   r8, rcx
+; @killedregs   r8, rcx
 ;-----------------------------------------------------------------------------
 memsetd:
 
@@ -190,7 +190,7 @@ memsetd:
 ; @reg[in]      rdi     Address of the destination memory area.
 ; @reg[in]      rsi     Number of bytes to set to zero.
 ; @reg[out]     rax     Destination address.
-; @regskilled   r8, rcx
+; @killedregs   r8, rcx
 ;-----------------------------------------------------------------------------
 memzero:
 

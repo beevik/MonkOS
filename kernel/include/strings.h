@@ -7,6 +7,10 @@
 // be found in the MonkOS LICENSE file.
 //============================================================================
 
+#pragma once
+
+#include <stdint.h>
+
 //----------------------------------------------------------------------------
 //  @function   memcpy
 /// @brief      Copy bytes from one memory region to another.

@@ -7,6 +7,10 @@
 //  that can be found in the MonkOS LICENSE file.
 //============================================================================
 
+#pragma once
+
+#include <stdint.h>
+
 //----------------------------------------------------------------------------
 //  @function   io_inb
 /// @brief      Retrieve a byte value from an input port.

@@ -13,37 +13,27 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <interrupt.h>
-#include <io.h>
+#include <keyboard.h>
 #include <console.h>
 
 #if defined(__linux__)
 #   error "This code must be compiled with a cross-compiler."
 #endif
 
-static int key_irqs;
-
 //----------------------------------------------------------------------------
-//  @function   handle_irq_keyboard
-/// @brief      Interrupt service routine for keyboard input interrupt.
-/// @param[in]  interrupt   Interrupt number.
-/// @param[in]  error       Interrupt error code.
+//  @function   hexchar
+/// @brief      Convert a 4-byte integer to its hexadecimal representation.
+/// @param[in]  value   An integer value between 0 and 15.
+/// @returns    A character representing the hexadecimal digit.
 //----------------------------------------------------------------------------
-static void
-handle_irq_keyboard(uint8_t interrupt, uint64_t error)
+static inline char
+hexchar(int value)
 {
-    (void)interrupt;
-    (void)error;
-
-    key_irqs++;
-
-    // Read the key value.
-    uint8_t value = io_inb(0x60);
-    (void)value;
-
-    // Send end-of-interrupt signal.
-    io_outb(0x20, 0x20);
+    if (value >= 0 && value <= 9)
+        return (char)(value + '0');
+    else
+        return (char)(value - 10 + 'a');
 }
-
 
 //----------------------------------------------------------------------------
 //  @function   kmain
@@ -62,11 +52,8 @@ kmain()
     // Initialize all interrupt data structures.
     interrupts_init();
 
-    // Assign interrupt service routine handlers.
-    isr_set(0x21, handle_irq_keyboard);
-
-    // Enable hardware interrupts we wish to handle.
-    irq_enable(1);  // IRQ1 = keyboard
+    // Initialize the keyboard.
+    kb_init();
 
     // Turn on interrupt service routines.
     interrupts_enable();
@@ -80,11 +67,13 @@ kmain()
     for (;;) {
         halt();
 
-        // Output some text to test console scrolling.
-        if (key_irqs % 2 == 0) {
-            char buf[] = "Test \033[e] \033[-]\n";
-            char ch = 'a' + (key_irqs / 2) % 26;
-            buf[9] = ch;
+        // Output the last keyboard scan code every time there's an interrupt.
+        for (char ch = kb_getchar(); ch; ch = kb_getchar()) {
+            uint8_t scancode = kb_lastscancode();
+            char buf[] = "Scan code: \033[e]  \033[-] ' '\n";
+            buf[15] = hexchar(scancode >> 4);
+            buf[16] = hexchar(scancode & 0xf);
+            buf[23] = ch;
             console_print(0, buf);
         }
     }

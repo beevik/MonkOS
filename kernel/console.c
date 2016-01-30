@@ -15,14 +15,14 @@
 #include <console.h>
 
 // CRTC ports
-#define CRTC_PORT_CMD           0x03d4
-#define CRTC_PORT_DATA          0x03d5
+#define CRTC_PORT_CMD           0x03d4  ///< Command port for CRT controller.
+#define CRTC_PORT_DATA          0x03d5  ///< Data port for CRT controller.
 
 // CRTC commands
-#define CRTC_CMD_STARTADDR_HI   0x0c
-#define CRTC_CMD_STARTADDR_LO   0x0d
-#define CRTC_CMD_CURSORADDR_HI  0x0e
-#define CRTC_CMD_CURSORADDR_LO  0x0f
+#define CRTC_CMD_STARTADDR_HI   0x0c    ///< Hi-byte of buffer start address.
+#define CRTC_CMD_STARTADDR_LO   0x0d    ///< Lo-byte of buffer start address.
+#define CRTC_CMD_CURSORADDR_HI  0x0e    ///< Hi-byte of cursor start address.
+#define CRTC_CMD_CURSORADDR_LO  0x0f    ///< Lo-byte of cursor start address.
 
 // Visible screen geometry
 #define SCREEN_ROWS             25

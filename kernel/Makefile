@@ -13,21 +13,20 @@ include $(DIR_ROOT)/config.mk
 # Build targets
 #----------------------------------------------------------------------------
 
-FILES       := main.c start.asm strings.asm interrupt.asm io.asm console.c
+FILES       := main.c console.c interrupt.asm io.asm keyboard.c start.asm \
+			   strings.asm
 OBJ_FILES   := $(foreach F,$(FILES),$(F:.c=.o))
 OBJ_FILES   := $(foreach F,$(OBJ_FILES),$(F:.asm=.o))
 OBJ_FILES   := $(foreach F,$(OBJ_FILES),$(patsubst %,$(DIR_BUILD)/%,$(F)))
 TAG         := $(BLUE)[kernel]$(NORMAL)
 
-all: .deps $(DIR_BUILD)/monk64.sys
+all: .deps kernel
 	@echo "$(TAG) $(SUCCESS)"
+
+kernel: $(DIR_BUILD)/monk64.sys
 
 clean:
 	@rm -f $(OBJ_FILES)
-
-$(DIR_BUILD)/start.o: start.asm
-	@echo "$(TAG) Assembling $<"
-	@$(AS) $(ASFLAGS) $< -o $@
 
 $(DIR_BUILD)/main.o: main.c
 	@echo "$(TAG) Compiling $<"
@@ -37,15 +36,23 @@ $(DIR_BUILD)/console.o: console.c
 	@echo "$(TAG) Compiling $<"
 	@$(CC) $(CCFLAGS) -c $< -o $@
 
-$(DIR_BUILD)/strings.o: strings.asm
-	@echo "$(TAG) Assembling $<"
-	@$(AS) $(ASFLAGS) $< -o $@
-
 $(DIR_BUILD)/interrupt.o: interrupt.asm
 	@echo "$(TAG) Assembling $<"
 	@$(AS) $(ASFLAGS) $< -o $@
 
 $(DIR_BUILD)/io.o: io.asm
+	@echo "$(TAG) Assembling $<"
+	@$(AS) $(ASFLAGS) $< -o $@
+
+$(DIR_BUILD)/keyboard.o: keyboard.c
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(DIR_BUILD)/start.o: start.asm
+	@echo "$(TAG) Assembling $<"
+	@$(AS) $(ASFLAGS) $< -o $@
+
+$(DIR_BUILD)/strings.o: strings.asm
 	@echo "$(TAG) Assembling $<"
 	@$(AS) $(ASFLAGS) $< -o $@
 
