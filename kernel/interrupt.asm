@@ -204,14 +204,12 @@ ISR.Dispatcher:
 ;               thunks. For interrupts 8 and 10-14, perform some offsetting
 ;               in the IDT descriptor to skip one of the thunk's push
 ;               instructions.
-; @killedregs   rax, rcx, rdx, rsi, rdi, r8, r9
+; @killedregs   rax, rcx, rdx, rsi, rdi, r8
 ;-----------------------------------------------------------------------------
 interrupts_init:
 
-    ; Save the flags register into r9.
+    ; Preserve flags before disabling interrupts.
     pushf
-    mov     r9,     [rsp]
-    popf
 
     ; Interrupts must be disabled before mucking with interrupt tables.
     cli
@@ -339,17 +337,8 @@ interrupts_init:
         ; Install the IDT
         lidt    [IDT.Pointer]
 
-        ; Check if interrupts were enabled when this procedure started.
-        test    r9,     (1 << 9)
-        jz      .done
-
-    .reenable:
-
-        ; Re-enable interrupts if they were enabled when this procedure
-        ; started.
-        sti
-
-    .done:
+        ; Restore interrupt flag.
+        popf
 
         ret
 
@@ -388,14 +377,11 @@ interrupts_disable:
 ;               To disable an ISR, set its handler to null.
 ; @reg[in]      rdi     Interrupt number
 ; @reg[in]      rsi     ISR function address
-; @killedregs   rcx
 ;-----------------------------------------------------------------------------
 isr_set:
 
-    ; Save the flags register into rcx.
+    ; Preserve flags before disabling interrupts.
     pushf
-    mov     rcx,    [rsp]
-    popf
 
     ; Temporarily disable interrupts while updating the ISR table.
     cli
@@ -407,19 +393,10 @@ isr_set:
     ; Store the interrupt service routine.
     mov     [rdi],  rsi
 
-    ; Check if interrupts were enabled when this procedure started.
-    test    rcx,    (1 << 9)
-    jz      .done
+    ; Restore interrupt flag.
+    popf
 
-    .reenable:
-
-        ; Re-enable interrupts if they were enabled when this procedure
-        ; started.
-        sti
-
-    .done:
-
-        ret
+    ret
 
 
 ;-----------------------------------------------------------------------------

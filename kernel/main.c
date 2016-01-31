@@ -67,14 +67,29 @@ kmain()
     for (;;) {
         halt();
 
-        // Output the last keyboard scan code every time there's an interrupt.
-        for (char ch = kb_getchar(); ch; ch = kb_getchar()) {
-            uint8_t scancode = kb_lastscancode();
-            char buf[] = "Scan code: \033[e]  \033[-] ' '\n";
-            buf[15] = hexchar(scancode >> 4);
-            buf[16] = hexchar(scancode & 0xf);
-            buf[23] = ch;
-            console_print(0, buf);
+        // Output the key code every time there's an interrupt.
+        key_t key;
+        bool avail;
+        while ((avail = kb_getkey(&key)) != false) {
+            if (key.ch) {
+                char buf[] = "Keycode: \033[ ]  \033[-] meta=   ' '\n";
+                buf[11] = key.brk ? 'e' : '2';
+                buf[13] = hexchar(key.code >> 4);
+                buf[14] = hexchar(key.code & 0xf);
+                buf[25] = hexchar(key.meta >> 4);
+                buf[26] = hexchar(key.meta & 0xf);
+                buf[29] = key.ch;
+                console_print(0, buf);
+            }
+            else {
+                char buf[] = "Keycode: \033[ ]  \033[-] meta=  \n";
+                buf[11] = key.brk ? 'e' : '2';
+                buf[13] = hexchar(key.code >> 4);
+                buf[14] = hexchar(key.code & 0xf);
+                buf[25] = hexchar(key.meta >> 4);
+                buf[26] = hexchar(key.meta & 0xf);
+                console_print(0, buf);
+            }
         }
     }
 }
