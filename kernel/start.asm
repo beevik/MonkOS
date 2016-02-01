@@ -11,9 +11,9 @@
 ; The boot loader should have put us in 64-bit long mode.
 bits 64
 
-; Use a special section .start, which comes first in the linker.ld
-; .text section. This way, the _start label will be given the lowest possible
-; code address (0x00101000 in our case).
+; Use a special section .start, which comes first in the linker.ld .text
+; section. This way, the _start label will be given the lowest possible code
+; address (0x00101000 in our case).
 section .start
     global _start
 
@@ -38,8 +38,7 @@ _start:
     mov     rsi,    _BSS_SIZE
     call    memzero
 
-    ; Call the kernel's main entry point. This function should never
-    ; return.
+    ; Call the kernel's main entry point. This function should never return.
     call    kmain
 
     ; If the function does return for some reason, hang the computer.

@@ -29,6 +29,9 @@ iso: .force boot kernel
 docs: .force
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_DOCS)
 
+uncrustify: .force
+	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_KERNEL) uncrustify
+
 all: kernel boot iso docs
 
 debug: iso

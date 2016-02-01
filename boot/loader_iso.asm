@@ -5,15 +5,14 @@
 ;
 ; This boot loader is executed after the first stage loader completes. Its
 ; responsibility is to load the kernel into memory, place the CPU into
-; protected mode, then into 64-bit mode, and to start the kernel's
-; execution.
+; protected mode, then into 64-bit mode, and to start the kernel's execution.
 ;
 ; This loader allows for kernel images that are several megabytes in size.
-; Making this possible was a bit tricky.  16-bit real mode is required to
-; use the BIOS routines that load the kernel image from cdrom, but you can
-; only use about 600KiB of memory while in real mode.  So this loader
-; switches between real mode and 32-bit protected mode while transferring
-; chunks of the kernel image from lower to upper memory.
+; Making this possible was a bit tricky.  16-bit real mode is required to use
+; the BIOS routines that load the kernel image from cdrom, but you can only
+; use about 600KiB of memory while in real mode.  So this loader switches
+; between real mode and 32-bit protected mode while transferring chunks of the
+; kernel image from lower to upper memory.
 ;
 ; Copyright 2016 Brett Vickers.
 ; Use of this source code is governed by a BSD-style license that can
@@ -23,8 +22,8 @@
 ; The second-stage boot loader starts in 16-bit real mode.
 bits 16
 
-; The second-stage loader is executed from code segment 0, starting at
-; address 0x8000.
+; The second-stage loader is executed from code segment 0, starting at address
+; 0x8000.
 org 0x8000
 
 ; Produce a map file containing all symbols and sections.
@@ -43,8 +42,8 @@ org 0x8000
 ;
 ; This is the second stage loader's entry point.
 ;
-; This code is launched by the first-stage loader and runs in 16-bit
-; real mode starting at address 0:0x8000.
+; This code is launched by the first-stage loader and runs in 16-bit real mode
+; starting at address 0:0x8000.
 ;
 ; Memory layout before this code starts running:
 ;
@@ -151,12 +150,12 @@ load:
         ; Re-enable interrupts.
         sti
 
-        ; Use a temporary GDT while loading the kernel, since we use
-        ; 32-bit protected mode during the load.
+        ; Use a temporary GDT while loading the kernel, since we use 32-bit
+        ; protected mode during the load.
         lgdt    [GDT32.Table.Pointer]
 
-        ; Find the first sector and size of the kernel, with results in
-        ; bx and eax.
+        ; Find the first sector and size of the kernel, with results in bx and
+        ; eax.
         call    FindKernel
         jc      .error.kernelNotFound
 
@@ -222,8 +221,8 @@ load:
         out     0xa1,   al
         call    .wait
 
-        ; Disable all IRQs. Kernel will re-enable the ones it wants to
-        ; handle later.
+        ; Disable all IRQs. Kernel will re-enable the ones it wants to handle
+        ; later.
         mov     al,     0xff
         out     0x21,   al
         out     0xa1,   al
@@ -256,8 +255,8 @@ load:
     ;-------------------------------------------------------------------------
     .setupPageTables:
 
-        ; Create page tables that identity-map the first 10MiB of memory.
-        ; This should be more than enough to hold the kernel.
+        ; Create page tables that identity-map the first 10MiB of memory. This
+        ; should be more than enough to hold the kernel.
         call    SetupPageTables
 
         ; Enable PAE paging.
@@ -295,10 +294,10 @@ bits 64
     ;-------------------------------------------------------------------------
     .launch64:
 
-        ; Set up the data segment registers. Note that in 64-bit mode
-        ; the CPU treats cs, ds, es, and ss as zero regardless of what
-        ; we store there.  (gs and fs are exceptions; they can be used
-        ; as real segment registers.)
+        ; Set up the data segment registers. Note that in 64-bit mode the CPU
+        ; treats cs, ds, es, and ss as zero regardless of what we store there.
+        ; (gs and fs are exceptions; they can be used as real segment
+        ; registers.)
         xor     ax,     ax
         mov     ds,     ax
         mov     es,     ax
@@ -505,8 +504,8 @@ TestA20:
     not     ax
     mov     ds,     ax
 
-    ; If the A20 line is disabled, then es:di and ds:si will point to the
-    ; same physical memory location due to wrap-around at 1 MiB.
+    ; If the A20 line is disabled, then es:di and ds:si will point to the same
+    ; physical memory location due to wrap-around at 1 MiB.
     ;
     ; es:di = 0000:0500 = 0x0000 * 16 + 0x0500 = 0x00500 = 0x0500
     ; ds:si = ffff:0510 = 0xffff * 16 + 0x0510 = 0x10500 = 0x0500
@@ -523,8 +522,8 @@ TestA20:
     mov     byte [es:di],   0x00
     mov     byte [ds:si],   0xff
 
-    ; If a store to ds:si changes the value at es:di, then memory wrapped
-    ; and A20 is not enabled.
+    ; If a store to ds:si changes the value at es:di, then memory wrapped and
+    ; A20 is not enabled.
     cmp     byte [es:di],   0xff
 
     ; Restore the original values stored at es:di and ds:si.
@@ -613,8 +612,8 @@ CanCPUID:
 ;=============================================================================
 ; FindKernel
 ;
-; Scan the root directory of the cdrom for a file called "MONK64.SYS".
-; If found, return its start sector and file size.
+; Scan the root directory of the cdrom for a file called "MONK64.SYS". If
+; found, return its start sector and file size.
 ;
 ; Return registers:
 ;   EAX     Kernel file size in bytes
@@ -763,16 +762,19 @@ ReadSectors:
 ; Load the kernel into upper memory.
 ;
 ; There are two problems we need to solve:
-;   1. In real mode, we have access to the BIOS but can only access
-;      the first megabyte of system memory.
-;   2. In protected mode, we can access memory above the first megabyte
-;      but don't have access to the BIOS.
-; Since we need the BIOS to read the kernel from the CDROM and we need
-; to load it into upper memory, we'll have to switch back and forth between
-; real mode and protected mode to do it.
 ;
-; This code repeats the following steps until the kernel is fully copied
-; into upper memory:
+;   1. In real mode, we have access to the BIOS but can only access the
+;      first megabyte of system memory.
+;   2. In protected mode, we can access memory above the first megabyte but
+;      don't have access to the BIOS.
+;
+; Since we need the BIOS to read the kernel from the CDROM and we need to load
+; it into upper memory, we'll have to switch back and forth between real mode
+; and protected mode to do it.
+;
+; This code repeats the following steps until the kernel is fully copied into
+; upper memory:
+;
 ;     1. Use BIOS to read the next 64KiB of the kernel file into a lower
 ;        memory buffer.
 ;     2. Switch to 32-bit protected mode.
@@ -837,8 +839,8 @@ LoadKernel:
 
     .proceed:
 
-        ; Store the number of sectors being loaded, so we can access it
-        ; in protected mode when we do the copy to upper memory.
+        ; Store the number of sectors being loaded, so we can access it in
+        ; protected mode when we do the copy to upper memory.
         mov     [LoadKernel.SectorsToCopy],     cx
 
         ; Read a chunk of the kernel into the buffer.
@@ -847,8 +849,8 @@ LoadKernel:
 
     .prepareProtected32Mode:
 
-        ; Disable interrupts until we're out of protected mode and back
-        ; into real mode, since we're not setting up a new interrupt table.
+        ; Disable interrupts until we're out of protected mode and back into
+        ; real mode, since we're not setting up a new interrupt table.
         cli
 
         ; Enable protected mode.
@@ -863,8 +865,8 @@ bits 32
 
     .switchToProtected32Mode:
 
-        ; Initialize all data segment registers with the 32-bit protected
-        ; mode data segment selector.
+        ; Initialize all data segment registers with the 32-bit protected mode
+        ; data segment selector.
         mov     ax,     GDT32.Selector.Data32
         mov     ds,     ax
         mov     es,     ax
@@ -876,8 +878,8 @@ bits 32
 
     .copyChunk:
 
-        ; Set up a copy from lower memory to upper memory using the
-        ; number of sectors.
+        ; Set up a copy from lower memory to upper memory using the number of
+        ; sectors.
         xor     ecx,    ecx
         xor     esi,    esi
         xor     edi,    edi
@@ -906,8 +908,8 @@ bits 16
 
     .switchToProtected16Mode:
 
-        ; Initialize all data segment registers with the 16-bit protected
-        ; mode data segment selector.
+        ; Initialize all data segment registers with the 16-bit protected mode
+        ; data segment selector.
         mov     ax,     GDT32.Selector.Data16
         mov     ds,     ax
         mov     es,     ax
@@ -989,8 +991,8 @@ LoadKernel.StackPointer         dw      0
 ;
 ; Set up a page table for 64-bit long mode.
 ;
-; This procedure creates an identity-mapped page table for the first
-; 10MiB of physical memory.
+; This procedure creates an identity-mapped page table for the first 10MiB of
+; physical memory.
 ;
 ; Killed registers:
 ;   None
@@ -1074,8 +1076,8 @@ SetupPageTables:
 ;=============================================================================
 ; DisplayStatusString
 ;
-; Add an OS prefix and a CRLF suffix to a null-terminated string, then
-; display it to the console using the BIOS.
+; Add an OS prefix and a CRLF suffix to a null-terminated string, then display
+; it to the console using the BIOS.
 ;
 ; Input registers:
 ;   SI      String offset

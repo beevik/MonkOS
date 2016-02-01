@@ -22,85 +22,81 @@
 #define BUFSIZ          32      ///< Keyboard input buffer size.
 
 // Key code abbreviations, used to set up the default scan map table below.
-#define CTL     KEY_CTRL
-#define SH      KEY_SHIFT
-#define ALT     KEY_ALT
-#define PS      KEY_PRTSCR
-#define CL      KEY_CAPSLOCK
-#define NL      KEY_NUMLOCK
-#define SL      KEY_SCRLOCK
-#define KI      KEY_INSERT
-#define KE      KEY_END
-#define KD      KEY_DOWN
-#define KPD     KEY_PGDN
-#define KL      KEY_LEFT
-#define KC      KEY_CENTER
-#define KR      KEY_RIGHT
-#define KH      KEY_HOME
-#define KU      KEY_UP
-#define KPU     KEY_PGUP
-#define KDL     KEY_DEL
-#define KM      KEY_MINUS
-#define KP      KEY_PLUS
-#define F1      KEY_F1
-#define F2      KEY_F2
-#define F3      KEY_F3
-#define F4      KEY_F4
-#define F5      KEY_F5
-#define F6      KEY_F6
-#define F7      KEY_F7
-#define F8      KEY_F8
-#define F9      KEY_F9
-#define F10     KEY_F10
-#define F11     KEY_F11
-#define F12     KEY_F12
-#define SE      KEY_SCANESC
-#define INV     KEY_INVALID
+#define CTL             KEY_CTRL
+#define SH              KEY_SHIFT
+#define ALT             KEY_ALT
+#define PS              KEY_PRTSCR
+#define CL              KEY_CAPSLOCK
+#define NL              KEY_NUMLOCK
+#define SL              KEY_SCRLOCK
+#define KI              KEY_INSERT
+#define KE              KEY_END
+#define KD              KEY_DOWN
+#define KPD             KEY_PGDN
+#define KL              KEY_LEFT
+#define KC              KEY_CENTER
+#define KR              KEY_RIGHT
+#define KH              KEY_HOME
+#define KU              KEY_UP
+#define KPU             KEY_PGUP
+#define KDL             KEY_DEL
+#define KM              KEY_MINUS
+#define KP              KEY_PLUS
+#define F1              KEY_F1
+#define F2              KEY_F2
+#define F3              KEY_F3
+#define F4              KEY_F4
+#define F5              KEY_F5
+#define F6              KEY_F6
+#define F7              KEY_F7
+#define F8              KEY_F8
+#define F9              KEY_F9
+#define F10             KEY_F10
+#define F11             KEY_F11
+#define F12             KEY_F12
+#define SE              KEY_SCANESC
+#define INV             KEY_INVALID
 
 /// US English PS/2 keyboard scan map (default setting)
 static const keylayout_t ps2_layout =
 {
-    .shifted =
+    .shifted   =
     {
-      //   0     1     2     3     4     5     6     7
-      //   8     9     a     b     c     d     e     f
-         INV,   27,  '!',  '@',  '#',  '$',  '%',  '^',
-         '&',  '*',  '(',  ')',  '_',  '+',    8,    9,   // 0
-         'Q',  'W',  'E',  'R',  'T',  'Y',  'U',  'I',
-         'O',  'P',  '{',  '}',   13,  CTL,  'A',  'S',   // 1
-         'D',  'F',  'G',  'H',  'J',  'K',  'L',  ':',
-         '"',  '~',   SH,  '|',  'Z',  'X',  'C',  'V',   // 2
-         'B',  'N',  'M',  '<',  '>',  '?',   SH,   PS,
-         ALT,  ' ',   CL,   F1,   F2,   F3,   F4,   F5,   // 3
-          F6,   F7,   F8,   F9,  F10,   NL,   SL,   KH,
-          KU,  KPU,   KM,   KL,   KC,   KR,   KP,   KE,   // 4
-          KD,  KPD,   KI,  KDL,  INV,  INV,  INV,  F11,
-         F12,  INV,  INV,  INV,  INV,  INV,  INV,  INV,   // 5
-          SE,   SE,  INV,  INV,  INV,  INV,  INV,  INV,
-         INV,  INV,  INV,  INV,  INV,  INV,  INV,  INV,   // 6
-         INV,  INV,  INV,  INV,  INV,  INV,  INV,  INV,
-         INV,  INV,  INV,  INV,  INV,  INV,  INV,  INV,   // 7
+        INV,  27, '!', '@', '#', '$', '%', '^',
+        '&', '*', '(', ')', '_', '+',   8,   9,     // 0
+        'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
+        'O', 'P', '{', '}',  13, CTL, 'A', 'S',     // 1
+        'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',
+        '"', '~', SH,  '|', 'Z', 'X', 'C', 'V',     // 2
+        'B', 'N', 'M', '<', '>', '?', SH,  PS,
+        ALT, ' ', CL,  F1,  F2,  F3,  F4,  F5,      // 3
+        F6,  F7,  F8,  F9,  F10, NL,  SL,  KH,
+        KU,  KPU, KM,  KL,  KC,  KR,  KP,  KE,      // 4
+        KD,  KPD, KI,  KDL, INV, INV, INV, F11,
+        F12, INV, INV, INV, INV, INV, INV, INV,     // 5
+        SE,  SE,  INV, INV, INV, INV, INV, INV,
+        INV, INV, INV, INV, INV, INV, INV, INV,     // 6
+        INV, INV, INV, INV, INV, INV, INV, INV,
+        INV, INV, INV, INV, INV, INV, INV, INV,     // 7
     },
     .unshifted =
     {
-      //   0     1     2     3     4     5     6     7
-      //   8     9     a     b     c     d     e     f
-         INV,   27,  '1',  '2',  '3',  '4',  '5',  '6',
-         '7',  '8',  '9',  '0',  '-',  '=',    8,    9,   // 0
-         'q',  'w',  'e',  'r',  't',  'y',  'u',  'i',
-         'o',  'p',  '[',  ']',   13,  CTL,  'a',  's',   // 1
-         'd',  'f',  'g',  'h',  'j',  'k',  'l',  ';',
-        '\'',  '`',   SH, '\\',  'z',  'x',  'c',  'v',   // 2
-         'b',  'n',  'm',  ',',  '.',  '/',   SH,   PS,
-         ALT,  ' ',   CL,   F1,   F2,   F3,   F4,   F5,   // 3
-          F6,   F7,   F8,   F9,  F10,   NL,   SL,   KH,
-          KU,  KPU,   KM,   KL,   KC,   KR,   KP,   KE,   // 4
-          KD,  KPD,   KI,  KDL,  INV,  INV,  INV,  F11,
-         F12,  INV,  INV,  INV,  INV,  INV,  INV,  INV,   // 5
-          SE,   SE,  INV,  INV,  INV,  INV,  INV,  INV,
-         INV,  INV,  INV,  INV,  INV,  INV,  INV,  INV,   // 6
-         INV,  INV,  INV,  INV,  INV,  INV,  INV,  INV,
-         INV,  INV,  INV,  INV,  INV,  INV,  INV,  INV,   // 7
+        INV,   27, '1', '2',  '3', '4', '5', '6',
+        '7',  '8', '9', '0',  '-', '=',   8,   9,   // 0
+        'q',  'w', 'e', 'r',  't', 'y', 'u', 'i',
+        'o',  'p', '[', ']',   13, CTL, 'a', 's',   // 1
+        'd',  'f', 'g', 'h',  'j', 'k', 'l', ';',
+        '\'', '`', SH,  '\\', 'z', 'x', 'c', 'v',   // 2
+        'b',  'n', 'm', ',',  '.', '/', SH,  PS,
+        ALT,  ' ', CL,  F1,   F2,  F3,  F4,  F5,    // 3
+        F6,   F7,  F8,  F9,   F10, NL,  SL,  KH,
+        KU,   KPU, KM,  KL,   KC,  KR,  KP,  KE,    // 4
+        KD,   KPD, KI,  KDL,  INV, INV, INV, F11,
+        F12,  INV, INV, INV,  INV, INV, INV, INV,   // 5
+        SE,   SE,  INV, INV,  INV, INV, INV, INV,
+        INV,  INV, INV, INV,  INV, INV, INV, INV,   // 6
+        INV,  INV, INV, INV,  INV, INV, INV, INV,
+        INV,  INV, INV, INV,  INV, INV, INV, INV,   // 7
     },
 };
 
@@ -108,8 +104,7 @@ static const keylayout_t ps2_layout =
 //  @struct     kbstate
 /// @brief      Holds the current state of the keyboard.
 //----------------------------------------------------------------------------
-typedef struct
-kbstate
+typedef struct kbstate
 {
     keylayout_t layout;         ///< The installed keyboard layout.
     uint8_t     meta;           ///< Mask of meta keys currently pressed.
@@ -147,15 +142,16 @@ toggle(uint8_t flag)
 static void
 addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
 {
-    // Reset the scan code escape state whenever a new key is added to
-    // the buffer.
+    // Reset the scan code escape state whenever a new key is added to the
+    // buffer.
     state.meta &= ~META_ESCAPED;
 
     // Is the buffer full?
     if ((state.buf_tail + 1) % BUFSIZ == state.buf_head)
         return;
 
-    key_t key = {
+    key_t key =
+    {
         .brk  = brk,
         .meta = meta,
         .code = code,
@@ -193,8 +189,8 @@ isr_keyboard(uint8_t interrupt, uint64_t error)
     // Convert the scan code into an unshifted key code.
     uint8_t ukeycode = state.layout.unshifted[scancode];
 
-    // Is the key a keyboard scan escape code? If so, don't add it to
-    // the buffer, but track the escape as a meta-state.
+    // Is the key a keyboard scan escape code? If so, don't add it to the
+    // buffer, but track the escape as a meta-state.
     if (ukeycode == KEY_SCANESC) {
         state.meta |= META_ESCAPED;
         goto done;
@@ -202,7 +198,7 @@ isr_keyboard(uint8_t interrupt, uint64_t error)
 
     // Alter shift state based on capslock state.
     if (state.meta & META_CAPSLOCK) {
-        if (ukeycode >= 'a' && ukeycode <= 'z')
+        if ((ukeycode >= 'a') && (ukeycode <= 'z'))
             shifted = !shifted;
     }
 
@@ -215,34 +211,40 @@ isr_keyboard(uint8_t interrupt, uint64_t error)
             case KEY_SHIFT:
                 state.meta &= ~META_SHIFT;
                 break;
+
             case KEY_CTRL:
                 state.meta &= ~META_CTRL;
                 break;
+
             case KEY_ALT:
                 state.meta &= ~META_ALT;
                 break;
+
             case KEY_CAPSLOCK:
                 toggle(META_CAPSLOCK);
                 break;
+
             case KEY_NUMLOCK:
                 toggle(META_NUMLOCK);
                 break;
+
             case KEY_SCRLOCK:
                 toggle(META_SCRLOCK);
                 break;
         }
         addkey(0, state.meta, ukeycode, 0);
     }
-
     // Key down?
     else {
         switch (keycode) {
             case KEY_SHIFT:
                 state.meta |= META_SHIFT;
                 break;
+
             case KEY_CTRL:
                 state.meta |= META_CTRL;
                 break;
+
             case KEY_ALT:
                 state.meta |= META_ALT;
                 break;
@@ -255,8 +257,9 @@ isr_keyboard(uint8_t interrupt, uint64_t error)
                 case 0:
                     ch = (char)keycode;
                     break;
+
                 case META_CTRL:
-                    if (ukeycode >= 'a' && ukeycode <= 'z')
+                    if ((ukeycode >= 'a') && (ukeycode <= 'z'))
                         ch = (char)(ukeycode - 'a' + 1);
                     break;
             }
@@ -281,8 +284,9 @@ kb_init()
     memcpy(&state.layout, &ps2_layout, sizeof(state.layout));
 
     // Initialize keyboard state.
-    state.meta = 0;
-    state.buf_head = state.buf_tail = 0;
+    state.meta     = 0;
+    state.buf_head = 0;
+    state.buf_tail = 0;
     memzero(&state.keybuf, sizeof(state.keybuf));
 
     // Assign the interrupt service routine.

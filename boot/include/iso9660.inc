@@ -1,7 +1,7 @@
 ;=============================================================================
 ; @file iso9660.inc
 ;
-; ISO9660 constants and structures
+; ISO9660 constants and structures.
 ;
 ; Copyright 2016 Brett Vickers.
 ; Use of this source code is governed by a BSD-style license that can

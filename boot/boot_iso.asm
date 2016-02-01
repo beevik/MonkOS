@@ -4,17 +4,17 @@
 ; A first-stage boot loader suitable for an El Torito ISO 9660 cdrom
 ; image.
 ;
-; The first-stage boot loader is responsible for accessing the CDROM
-; to locate and launch the second-stage boot loader (called LOADER.SYS).
-; The second-stage boot loader may be up to 32KiB, which is larger than
-; the tiny 512 bytes afforded by the BIOS to the first-stage boot loader.
+; The first-stage boot loader is responsible for accessing the CDROM to locate
+; and launch the second-stage boot loader (called LOADER.SYS). The second-
+; stage boot loader may be up to 32KiB, which is larger than the tiny 512
+; bytes afforded by the BIOS to the first-stage boot loader.
 ;
 ; To assemble this file, use raw binary mode with nasm, as follows:
 ;
 ;   nasm -f bin -o boot.sys boot_iso.asm
 ;
-; Take the completed image file and copy it to the following directory
-; after creating the necessary subdirectories:
+; Take the completed image file and copy it to the following directory after
+; creating the necessary subdirectories:
 ;
 ;   ./iso/boot/boot.sys
 ;
@@ -56,9 +56,9 @@ org 0
 ;
 ; First-stage boot loader entry point
 ;
-; The BIOS initialiates the boot process by running the code here in
-; 16-bit real mode. The segment registers are all set to zero, and the
-; instruction pointer (IP) is 0x7c00.
+; The BIOS initialiates the boot process by running the code here in 16-bit
+; real mode. The segment registers are all set to zero, and the instruction
+; pointer (IP) is 0x7c00.
 ;
 ; Input registers:
 ;

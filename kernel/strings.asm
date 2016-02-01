@@ -65,15 +65,15 @@ memmove:
     je      .done
     jb      .fast
 
-    ; If dest > src and there are no overlapping regions (dest >= src+num),
-    ; we can still do a fast pointer-incrementing move.
+    ; If dest > src and there are no overlapping regions (dest >= src+num), we
+    ; can still do a fast pointer-incrementing move.
     mov     rcx,    rsi
     add     rcx,    rdx
     cmp     rdi,    rcx
     jae     .fast
 
-    ; If dest > src and dest < src+num, we have to do a right-to-left
-    ; move to preserve overlapping data.
+    ; If dest > src and dest < src+num, we have to do a right-to-left move to
+    ; preserve overlapping data.
     .slow:
 
         ; Set the direction flag so copying is right-to-left.

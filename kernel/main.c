@@ -29,7 +29,7 @@
 static inline char
 hexchar(int value)
 {
-    if (value >= 0 && value <= 9)
+    if ((value >= 0) && (value <= 9))
         return (char)(value + '0');
     else
         return (char)(value - 10 + 'a');
@@ -64,12 +64,13 @@ kmain()
         console_set_textcolor_fg(id, TEXTCOLOR_LTGRAY);
     }
 
+    int console_id = 0;
     for (;;) {
         halt();
 
         // Output the key code every time there's an interrupt.
         key_t key;
-        bool avail;
+        bool  avail;
         while ((avail = kb_getkey(&key)) != false) {
             if (key.ch) {
                 char buf[] = "Keycode: \033[ ]  \033[-] meta=   ' '\n";
@@ -79,7 +80,7 @@ kmain()
                 buf[25] = hexchar(key.meta >> 4);
                 buf[26] = hexchar(key.meta & 0xf);
                 buf[29] = key.ch;
-                console_print(0, buf);
+                console_print(console_id, buf);
             }
             else {
                 char buf[] = "Keycode: \033[ ]  \033[-] meta=  \n";
@@ -88,7 +89,15 @@ kmain()
                 buf[14] = hexchar(key.code & 0xf);
                 buf[25] = hexchar(key.meta >> 4);
                 buf[26] = hexchar(key.meta & 0xf);
-                console_print(0, buf);
+                console_print(console_id, buf);
+            }
+
+            if ((key.brk == 0) && (key.meta & META_ALT)) {
+                if ((key.code >= '1') && (key.code <= '4')) {
+                    console_id = key.code - '1';
+                    console_activate(console_id);
+                    console_print(console_id, "Console activated.\n");
+                }
             }
         }
     }

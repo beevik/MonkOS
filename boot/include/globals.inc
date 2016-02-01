@@ -1,7 +1,7 @@
 ;=============================================================================
 ; @file globals.inc
 ;
-; Global variables used by boot loaders
+; Global variables used by boot loaders.
 ;
 ; Copyright 2016 Brett Vickers.
 ; Use of this source code is governed by a BSD-style license that can

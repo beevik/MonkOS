@@ -15,38 +15,37 @@
 #include <console.h>
 
 // CRTC ports
-#define CRTC_PORT_CMD           0x03d4  ///< Command port for CRT controller.
-#define CRTC_PORT_DATA          0x03d5  ///< Data port for CRT controller.
+#define CRTC_PORT_CMD             0x03d4 ///< Command port for CRT controller.
+#define CRTC_PORT_DATA            0x03d5 ///< Data port for CRT controller.
 
 // CRTC commands
-#define CRTC_CMD_STARTADDR_HI   0x0c    ///< Hi-byte of buffer start address.
-#define CRTC_CMD_STARTADDR_LO   0x0d    ///< Lo-byte of buffer start address.
-#define CRTC_CMD_CURSORADDR_HI  0x0e    ///< Hi-byte of cursor start address.
-#define CRTC_CMD_CURSORADDR_LO  0x0f    ///< Lo-byte of cursor start address.
+#define CRTC_CMD_STARTADDR_HI     0x0c  ///< Hi-byte of buffer start address.
+#define CRTC_CMD_STARTADDR_LO     0x0d  ///< Lo-byte of buffer start address.
+#define CRTC_CMD_CURSORADDR_HI    0x0e  ///< Hi-byte of cursor start address.
+#define CRTC_CMD_CURSORADDR_LO    0x0f  ///< Lo-byte of cursor start address.
 
 // Visible screen geometry
-#define SCREEN_ROWS             25
-#define SCREEN_COLS             80
-#define SCREEN_SIZE             (SCREEN_ROWS * SCREEN_COLS)
-#define SCREEN_BUFFER           0x000b8000
+#define SCREEN_ROWS               25
+#define SCREEN_COLS               80
+#define SCREEN_SIZE               (SCREEN_ROWS * SCREEN_COLS)
+#define SCREEN_BUFFER             0x000b8000
 
 //----------------------------------------------------------------------------
 //  @struct     console_t
 /// @brief      The full state of a virtual console.
 //----------------------------------------------------------------------------
-typedef struct
-console
+typedef struct console
 {
-    uint16_t        textcolor;      ///< Current fg/bg color (shifted left 8).
-    uint16_t        textcolor_orig; ///< Original, non-override text color.
-    screenpos_t     pos;            ///< Current screen position.
-    uint8_t         ybuf;           ///< Virtual buffer y position.
-    uint16_t       *screen;         ///< Virtual screen buffer for 50 rows.
-    uint16_t       *tlcorner;       ///< Points to char in top-left corner.
+    uint16_t    textcolor;          ///< Current fg/bg color (shifted left 8).
+    uint16_t    textcolor_orig;     ///< Original, non-override text color.
+    screenpos_t pos;                ///< Current screen position.
+    uint8_t     ybuf;               ///< Virtual buffer y position.
+    uint16_t   *screen;             ///< Virtual screen buffer for 50 rows.
+    uint16_t   *tlcorner;           ///< Points to char in top-left corner.
 } console_t;
 
-static console_t   console[MAX_CONSOLES];  ///< All virtual consoles.
-static console_t * active_console;         ///< The currently visible console.
+static console_t  console[MAX_CONSOLES];   ///< All virtual consoles.
+static console_t *active_console;          ///< The currently visible console.
 
 //----------------------------------------------------------------------------
 //  @function   color
@@ -109,16 +108,19 @@ update_cursor()
 //  @details    This function must be called before any other console
 //              functions can be used.
 //----------------------------------------------------------------------------
-void console_init()
+void
+console_init()
 {
-    uint16_t * screenptr = (uint16_t *)SCREEN_BUFFER;
+    uint16_t *screenptr = (uint16_t *)SCREEN_BUFFER;
+
     for (int id = 0; id < MAX_CONSOLES; id++) {
-        console[id].textcolor = color(TEXTCOLOR_WHITE, TEXTCOLOR_BLACK);
+        console[id].textcolor      = color(TEXTCOLOR_WHITE, TEXTCOLOR_BLACK);
         console[id].textcolor_orig = console[id].textcolor;
-        console[id].pos.x = console[id].pos.y = 0;
-        console[id].ybuf = 0;
-        console[id].screen = screenptr;
-        console[id].tlcorner = screenptr;
+        console[id].pos.x          = 0;
+        console[id].pos.y          = 0;
+        console[id].ybuf           = 0;
+        console[id].screen         = screenptr;
+        console[id].tlcorner       = screenptr;
         screenptr += 0x1000;    // each screen is 4K words (8K bytes).
     }
     active_console = &console[0];
@@ -134,7 +136,7 @@ void console_init()
 void
 console_activate(int id)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
     if (&console[id] == active_console)
         return;
@@ -155,7 +157,7 @@ console_activate(int id)
 void
 console_set_textcolor(int id, textcolor_t fg, textcolor_t bg)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
 
     console[id].textcolor = console[id].textcolor_orig = color(fg, bg);
@@ -171,10 +173,10 @@ console_set_textcolor(int id, textcolor_t fg, textcolor_t bg)
 void
 console_set_textcolor_fg(int id, textcolor_t fg)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
 
-    console[id].textcolor = color(fg, console_get_textcolor_bg(id));
+    console[id].textcolor      = color(fg, console_get_textcolor_bg(id));
     console[id].textcolor_orig = console[id].textcolor;
 }
 
@@ -188,10 +190,10 @@ console_set_textcolor_fg(int id, textcolor_t fg)
 void
 console_set_textcolor_bg(int id, textcolor_t bg)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
 
-    console[id].textcolor = color(console_get_textcolor_fg(id), bg);
+    console[id].textcolor      = color(console_get_textcolor_fg(id), bg);
     console[id].textcolor_orig = console[id].textcolor;
 }
 
@@ -205,7 +207,7 @@ console_set_textcolor_bg(int id, textcolor_t bg)
 textcolor_t
 console_get_textcolor_fg(int id)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
 
     return (textcolor_t)((console[id].textcolor_orig >> 8) & 0x0f);
@@ -221,7 +223,7 @@ console_get_textcolor_fg(int id)
 textcolor_t
 console_get_textcolor_bg(int id)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
 
     return (textcolor_t)((console[id].textcolor_orig >> 12) & 0x0f);
@@ -236,13 +238,14 @@ console_get_textcolor_bg(int id)
 void
 console_clear(int id)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
 
     memsetw(console[id].screen,
             console[id].textcolor | ' ', SCREEN_SIZE * 2);
-    console[id].pos.x = console[id].pos.y = 0;
-    console[id].ybuf = 0;
+    console[id].pos.x    = 0;
+    console[id].pos.y    = 0;
+    console[id].ybuf     = 0;
     console[id].tlcorner = console[id].screen;
 }
 
@@ -257,11 +260,11 @@ console_clear(int id)
 void
 console_setpos(int id, screenpos_t pos)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
 
     int diff = (int)pos.y - (int)console[id].pos.y;
-    console[id].pos = pos;
+    console[id].pos  = pos;
     console[id].ybuf = (uint8_t)((int)console[id].ybuf + diff);
     if (active_console == &console[id])
         update_cursor();
@@ -274,9 +277,9 @@ console_setpos(int id, screenpos_t pos)
 //  @param[out] pos     A pointer to a screenpos_t to receive the position.
 //----------------------------------------------------------------------------
 void
-console_getpos(int id, screenpos_t * pos)
+console_getpos(int id, screenpos_t *pos)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
     *pos = console[id].pos;
 }
@@ -294,11 +297,12 @@ static int
 colorcode(char x, int orig)
 {
     int code = x;
-    if (code >= '0' && code <= '9')
+
+    if ((code >= '0') && (code <= '9'))
         return code - '0';
-    else if (code >= 'a' && code <= 'f')
+    else if ((code >= 'a') && (code <= 'f'))
         return code - 'a' + 10;
-    else if (code >= 'A' && code <= 'F')
+    else if ((code >= 'A') && (code <= 'F'))
         return code - 'A' + 10;
     else if (code == '-')
         return orig;
@@ -321,19 +325,18 @@ console_printchar(console_t *cons, const char **strptr)
 {
     bool linefeed = false;
 
-    const char * str = *strptr;
-    char ch = *str;
+    const char *str = *strptr;
+    char        ch  = *str;
 
     // If the newline character is encountered, do a line feed + carriage
     // return.
     if (ch == '\n') {
         cons->pos.x = 0;
-        linefeed = true;
+        linefeed    = true;
     }
-
     // Handle color codes, e.g. "\033[#]".
     else if (ch == '\033') {
-        if (str[1] == '[' && str[2] && str[3] == ']') {
+        if ((str[1] == '[') && str[2] && (str[3] == ']')) {
             int code = colorcode(str[2], (cons->textcolor_orig >> 8) & 0xff);
             if (code != -1) {
                 cons->textcolor = (cons->textcolor & 0xf000) |
@@ -341,7 +344,7 @@ console_printchar(console_t *cons, const char **strptr)
                 *strptr += 3;
             }
         }
-        else if (str[1] == '{' && str[2] && str[3] == '}') {
+        else if ((str[1] == '{') && str[2] && (str[3] == '}')) {
             int code = colorcode(str[2], (cons->textcolor_orig >> 12));
             if (code != -1) {
                 cons->textcolor = (cons->textcolor & 0x0f00) |
@@ -351,7 +354,6 @@ console_printchar(console_t *cons, const char **strptr)
         }
         return;
     }
-
     else {
         // Use the current foreground and background color.
         uint16_t value = cons->textcolor | ch;
@@ -365,7 +367,7 @@ console_printchar(console_t *cons, const char **strptr)
         // If the right side of the screen was reached, we need a linefeed.
         if (++cons->pos.x == SCREEN_COLS) {
             cons->pos.x = 0;
-            linefeed = true;
+            linefeed    = true;
         }
     }
 
@@ -423,12 +425,13 @@ console_printchar(console_t *cons, const char **strptr)
 void
 console_print(int id, const char *str)
 {
-    if (id < 0 || id >= MAX_CONSOLES)
+    if ((id < 0) || (id >= MAX_CONSOLES))
         id = 0;
 
-    console_t * cons = &console[id];
-    for (; *str; ++str)
+    console_t *cons = &console[id];
+    for (; *str; ++str) {
         console_printchar(cons, &str);
+    }
 
     if (cons == active_console)
         update_cursor();

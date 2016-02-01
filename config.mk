@@ -21,7 +21,7 @@ TARGET      :=  x86_64-elf
 
 CC          :=  $(TARGET)-gcc
 
-CCFLAGS     :=  -std=gnu11 -m64 -mno-red-zone -mno-mmx -mno-sse \
+CCFLAGS     :=  -std=gnu11 -m64 -mno-red-zone -mno-mmx -mno-sse -masm=intel \
                 -mno-sse2 -ffreestanding -fno-asynchronous-unwind-tables \
                 -I$(DIR_KERNEL)/include -g -Wall -Wextra -Qn
 
@@ -29,13 +29,18 @@ AS          :=  nasm
 
 ASFLAGS     :=  -f elf64
 
-LDFLAGS     :=  -m64 -ffreestanding -g -nostdlib -z max-page-size=0x1000 -lgcc
+LDFLAGS     :=  -m64 -ffreestanding -g -nostdlib -z max-page-size=0x1000 \
+                -lgcc -mno-red-zone
 
 DOXYGEN     :=  doxygen
 
 MAKE_FLAGS  := --quiet
 
 QEMU        :=  qemu-system-x86_64
+
+UNCRUSTIFY  :=  uncrustify
+
+UNCRUSTIFY_CONFIG := $(DIR_SCRIPT)/uncrustify.cfg
 
 
 #----------------------------------------------------------------------------

@@ -35,7 +35,7 @@ interrupts_init();
 /// @param[in]  interrupt   Interrupt number (0-255).
 /// @param[in]  error       Error code (interrupt-specific meaning).
 //----------------------------------------------------------------------------
-typedef void (* isr_handler)(uint8_t interrupt, uint64_t error);
+typedef void (*isr_handler)(uint8_t interrupt, uint64_t error);
 
 //----------------------------------------------------------------------------
 //  @function   interrupts_enable

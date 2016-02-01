@@ -12,42 +12,40 @@
 #include <stdint.h>
 
 /// The number of available virtual consoles.
-#define MAX_CONSOLES 4
+#define MAX_CONSOLES    4
 
 //----------------------------------------------------------------------------
 //  @enum       textcolor_t
 /// @brief      Color values used for console text.
 //----------------------------------------------------------------------------
-typedef enum
-textcolor
+typedef enum textcolor
 {
-    TEXTCOLOR_BLACK      = 0,
-    TEXTCOLOR_BLUE       = 1,
-    TEXTCOLOR_GREEN      = 2,
-    TEXTCOLOR_CYAN       = 3,
-    TEXTCOLOR_RED        = 4,
-    TEXTCOLOR_MAGENTA    = 5,
-    TEXTCOLOR_BROWN      = 6,
-    TEXTCOLOR_LTGRAY     = 7,
-    TEXTCOLOR_GRAY       = 8,
-    TEXTCOLOR_LTBLUE     = 9,
-    TEXTCOLOR_LTGREEN    = 10,
-    TEXTCOLOR_LTCYAN     = 11,
-    TEXTCOLOR_LTRED      = 12,
-    TEXTCOLOR_LTMAGENTA  = 13,
-    TEXTCOLOR_YELLOW     = 14,
-    TEXTCOLOR_WHITE      = 15,
+    TEXTCOLOR_BLACK     = 0,
+    TEXTCOLOR_BLUE      = 1,
+    TEXTCOLOR_GREEN     = 2,
+    TEXTCOLOR_CYAN      = 3,
+    TEXTCOLOR_RED       = 4,
+    TEXTCOLOR_MAGENTA   = 5,
+    TEXTCOLOR_BROWN     = 6,
+    TEXTCOLOR_LTGRAY    = 7,
+    TEXTCOLOR_GRAY      = 8,
+    TEXTCOLOR_LTBLUE    = 9,
+    TEXTCOLOR_LTGREEN   = 10,
+    TEXTCOLOR_LTCYAN    = 11,
+    TEXTCOLOR_LTRED     = 12,
+    TEXTCOLOR_LTMAGENTA = 13,
+    TEXTCOLOR_YELLOW    = 14,
+    TEXTCOLOR_WHITE     = 15,
 } textcolor_t;
 
 //----------------------------------------------------------------------------
 //  @struct     screenpos_t
 /// @brief      Console screen text position.
 //----------------------------------------------------------------------------
-typedef struct
-screenpos
+typedef struct screenpos
 {
-    uint8_t     x;  ///< x position in range [0:79]. 0 is left of screen.
-    uint8_t     y;  ///< y position in range [0:24]. 0 is top of screen.
+    uint8_t x;      ///< x position in range [0:79]. 0 is left of screen.
+    uint8_t y;      ///< y position in range [0:24]. 0 is top of screen.
 } screenpos_t;
 
 //----------------------------------------------------------------------------
@@ -147,7 +145,7 @@ console_setpos(int id, screenpos_t pos);
 /// @param[out] pos     A pointer to a screenpos_t to receive the position.
 //----------------------------------------------------------------------------
 void
-console_getpos(int id, screenpos_t * pos);
+console_getpos(int id, screenpos_t *pos);
 
 //----------------------------------------------------------------------------
 //  @function   console_print

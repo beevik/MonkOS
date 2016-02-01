@@ -1,8 +1,7 @@
 ;=============================================================================
 ; @file gdt.inc
 ;
-; Global Descrtiptor Table structure definitions for 32-bit and 64-bit
-; modes.
+; Global Descrtiptor Table structure definitions for 32-bit and 64-bit modes.
 ;
 ; Copyright 2016 Brett Vickers.
 ; Use of this source code is governed by a BSD-style license that can
@@ -17,8 +16,8 @@
 ;=============================================================================
 
 ; GDT selectors, which should be used in protected mode to set segment
-; register values. See loader_iso.asm for the descriptors referenced by
-; these selectors.
+; register values. See loader_iso.asm for the descriptors referenced by these
+; selectors.
 GDT32.Selector.Code32       equ     0x08    ; 32-bit protected mode (code)
 GDT32.Selector.Data32       equ     0x10    ; 32-bit protected mode (data)
 GDT32.Selector.Code16       equ     0x18    ; 16-bit protected mode (code)
