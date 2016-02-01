@@ -1,3 +1,4 @@
+.gdbinit
 .p4ignore
 build
 docs/monk

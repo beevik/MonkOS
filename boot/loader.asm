@@ -1,5 +1,5 @@
 ;=============================================================================
-; @file loader_iso.asm
+; @file loader.asm
 ;
 ; A second-stage boot loader suitable for an El Torito ISO 9660 cdrom image.
 ;
@@ -27,7 +27,7 @@ bits 16
 org 0x8000
 
 ; Produce a map file containing all symbols and sections.
-[map all ../build/loader_iso.map]
+[map all ../build/boot/loader.map]
 
 ; Include constants, structures, and macros.
 %include "include/mem.inc"          ; Memory layout constants
@@ -612,7 +612,7 @@ CanCPUID:
 ;=============================================================================
 ; FindKernel
 ;
-; Scan the root directory of the cdrom for a file called "MONK64.SYS". If
+; Scan the root directory of the cdrom for a file called "MONK.SYS". If
 ; found, return its start sector and file size.
 ;
 ; Return registers:
@@ -660,12 +660,12 @@ FindKernel:
         test    byte [di + ISO.DirectoryEntry.FileFlags],   0x02
         jnz     .nextDirEntry
 
-        ; Is the file name the same length as "MONK64.SYS;1"?
+        ; Is the file name the same length as "MONK.SYS;1"?
         cmp     byte [di + ISO.DirectoryEntry.NameLength], \
                     Kernel.Filename.Length
         jne     .nextDirEntry
 
-        ; Is the file name "MONK64.SYS;1"?
+        ; Is the file name "MONK.SYS;1"?
         push    di
         mov     cx,     Kernel.Filename.Length
         mov     si,     Kernel.Filename
@@ -1205,7 +1205,7 @@ String.Error.KernelLoadFailed db "Kernel load failed",      0
 ; Filename strings
 ;-----------------------------------------------------------------------------
 
-Kernel.Filename         db      "MONK64.SYS;1"
+Kernel.Filename         db      "MONK.SYS;1"
 Kernel.Filename.Length  equ     ($ - Kernel.Filename)
 
 ;-----------------------------------------------------------------------------

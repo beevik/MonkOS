@@ -1,5 +1,5 @@
 ;=============================================================================
-; @file     strings.asm
+; @file     string.asm
 ; @brief    String and memory manipulation functions.
 ;
 ; Copyright 2016 Brett Vickers.

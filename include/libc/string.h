@@ -1,5 +1,5 @@
 //============================================================================
-/// @file   strings.h
+/// @file   string.h
 /// @brief  String and memory operations.
 //
 // Copyright 2016 Brett Vickers.

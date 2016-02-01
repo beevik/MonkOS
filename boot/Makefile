@@ -8,25 +8,31 @@ DIR_ROOT := ..
 
 include $(DIR_ROOT)/config.mk
 
+DIR_TARGET := $(DIR_BUILD)/boot
 
 #----------------------------------------------------------------------------
 # Build targets
 #----------------------------------------------------------------------------
 
-FILES 		:= boot_iso.asm loader_iso.asm
-OBJ_FILES 	:= $(foreach F,$(FILES),$(patsubst %.asm,$(DIR_BUILD)/%.sys,$(F)))
+FILES 		:= boot.asm loader.asm
+
+SYS_FILES 	:= $(foreach F,$(FILES),$(patsubst %.asm,$(DIR_BUILD)/%.sys,$(F)))
+
 TAG 		:= $(BLUE)[boot]$(NORMAL)
 
-all: .deps $(OBJ_FILES)
+all: deps $(SYS_FILES)
 	@echo "$(TAG) $(SUCCESS)"
 
+deps:
+	@mkdir -p $(DIR_TARGET)
+
 clean:
-	@rm -f $(OBJ_FILES)
+	@rm -rf $(DIR_TARGET) $(SYS_FILES)
 
-$(DIR_BUILD)/boot_iso.sys: boot_iso.asm
+$(DIR_BUILD)/boot.sys: boot.asm
 	@echo "$(TAG) Assembling $<"
-	@$(AS) -f bin boot_iso.asm -o $(DIR_BUILD)/boot_iso.sys
+	@$(AS) -f bin $< -o $@
 
-$(DIR_BUILD)/loader_iso.sys: loader_iso.asm
+$(DIR_BUILD)/loader.sys: loader.asm
 	@echo "$(TAG) Assembling $<"
-	@$(AS) -f bin loader_iso.asm -o $(DIR_BUILD)/loader_iso.sys
+	@$(AS) -f bin $< -o $@

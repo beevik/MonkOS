@@ -10,9 +10,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <strings.h>
-#include <io.h>
-#include <console.h>
+#include <kernel/io.h>
+#include <kernel/console.h>
+#include <libc/string.h>
 
 // CRTC ports
 #define CRTC_PORT_CMD             0x03d4 ///< Command port for CRT controller.

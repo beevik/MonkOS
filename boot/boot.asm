@@ -1,5 +1,5 @@
 ;=============================================================================
-; @file boot_iso.asm
+; @file boot.asm
 ;
 ; A first-stage boot loader suitable for an El Torito ISO 9660 cdrom
 ; image.
@@ -42,7 +42,7 @@ bits 16
 org 0
 
 ; Produce a map file containing all symbols and sections.
-[map all ../build/boot_iso.map]
+[map all ../build/boot/boot.map]
 
 ; Include constants, structures, and macros.
 %include "include/mem.inc"          ; Memory layout constants

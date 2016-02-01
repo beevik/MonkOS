@@ -12,9 +12,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <interrupt.h>
-#include <keyboard.h>
-#include <console.h>
+#include <kernel/interrupt.h>
+#include <kernel/keyboard.h>
+#include <kernel/console.h>
 
 #if defined(__linux__)
 #   error "This code must be compiled with a cross-compiler."

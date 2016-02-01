@@ -8,27 +8,34 @@ DIR_ROOT := ..
 
 include $(DIR_ROOT)/config.mk
 
+DIR_TARGET := $(DIR_BUILD)/kernel
 
 #----------------------------------------------------------------------------
 # Build targets
 #----------------------------------------------------------------------------
 
 C_FILES 	:= main.c console.c keyboard.c
-ASM_FILES	:= interrupt.asm io.asm start.asm strings.asm
-CODE_FILES	:= $(C_FILES) $(ASM_FILES)
+H_FILES		:= console.h interrupt.h io.h keyboard.h
+ASM_FILES	:= interrupt.asm io.asm start.asm
+LIB_FILES 	:= libc/libc.a kernel/libkernel.a
 
-H_FILES		:= console.h interrupt.h io.h keyboard.h strings.h
-H_FILES		:= $(foreach F,$(H_FILES),$(patsubst %,include/%,$(F)))
+CODE_FILES	:= $(C_FILES) $(ASM_FILES)
+HDR_FILES	:= $(foreach F,$(H_FILES),$(patsubst %,$(DIR_INCLUDE)/kernel/%,$(F)))
+LIB_FILES 	:= $(foreach F,$(LIB_FILES),$(patsubst %,$(DIR_BUILD)/%,$(F)))
 
 OBJ_FILES	:= $(foreach F,$(CODE_FILES),$(F:.c=.o))
 OBJ_FILES	:= $(foreach F,$(OBJ_FILES),$(F:.asm=.o))
-OBJ_FILES	:= $(foreach F,$(OBJ_FILES),$(patsubst %,$(DIR_BUILD)/%,$(F)))
+OBJ_FILES	:= $(foreach F,$(OBJ_FILES),$(patsubst %,$(DIR_TARGET)/%,$(F)))
+
 TAG			:= $(BLUE)[kernel]$(NORMAL)
 
-all: .deps kernel
+all: deps kernel
 	@echo "$(TAG) $(SUCCESS)"
 
-kernel: $(DIR_BUILD)/monk64.sys
+deps:
+	@mkdir -p $(DIR_TARGET)
+
+kernel: $(DIR_BUILD)/monk.sys
 
 uncrustify:
 	@echo "$(TAG) Uncrustifying code"
@@ -37,39 +44,48 @@ uncrustify:
 		-l C \
 		--replace \
 		--no-backup \
-		$(H_FILES) $(C_FILES) > /dev/null 2> /dev/null
+		$(HDR_FILES) $(C_FILES) > /dev/null 2> /dev/null
 
 clean:
-	@rm -f $(OBJ_FILES)
+	@rm -rf $(DIR_TARGET)
+	@rm -f $(DIR_BUILD)/monk.sys
 
-$(DIR_BUILD)/main.o: main.c $(H_FILES)
-	@echo "$(TAG) Compiling $<"
-	@$(CC) $(CCFLAGS) -c $< -o $@
-
-$(DIR_BUILD)/console.o: console.c $(H_FILES)
-	@echo "$(TAG) Compiling $<"
-	@$(CC) $(CCFLAGS) -c $< -o $@
-
-$(DIR_BUILD)/interrupt.o: interrupt.asm
-	@echo "$(TAG) Assembling $<"
-	@$(AS) $(ASFLAGS) $< -o $@
-
-$(DIR_BUILD)/io.o: io.asm
-	@echo "$(TAG) Assembling $<"
-	@$(AS) $(ASFLAGS) $< -o $@
-
-$(DIR_BUILD)/keyboard.o: keyboard.c $(H_FILES)
-	@echo "$(TAG) Compiling $<"
-	@$(CC) $(CCFLAGS) -c $< -o $@
-
-$(DIR_BUILD)/start.o: start.asm
-	@echo "$(TAG) Assembling $<"
-	@$(AS) $(ASFLAGS) $< -o $@
-
-$(DIR_BUILD)/strings.o: strings.asm
-	@echo "$(TAG) Assembling $<"
-	@$(AS) $(ASFLAGS) $< -o $@
-
-$(DIR_BUILD)/monk64.sys: linker.ld $(OBJ_FILES)
+# kernel file
+$(DIR_BUILD)/monk.sys: linker.ld $(DIR_TARGET)/libkernel.a
 	@echo "$(TAG) Linking $(notdir $@)"
-	@$(CC) $(LDFLAGS) -T linker.ld -o $@ $(OBJ_FILES)
+	@$(CC) $(LDFLAGS) -T linker.ld -o $@ $(OBJ_FILES) $(LIB_FILES)
+	@chmod a-x $@
+
+# Library file
+$(DIR_TARGET)/libkernel.a: $(OBJ_FILES)
+	@echo "$(TAG) Archiving $(notdir $@)"
+	@rm -f $@
+	@$(AR) cqs $@ $(OBJ_FILES)
+
+# Assembly files
+
+$(DIR_TARGET)/interrupt.o: interrupt.asm
+	@echo "$(TAG) Assembling $<"
+	@$(AS) $(ASFLAGS) $< -o $@
+
+$(DIR_TARGET)/io.o: io.asm
+	@echo "$(TAG) Assembling $<"
+	@$(AS) $(ASFLAGS) $< -o $@
+
+$(DIR_TARGET)/start.o: start.asm
+	@echo "$(TAG) Assembling $<"
+	@$(AS) $(ASFLAGS) $< -o $@
+
+# C files
+
+$(DIR_TARGET)/main.o: main.c $(HDR_FILES)
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(DIR_TARGET)/console.o: console.c $(HDR_FILES)
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(DIR_TARGET)/keyboard.o: keyboard.c $(HDR_FILES)
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@

@@ -15,30 +15,34 @@ include $(DIR_ROOT)/config.mk
 
 default: boot kernel iso
 
-boot: .deps
+all: boot kernel iso docs
+
+boot: .force
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_BOOT)
 
-kernel: .deps
+kernel: .force libc
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_KERNEL)
+
+libc: .force
+	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_LIBC)
 
 iso: .force boot kernel
 	@echo "$(BLUE)[iso]$(NORMAL) Running mkcdrom.sh"
-	@$(DIR_SCRIPT)/mkcdrom.sh 2> /dev/null > /dev/null
+	@$(DIR_SCRIPTS)/mkcdrom.sh 2> /dev/null > /dev/null
 	@echo "$(BLUE)[iso] $(SUCCESS)"
 
 docs: .force
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_DOCS)
 
 uncrustify: .force
+	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_LIBC) uncrustify
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_KERNEL) uncrustify
-
-all: kernel boot iso docs
 
 debug: iso
 	@$(QEMU) -gdb tcp::8864 -cdrom $(DIR_BUILD)/monk.iso
 
 debugwait: iso
-	@$(QEMU) -S -gdb tcp::8832 -cdrom $(DIR_BUILD)/monk.iso
+	@$(QEMU) -S -gdb tcp::8864 -cdrom $(DIR_BUILD)/monk.iso
 
 test: iso
 	@$(QEMU) -cdrom $(DIR_BUILD)/monk.iso

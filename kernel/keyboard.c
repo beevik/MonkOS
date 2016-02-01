@@ -10,10 +10,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <interrupt.h>
-#include <io.h>
-#include <strings.h>
-#include <keyboard.h>
+#include <kernel/interrupt.h>
+#include <kernel/io.h>
+#include <kernel/keyboard.h>
+#include <libc/string.h>
 
 // Keyboard I/O ports
 #define KB_PORT_DATA    0x60    ///< Keyboard I/O data port.

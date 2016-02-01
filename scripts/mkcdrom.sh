@@ -6,14 +6,14 @@ mkdir -p build/iso
 mkdir -p build/iso/boot
 
 # Copy the stage 1 boot loader
-cp build/boot_iso.sys build/iso/boot/boot.sys
+cp build/boot.sys build/iso/boot/boot.sys
 
 # Copy the stage 2 boot loader
-cp build/loader_iso.sys build/iso/loader.sys
+cp build/loader.sys build/iso/loader.sys
 
 # Copy the kernel and strip it
-cp build/monk64.sys build/iso/monk64.sys
-strip build/iso/monk64.sys
+cp build/monk.sys build/iso/monk.sys
+strip build/iso/monk.sys
 
 # Generate the ISO file (with a boot catalog)
 genisoimage -R -J \
