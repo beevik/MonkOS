@@ -337,7 +337,7 @@ console_printchar(console_t *cons, const char **strptr)
     // Handle color codes, e.g. "\033[#]".
     else if (ch == '\033') {
         if ((str[1] == '[') && str[2] && (str[3] == ']')) {
-            int code = colorcode(str[2], (cons->textcolor_orig >> 8) & 0xff);
+            int code = colorcode(str[2], (cons->textcolor_orig >> 8) & 0x0f);
             if (code != -1) {
                 cons->textcolor = (cons->textcolor & 0xf000) |
                                   (uint16_t)(code << 8);

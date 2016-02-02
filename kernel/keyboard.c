@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdatomic.h>
 #include <kernel/interrupt.h>
 #include <kernel/io.h>
 #include <kernel/keyboard.h>
@@ -19,7 +20,7 @@
 #define KB_PORT_DATA    0x60    ///< Keyboard I/O data port.
 
 // Other constants
-#define BUFSIZ          32      ///< Keyboard input buffer size.
+#define MAX_BUFSIZ      32      ///< Keyboard input buffer size.
 
 // Key code abbreviations, used to set up the default scan map table below.
 #define CTL             KEY_CTRL
@@ -103,14 +104,18 @@ static const keylayout_t ps2_layout =
 //----------------------------------------------------------------------------
 //  @struct     kbstate
 /// @brief      Holds the current state of the keyboard.
+/// @details    The buffer's current size (buf_size) is an atomic variable
+///             to prevent race conditions between the keyboard ISR and
+///             the keyboard get functions on buffer empty/full checks.
 //----------------------------------------------------------------------------
 typedef struct kbstate
 {
-    keylayout_t layout;         ///< The installed keyboard layout.
-    uint8_t     meta;           ///< Mask of meta keys currently pressed.
-    uint8_t     buf_head;       ///< Index of oldest key in keybuf.
-    uint8_t     buf_tail;       ///< Index of next empty slot in keybuf.
-    key_t       keybuf[BUFSIZ]; ///< Buffer holding unconsumed keys.
+    keylayout_t  layout;          ///< The installed keyboard layout.
+    uint8_t      meta;            ///< Mask of meta keys currently pressed.
+    uint8_t      buf_head;        ///< Index of oldest key in buf.
+    uint8_t      buf_tail;        ///< Index of next empty slot in buf.
+    atomic_uchar buf_size;        ///< Number of keys in the buf.
+    key_t        buf[MAX_BUFSIZ]; ///< Buffer holding unconsumed keys.
 } kbstate_t;
 
 /// Current keyboard state.
@@ -147,7 +152,10 @@ addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
     state.meta &= ~META_ESCAPED;
 
     // Is the buffer full?
-    if ((state.buf_tail + 1) % BUFSIZ == state.buf_head)
+    // There is no need for an atomic comparison here, because the ISR
+    // function calling addkey can never be interrupted by anything that
+    // touches the buffer.
+    if (state.buf_size == MAX_BUFSIZ)
         return;
 
     key_t key =
@@ -159,9 +167,12 @@ addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
     };
 
     // Add the character to the tail of the buffer.
-    state.keybuf[state.buf_tail++] = key;
-    if (state.buf_tail == BUFSIZ)
+    state.buf[state.buf_tail++] = key;
+    if (state.buf_tail == MAX_BUFSIZ)
         state.buf_tail = 0;
+
+    // state.buf_size++;
+    atomic_fetch_add_explicit(&state.buf_size, 1, memory_order_relaxed);
 }
 
 //----------------------------------------------------------------------------
@@ -287,7 +298,8 @@ kb_init()
     state.meta     = 0;
     state.buf_head = 0;
     state.buf_tail = 0;
-    memzero(&state.keybuf, sizeof(state.keybuf));
+    state.buf_size = 0;
+    memzero(&state.buf, sizeof(state.buf));
 
     // Assign the interrupt service routine.
     isr_set(0x21, isr_keyboard);
@@ -310,77 +322,61 @@ kb_setlayout(keylayout_t *layout)
 //----------------------------------------------------------------------------
 //  @function   kb_getchar
 //  @brief      Return the next available character from the keyboard's
-//              input buffer. Onl
-//  @details    If the buffer is empty, return 0.
+//              input buffer.
 //  @returns    The ascii value of the next character in the input buffer,
 //              or 0 if there are no characters available.
 //----------------------------------------------------------------------------
 char
 kb_getchar()
 {
-    char ch = 0;
-
-    // To prevent race conditions while accessing buffer indexes, disable
-    // interrupts. Preserve the interrupt flag so we can restore it before
-    // returning.
-    asm volatile ("pushfq");
-    asm volatile ("cli");
-
     for (;;) {
-
-        // Buffer empty?
-        if (state.buf_tail == state.buf_head)
-            break;
+        // Buffer empty? (state.buf_size == 0?) Check atomically because
+        // this function could be interrupted by the keyboard ISR.
+        uint8_t size = 0;
+        if (atomic_compare_exchange_strong(&state.buf_size, &size, 0))
+            return 0;
 
         // Pull the next character from the head of the buffer.
-        ch = state.keybuf[state.buf_head++].ch;
-        if (state.buf_head == BUFSIZ)
+        char ch = state.buf[state.buf_head++].ch;
+        if (state.buf_head == MAX_BUFSIZ)
             state.buf_head = 0;
+
+        // state.buf_size--
+        atomic_fetch_sub_explicit(&state.buf_size, 1, memory_order_relaxed);
 
         // Valid character?
         if (ch != 0)
-            break;
+            return ch;
     }
-
-    // Restore the interrupt flag.
-    asm volatile ("popfq");
-    return ch;
 }
 
 //----------------------------------------------------------------------------
 //  @function   kb_getkey
-//  @brief      Return the next key from the keyboard's input buffer.
-//  @details    If the buffer is empty, return 0.
+//  @brief      Return the available next key from the keyboard's input
+//              buffer.
 //  @param[out] key     The key record of the next key in the buffer.
 //  @returns    true if there is a key in the buffer, false otherwise.
 //----------------------------------------------------------------------------
 bool
 kb_getkey(key_t *key)
 {
-    *(uint32_t *)key = 0;
-    bool found = false;
-
-    // To prevent race conditions while accessing buffer indexes, disable
-    // interrupts. Preserve the interrupt flag so we can restore it before
-    // returning.
-    asm volatile ("pushfq");
-    asm volatile ("cli");
-
-    // Buffer empty?
-    if (state.buf_tail == state.buf_head)
-        goto done;
-
-    found = true;
+    // Buffer empty? (state.buf_size == 0?) Check atomically because this
+    // function could be interrupted by the keyboard ISR.
+    uint8_t size = 0;
+    if (atomic_compare_exchange_strong(&state.buf_size, &size, 0)) {
+        *(uint32_t *)key = 0;
+        return false;
+    }
 
     // Pull the next character from the head of the buffer.
-    *key = state.keybuf[state.buf_head++];
-    if (state.buf_head == BUFSIZ)
+    *key = state.buf[state.buf_head++];
+    if (state.buf_head == MAX_BUFSIZ)
         state.buf_head = 0;
 
-done:
-    // Restore the interrupt flag.
-    asm volatile ("popfq");
-    return found;
+    // state.buf_size--
+    atomic_fetch_sub_explicit(&state.buf_size, 1, memory_order_relaxed);
+
+    return true;
 }
 
 //----------------------------------------------------------------------------

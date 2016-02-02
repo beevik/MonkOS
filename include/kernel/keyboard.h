@@ -113,7 +113,6 @@ kb_setlayout(keylayout_t *layout);
 //  @function   kb_getchar
 /// @brief      Return the next available character from the keyboard's
 ///             input buffer.
-/// @details    If the buffer is empty, return 0.
 /// @returns    The ascii value of the next character in the input buffer,
 ///             or 0 if there are no characters available.
 //----------------------------------------------------------------------------
@@ -122,8 +121,8 @@ kb_getchar();
 
 //----------------------------------------------------------------------------
 //  @function   kb_getkey
-/// @brief      Return the next key from the keyboard's input buffer.
-/// @details    If the buffer is empty, return 0.
+/// @brief      Return the available next key from the keyboard's input
+///             buffer.
 /// @param[out] key     The key record of the next key in the buffer.
 /// @returns    true if there is a key in the buffer, false otherwise.
 //----------------------------------------------------------------------------
@@ -132,7 +131,7 @@ kb_getkey(key_t *key);
 
 //----------------------------------------------------------------------------
 //  @function   kb_meta
-/// @brief      Return the meta-key bit mask.
+/// @brief      Return the current meta-key bit mask.
 /// @returns    The meta-key bitmask.
 //----------------------------------------------------------------------------
 uint8_t
