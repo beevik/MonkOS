@@ -12,12 +12,9 @@ bits 64
 section .text
 
     global interrupts_init
-    global interrupts_enable
-    global interrupts_disable
     global isr_set
     global irq_enable
     global irq_disable
-    global halt
 
 
 ;-----------------------------------------------------------------------------
@@ -343,32 +340,6 @@ interrupts_init:
 
 
 ;-----------------------------------------------------------------------------
-; @function     interrupts_enable
-; @brief        Enable all defined (maskable) interrupt service routines.
-; @details      Do not call this from within an ISR, as the original
-;               interrupt flag will be restored as soon as the ISR returns.
-;-----------------------------------------------------------------------------
-interrupts_enable:
-
-    ; Set the CPU interrupt flag to allow interrupts.
-    sti
-    ret
-
-
-;-----------------------------------------------------------------------------
-; @function     interrupts_disable
-; @brief        Disable all defined (maskable) interrupt service routines.
-; @details      Do not call this from within an ISR, as the original
-;               interrupt flag will be restored as soon as the ISR returns.
-;-----------------------------------------------------------------------------
-interrupts_disable:
-
-    ; Clear the CPU interrupt flag to disallow interrupts.
-    cli
-    ret
-
-
-;-----------------------------------------------------------------------------
 ; @function     isr_set
 ; @brief        Set a kernel-defined interrupt service routine for the given
 ;               interrupt number.
@@ -500,13 +471,3 @@ irq_disable:
         out     0xa1,   al
 
         ret
-
-
-;-----------------------------------------------------------------------------
-; @function     halt
-; @brief        Halt the computer until an interrupt arrives.
-;-----------------------------------------------------------------------------
-halt:
-
-    hlt
-    ret

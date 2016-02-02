@@ -14,14 +14,18 @@ DIR_TARGET := $(DIR_BUILD)/kernel
 # Build targets
 #----------------------------------------------------------------------------
 
-C_FILES 	:= main.c console.c keyboard.c timer.c
-H_FILES		:= console.h interrupt.h io.h keyboard.h timer.h
-ASM_FILES	:= interrupt.asm io.asm start.asm
-LIB_FILES 	:= libc/libc.a kernel/libkernel.a
+C_FILES		:= main.c console.c keyboard.c timer.c
+H_FILES		:= console.h interrupt.h keyboard.h timer.h
+ASM_H_FILES := asm.h io.h interrupt.h
+ASM_FILES	:= interrupt.asm start.asm
+LIB_FILES	:= libc/libc.a kernel/libkernel.a
+
+H_FILES		:= $(foreach F,$(H_FILES),$(patsubst %,$(DIR_INCLUDE)/kernel/%,$(F)))
+ASM_H_FILES	:= $(foreach F,$(ASM_H_FILES),$(patsubst %,$(DIR_INCLUDE)/kernel/asm/%,$(F)))
+LIB_FILES	:= $(foreach F,$(LIB_FILES),$(patsubst %,$(DIR_BUILD)/%,$(F)))
 
 CODE_FILES	:= $(C_FILES) $(ASM_FILES)
-HDR_FILES	:= $(foreach F,$(H_FILES),$(patsubst %,$(DIR_INCLUDE)/kernel/%,$(F)))
-LIB_FILES 	:= $(foreach F,$(LIB_FILES),$(patsubst %,$(DIR_BUILD)/%,$(F)))
+HDR_FILES	:= $(H_FILES) $(ASM_H_FILES)
 
 OBJ_FILES	:= $(foreach F,$(CODE_FILES),$(F:.c=.o))
 OBJ_FILES	:= $(foreach F,$(OBJ_FILES),$(F:.asm=.o))
@@ -65,10 +69,6 @@ $(DIR_TARGET)/libkernel.a: $(OBJ_FILES)
 # Assembly files
 
 $(DIR_TARGET)/interrupt.o: interrupt.asm
-	@echo "$(TAG) Assembling $<"
-	@$(AS) $(ASFLAGS) $< -o $@
-
-$(DIR_TARGET)/io.o: io.asm
 	@echo "$(TAG) Assembling $<"
 	@$(AS) $(ASFLAGS) $< -o $@
 

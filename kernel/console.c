@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/io.h>
+#include <kernel/asm/io.h>
 #include <kernel/console.h>
 #include <libc/string.h>
 

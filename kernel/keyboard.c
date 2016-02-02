@@ -11,8 +11,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdatomic.h>
+#include <kernel/asm/io.h>
 #include <kernel/interrupt.h>
-#include <kernel/io.h>
 #include <kernel/keyboard.h>
 #include <libc/string.h>
 

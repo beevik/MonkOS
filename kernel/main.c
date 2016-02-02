@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <kernel/asm/interrupt.h>
 #include <kernel/console.h>
 #include <kernel/interrupt.h>
 #include <kernel/keyboard.h>

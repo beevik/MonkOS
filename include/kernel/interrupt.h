@@ -1,5 +1,5 @@
 //============================================================================
-/// @file       interrupt.h
+/// @file       kernel/interrupt.h
 /// @brief      Interrupt handling operations.
 //
 //  Copyright 2016 Brett Vickers.
@@ -38,24 +38,6 @@ interrupts_init();
 typedef void (*isr_handler)(uint8_t interrupt, uint64_t error);
 
 //----------------------------------------------------------------------------
-//  @function   interrupts_enable
-/// @brief      Enable all defined (maskable) interrupt service routines.
-/// @details    Do not call this from within an ISR, as the original
-///             interrupt flag will be restored as soon as the ISR returns.
-//----------------------------------------------------------------------------
-void
-interrupts_enable();
-
-//----------------------------------------------------------------------------
-//  @function   interrupts_disable
-/// @brief      Disable all defined (maskable) interrupt service routines.
-/// @details    Do not call this from within an ISR, as the original
-///             interrupt flag will be restored as soon as the ISR returns.
-//----------------------------------------------------------------------------
-void
-interrupts_disable();
-
-//----------------------------------------------------------------------------
 //  @function   isr_set
 /// @brief      Set an interrupt service routine for the given interrupt
 ///             number.
@@ -82,10 +64,3 @@ irq_enable(uint8_t irq);
 //----------------------------------------------------------------------------
 void
 irq_disable(uint8_t irq);
-
-//----------------------------------------------------------------------------
-//  @function   halt
-/// @brief        Halt the computer until an interrupt arrives.
-//----------------------------------------------------------------------------
-void
-halt();

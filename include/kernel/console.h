@@ -1,6 +1,6 @@
 //============================================================================
-/// @file   console.h
-/// @brief  Console screen text manipulation routines.
+/// @file       kernel/console.h
+/// @brief      Console screen text manipulation routines.
 //
 // Copyright 2016 Brett Vickers.
 // Use of this source code is governed by a BSD-style license that can
