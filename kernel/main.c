@@ -12,9 +12,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <kernel/console.h>
 #include <kernel/interrupt.h>
 #include <kernel/keyboard.h>
-#include <kernel/console.h>
+#include <kernel/timer.h>
 
 #if defined(__linux__)
 #   error "This code must be compiled with a cross-compiler."
@@ -52,8 +53,9 @@ kmain()
     // Initialize all interrupt data structures.
     interrupts_init();
 
-    // Initialize the keyboard.
+    // Initialize various interrupt-generating kernel modules.
     kb_init();
+    timer_init(20);         // 20Hz
 
     // Turn on interrupt service routines.
     interrupts_enable();

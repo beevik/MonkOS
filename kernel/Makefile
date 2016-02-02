@@ -14,8 +14,8 @@ DIR_TARGET := $(DIR_BUILD)/kernel
 # Build targets
 #----------------------------------------------------------------------------
 
-C_FILES 	:= main.c console.c keyboard.c
-H_FILES		:= console.h interrupt.h io.h keyboard.h
+C_FILES 	:= main.c console.c keyboard.c timer.c
+H_FILES		:= console.h interrupt.h io.h keyboard.h timer.h
 ASM_FILES	:= interrupt.asm io.asm start.asm
 LIB_FILES 	:= libc/libc.a kernel/libkernel.a
 
@@ -87,5 +87,9 @@ $(DIR_TARGET)/console.o: console.c $(HDR_FILES)
 	@$(CC) $(CCFLAGS) -c $< -o $@
 
 $(DIR_TARGET)/keyboard.o: keyboard.c $(HDR_FILES)
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(DIR_TARGET)/timer.o: timer.c $(HDR_FILES)
 	@echo "$(TAG) Compiling $<"
 	@$(CC) $(CCFLAGS) -c $< -o $@
