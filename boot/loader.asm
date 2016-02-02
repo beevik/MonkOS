@@ -119,7 +119,7 @@ load:
     .detectLongMode:
 
         ; Detect if the cpuid instruction is available.
-        call    CanCPUID
+        call    HasCPUID
         jnc     .error.noCPUID
 
         ; Is the processor info function supported?
@@ -140,6 +140,45 @@ load:
 
         ; Display a status message.
         mov     si,     String.Status.CPU64Detected
+        call    DisplayStatusString
+
+    ;-------------------------------------------------------------------------
+    ; Enable SSE on the CPU
+    ;-------------------------------------------------------------------------
+    .enableSSE:
+
+        ; Load CPU feature flags into ecx and edx.
+        mov     eax,    1
+        cpuid
+
+        ; Check for SSE1 support.
+        test    edx,    (1 << 25)
+        jz      .error.noSSE
+
+        ; Check for SSE2 support.
+        test    edx,    (1 << 26)
+        jz      .error.noSSE2
+
+        ; Check for FXSAVE/FXRSTOR support.
+        test    edx,    (1 << 24)
+        jz      .error.noFXinst
+
+        ; Enable hardware FPU with monitoring.
+        mov     eax,    cr0
+        and     eax,    ~(1 << 2)   ; turn off CR0.EM bit (x87 FPU is present)
+        or      eax,    (1 << 1)    ; turn on CR0.MP bit (monitor FPU)
+        mov     cr0,    eax
+
+        ; Make sure FXSAVE/FXRSTOR instructions save the contents of the FPU
+        ; MMX, XMM and MXCSR registers. Enable the use of SSE instructions.
+        ; And indicate that the kernel is capable of handling SIMD floating-
+        ; point exceptions.
+        mov     eax,    cr4
+        or      eax,    (1 << 9) | (1 << 10)    ; CR4.OFXSR, CR4.OSXMMEXCPT
+        mov     cr4,    eax
+
+        ; Display a status message.
+        mov     si,     String.Status.SSEEnabled
         call    DisplayStatusString
 
     ;-------------------------------------------------------------------------
@@ -359,6 +398,21 @@ bits 16
         mov     si,     String.Error.KernelLoadFailed
         jmp     .error
 
+    .error.noSSE:
+
+        mov     si,     String.Error.NoSSE
+        jmp     .error
+
+    .error.noSSE2:
+
+        mov     si,     String.Error.NoSSE2
+        jmp     .error
+
+    .error.noFXinst:
+
+        mov     si,     String.Error.NoFXinst
+        jmp     .error
+
     .error:
 
         call    DisplayErrorString
@@ -550,7 +604,7 @@ TestA20:
 
 
 ;=============================================================================
-; CanCPUID
+; HasCPUID
 ;
 ; Detect if the cpu supports the CPUID instruction.
 ;
@@ -563,7 +617,7 @@ TestA20:
 ; Killed registers:
 ;   None
 ;=============================================================================
-CanCPUID:
+HasCPUID:
 
     ; Preserve registers.
     push    eax
@@ -1191,6 +1245,7 @@ String.OS.Prefix              db "[Monk] ",                 0
 
 String.Status.A20Enabled      db "A20 line enabled",        0
 String.Status.CPU64Detected   db "64-bit CPU detected",     0
+String.Status.SSEEnabled      db "SSE enabled",             0
 String.Status.KernelFound     db "Kernel found",            0
 String.Status.KernelLoaded    db "Kernel loaded",           0
 
@@ -1198,6 +1253,9 @@ String.Error.Prefix           db "ERROR: ",                 0
 String.Error.A20              db "A20 line not enabled",    0
 String.Error.NoCPUID          db "CPUID not supported",     0
 String.Error.NoLongMode       db "CPU is not 64-bit",       0
+String.Error.NoSSE            db "No SSE support",          0
+String.Error.NoSSE2           db "No SSE2 support",         0
+String.Error.NoFXinst         db "No FXSAVE/FXRSTOR",       0
 String.Error.KernelNotFound   db "Kernel not found",        0
 String.Error.KernelLoadFailed db "Kernel load failed",      0
 
