@@ -1144,9 +1144,17 @@ SetupPageTables:
         mov     edi,        Mem.Kernel.Stack.Bottom
         call    .makeGuardPage
 
-        ; Create another guard page at the bottom of the kernel exception
+        ; Create another guard page at the bottom of the kernel interrupt
         ; stack.
-        mov     edi,        Mem.Kernel.ExcStack.Bottom
+        mov     edi,        Mem.Kernel.Stack.Interrupt.Bottom
+        call    .makeGuardPage
+
+        ; Create guard pages for the special exception stacks.
+        mov     edi,        Mem.Kernel.Stack.NMI.Bottom
+        call    .makeGuardPage
+        mov     edi,        Mem.Kernel.Stack.DF.Bottom
+        call    .makeGuardPage
+        mov     edi,        Mem.Kernel.Stack.MC.Bottom
         call    .makeGuardPage
 
     .initPageRegister:
@@ -1485,16 +1493,23 @@ GDT64.Table.Pointer:
 align 8
 TSS64.Entry:
 
-    ; Create a TSS that causes the CPU to use a special "exception stack"
-    ; whenever an exception occurs.  As long as the interrupt sets IST=1
-    ; in its IDT entry, it will use the interrupt stack.
+    ; Create a TSS that causes the CPU to use a special interrupt stack (RSP0)
+    ; whenever an interrupt causes a privilege change from user mode to kernel
+    ; mode.
+    ;
+    ; If a catastrophic exception occurs -- such as an NMI, double fault, or
+    ; machine check -- use an exception-specific stack (IST1 .. IST3)
+    ; that is guaranteed to be valid.
+    ;
+    ; See section 6.14.5 in volume 3 of the Intel 64 and IA-32 Architectures
+    ; Software Developer’s Manual for more information.
     istruc TSS64
-        at TSS64.RSP0,          dq      Mem.Kernel.ExcStack.Top
+        at TSS64.RSP0,          dq      Mem.Kernel.Stack.Interrupt.Top
         at TSS64.RSP1,          dq      0
         at TSS64.RSP2,          dq      0
-        at TSS64.IST1,          dq      Mem.Kernel.ExcStack.Top
-        at TSS64.IST2,          dq      0
-        at TSS64.IST3,          dq      0
+        at TSS64.IST1,          dq      Mem.Kernel.Stack.NMI.Top
+        at TSS64.IST2,          dq      Mem.Kernel.Stack.DF.Top
+        at TSS64.IST3,          dq      Mem.Kernel.Stack.MC.Top
         at TSS64.IST4,          dq      0
         at TSS64.IST5,          dq      0
         at TSS64.IST6,          dq      0
@@ -1502,7 +1517,7 @@ TSS64.Entry:
         at TSS64.IOPB,          dw      TSS64_size          ; no IOPB
     iend
 
-TSS64.Entry.Size    equ     ($ - GDT64.Table)
+TSS64.Entry.Size    equ     ($ - TSS64.Entry)
 
 
 ;=============================================================================

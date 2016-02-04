@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <kernel/cpu.h>
+#include <kernel/exception.h>
 #include <kernel/interrupt.h>
 #include <kernel/syscall.h>
 

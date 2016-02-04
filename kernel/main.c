@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <kernel/console.h>
+#include <kernel/exception.h>
 #include <kernel/interrupt.h>
 #include <kernel/keyboard.h>
 #include <kernel/syscall.h>
@@ -54,8 +55,9 @@ kmain()
     // Set up CPU for system calls.
     syscall_init();
 
-    // Initialize all interrupt data structures.
+    // Initialize all interrupt and exception handling.
     interrupts_init();
+    exceptions_init();
 
     // Initialize various interrupt-generating kernel modules.
     kb_init();
@@ -87,6 +89,8 @@ kmain()
                 buf[26] = hexchar(key.meta & 0xf);
                 buf[29] = key.ch;
                 console_print(console_id, buf);
+                if (key.ch == 'x')
+                    raise(EXCEPTION_BREAKPOINT);
             }
             else {
                 char buf[] = "Keycode: \033[ ]  \033[-] meta=  \n";
