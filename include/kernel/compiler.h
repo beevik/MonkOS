@@ -1,6 +1,6 @@
 //============================================================================
-/// @file   kernel/asm/asm.h
-/// @brief  Inline assembly helpers.
+/// @file   compiler.h
+/// @brief  Compiler-directed keywords
 //
 // Copyright 2016 Brett Vickers.
 // Use of this source code is governed by a BSD-style license that can

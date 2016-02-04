@@ -63,14 +63,16 @@ org 0x8000
 ;
 ; Memory regions used or modified by this code:
 ;
-;   00000700 - 000007ff          256 bytes     Global Descriptor Table (GDT)
+;   00000700 - 0000077f          128 bytes     Global Descriptor Table (GDT)
+;   00000780 - 000007ff          128 bytes     Task State Segment (TSS)
 ;   00000800 - 00000fff        2,048 bytes     Cdrom sector read buffer
 ;   00001000 - 00007bff       27,648 bytes     Real mode stack
 ;   00010000 - 00017fff       32,768 bytes     Page tables
 ;   0006f000 - 0006ffff        4,096 bytes     32-bit protected mode stack
 ;   00070000 - 0007ffff       65,536 bytes     Kernel load buffer
-;   00080000 - 0008ffff       65,536 bytes     Kernel stack
-;   00100000 - (krnize)                        Kernel image
+;   00100000 - 001fffff    1,048,576 bytes     Kernel stack
+;   00200000 - 002fffff    1,048,576 bytes     Kernel interrupt stack
+;   00300000 - (krnize)                        Kernel image
 ;
 ;=============================================================================
 load:
@@ -116,7 +118,7 @@ load:
     ;-------------------------------------------------------------------------
     ; Make sure we have a 64-bit CPU
     ;-------------------------------------------------------------------------
-    .detectLongMode:
+    .detect64BitMode:
 
         ; Detect if the cpuid instruction is available.
         call    HasCPUID
@@ -126,13 +128,17 @@ load:
         mov     eax,    0x80000000  ; Get Highest Extended Function Supported
         cpuid
         cmp     eax,    0x80000001
-        jb      .error.noLongMode
+        jb      .error.no64BitMode
 
-        ; Use processor info function to determine if long mode is supported.
+        ; Use processor info function to see if 64-bit mode is supported.
         mov     eax,    0x80000001  ; Extended Processor Info and Feature Bits
         cpuid
-        test    edx,    (1 << 29)   ; Long-mode bit
-        jz      .error.noLongMode
+        test    edx,    (1 << 29)   ; 64-bit mode bit
+        jz      .error.no64BitMode
+
+        ; Check if the SYSCALL/SYSRET instructions are supported.
+        ; test    edx,    (1 << 11)   ; SYSCALL/SYSRET support
+        ; jz      .error.noSysCall
 
         ; Clear 32-bit register values.
         xor     eax,    eax
@@ -290,6 +296,21 @@ load:
         rep     movsw
 
     ;-------------------------------------------------------------------------
+    ; Set up (but don't yet install) the 64-bit task state segment
+    ;-------------------------------------------------------------------------
+    .setupTSS:
+
+        ; Set up a copy of the TSS to its memory layout location (0x0780).
+        mov     si,     TSS64.Entry
+        mov     di,     Mem.TSS64
+        mov     cx,     TSS64.Entry.Size
+        shr     cx,     1
+
+        ; Do the copy.
+        cld
+        rep     movsw
+
+    ;-------------------------------------------------------------------------
     ; Set up page tables
     ;-------------------------------------------------------------------------
     .setupPageTables:
@@ -304,14 +325,14 @@ load:
         mov     cr4,    eax
 
     ;-------------------------------------------------------------------------
-    ; Enable long mode, protected mode, and paging
+    ; Enable 64-bit protected mode, and paging
     ;-------------------------------------------------------------------------
-    .enableLongMode:
+    .enable64BitMode:
 
-        ; Enable long mode.
-        mov     ecx,    0xc0000080
+        ; Enable 64-bit mode and syscall/sysret.
+        mov     ecx,    0xc0000080 ; Extended Feature Enable Register (EFER)
         rdmsr
-        or      eax,    (1 << 8)
+        or      eax,    (1 << 8) | (1 << 0)
         wrmsr
 
         ; Enable paging and protected mode.
@@ -324,7 +345,7 @@ load:
 
         ; Do a long jump using the new GDT, which forces the switch to 64-bit
         ; mode.
-        jmp     GDT64.Selector.Code : .launch64
+        jmp     GDT64.Selector.Kernel.Code : .launch64
 
 bits 64
 
@@ -333,19 +354,23 @@ bits 64
     ;-------------------------------------------------------------------------
     .launch64:
 
+        ; Load the mandatory 64-bit task state segment.
+        mov     ax,     GDT64.Selector.TSS
+        ltr     ax
+
         ; Set up the data segment registers. Note that in 64-bit mode the CPU
         ; treats cs, ds, es, and ss as zero regardless of what we store there.
         ; (gs and fs are exceptions; they can be used as real segment
         ; registers.)
-        xor     ax,     ax
+        mov     ax,     GDT64.Selector.Kernel.Data
         mov     ds,     ax
         mov     es,     ax
         mov     fs,     ax
         mov     gs,     ax
         mov     ss,     ax
 
-        ; Set up a temporary stack, which the kernel should replace.
-        mov     rsp,    Mem.Kernel.Stack
+        ; Set the kernel stack pointer.
+        mov     rsp,    Mem.Kernel.Stack.Top
 
         ; Initialize all general purpose registers.
         xor     rax,    rax
@@ -383,9 +408,14 @@ bits 16
         mov     si,     String.Error.NoCPUID
         jmp     .error
 
-    .error.noLongMode:
+    .error.no64BitMode:
 
-        mov     si,     String.Error.NoLongMode
+        mov     si,     String.Error.No64BitMode
+        jmp     .error
+
+    .error.noSysCall:
+
+        mov     si,     String.Error.NoSysCall
         jmp     .error
 
     .error.kernelNotFound:
@@ -1043,7 +1073,7 @@ LoadKernel.StackPointer         dw      0
 ;=============================================================================
 ; SetupPageTables
 ;
-; Set up a page table for 64-bit long mode.
+; Set up a page table for 64-bit mode.
 ;
 ; This procedure creates an identity-mapped page table for the first 10MiB of
 ; physical memory.
@@ -1107,6 +1137,18 @@ SetupPageTables:
         add     edi,                    8       ; next page table entry
         loop    .makePage
 
+    .makeStackGuardPages:
+
+        ; Create a guard page at the bottom of the kernel stack. This way, if
+        ; the kernel overflows the stack, we'll get a page fault.
+        mov     edi,        Mem.Kernel.Stack.Bottom
+        call    .makeGuardPage
+
+        ; Create another guard page at the bottom of the kernel exception
+        ; stack.
+        mov     edi,        Mem.Kernel.ExcStack.Bottom
+        call    .makeGuardPage
+
     .initPageRegister:
 
         ; CR3 is the page directory base register.
@@ -1123,6 +1165,18 @@ SetupPageTables:
         ; Restore registers.
         pop     es
         popa
+
+        ret
+
+    .makeGuardPage:
+
+        ; Locate the page table entry for the address in edi, and clear
+        ; its present bit.
+        shr     edi,        9               ; Divide by 4096, then mul by 8.
+        add     edi,        Mem.PageTable.PT0 & 0xffff
+        mov     eax,        [es:edi]
+        and     eax,        ~(.Present)     ; disable the present bit.
+        mov     [es:di],    eax
 
         ret
 
@@ -1252,7 +1306,8 @@ String.Status.KernelLoaded    db "Kernel loaded",           0
 String.Error.Prefix           db "ERROR: ",                 0
 String.Error.A20              db "A20 line not enabled",    0
 String.Error.NoCPUID          db "CPUID not supported",     0
-String.Error.NoLongMode       db "CPU is not 64-bit",       0
+String.Error.No64BitMode      db "CPU is not 64-bit",       0
+String.Error.NoSysCall        db "SYSCALL not supported",   0
 String.Error.NoSSE            db "No SSE support",          0
 String.Error.NoSSE2           db "No SSE2 support",         0
 String.Error.NoFXinst         db "No FXSAVE/FXRSTOR",       0
@@ -1347,49 +1402,107 @@ GDT32.Table.Pointer:
 
 
 ;-----------------------------------------------------------------------------
-; Global Descriptor Table used in 64-bit long mode
+; Global Descriptor Table used in 64-bit mode
 ;-----------------------------------------------------------------------------
 align 8
 GDT64.Table:
 
     ; Null descriptor
     istruc GDT.Descriptor
-        at GDT.Descriptor.LimitLow,            dw      0x0000
-        at GDT.Descriptor.BaseLow,             dw      0x0000
-        at GDT.Descriptor.BaseMiddle,          db      0x00
-        at GDT.Descriptor.Access,              db      0x00
-        at GDT.Descriptor.LimitHighFlags,      db      0x00
-        at GDT.Descriptor.BaseHigh,            db      0x00
+        at GDT.Descriptor.LimitLow,             dw      0x0000
+        at GDT.Descriptor.BaseLow,              dw      0x0000
+        at GDT.Descriptor.BaseMiddle,           db      0x00
+        at GDT.Descriptor.Access,               db      0x00
+        at GDT.Descriptor.LimitHighFlags,       db      0x00
+        at GDT.Descriptor.BaseHigh,             db      0x00
     iend
 
-    ; 64-bit long mode code segment descriptor (selector = 0x08)
+    ; kernel: code segment descriptor (selector = 0x08)
     istruc GDT.Descriptor
-        at GDT.Descriptor.LimitLow,            dw      0x0000
-        at GDT.Descriptor.BaseLow,             dw      0x0000
-        at GDT.Descriptor.BaseMiddle,          db      0x00
-        at GDT.Descriptor.Access,              db      10011010b
-        at GDT.Descriptor.LimitHighFlags,      db      00100000b
-        at GDT.Descriptor.BaseHigh,            db      0x00
+        at GDT.Descriptor.LimitLow,             dw      0x0000
+        at GDT.Descriptor.BaseLow,              dw      0x0000
+        at GDT.Descriptor.BaseMiddle,           db      0x00
+        at GDT.Descriptor.Access,               db      10011010b
+        at GDT.Descriptor.LimitHighFlags,       db      00100000b
+        at GDT.Descriptor.BaseHigh,             db      0x00
     iend
 
-    ; 64-bit long mode data segment descriptor (selector = 0x10)
+    ; kernel: data segment descriptor (selector = 0x10)
     istruc GDT.Descriptor
-        at GDT.Descriptor.LimitLow,            dw      0x0000
-        at GDT.Descriptor.BaseLow,             dw      0x0000
-        at GDT.Descriptor.BaseMiddle,          db      0x00
-        at GDT.Descriptor.Access,              db      10010010b
-        at GDT.Descriptor.LimitHighFlags,      db      00000000b
-        at GDT.Descriptor.BaseHigh,            db      0x00
+        at GDT.Descriptor.LimitLow,             dw      0x0000
+        at GDT.Descriptor.BaseLow,              dw      0x0000
+        at GDT.Descriptor.BaseMiddle,           db      0x00
+        at GDT.Descriptor.Access,               db      10010010b
+        at GDT.Descriptor.LimitHighFlags,       db      00000000b
+        at GDT.Descriptor.BaseHigh,             db      0x00
+    iend
+
+    ; user: data segment descriptor (selector = 0x18)
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,             dw      0x0000
+        at GDT.Descriptor.BaseLow,              dw      0x0000
+        at GDT.Descriptor.BaseMiddle,           db      0x00
+        at GDT.Descriptor.Access,               db      11110010b
+        at GDT.Descriptor.LimitHighFlags,       db      00000000b
+        at GDT.Descriptor.BaseHigh,             db      0x00
+    iend
+
+    ; user: code segment descriptor (selector = 0x20)
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,             dw      0x0000
+        at GDT.Descriptor.BaseLow,              dw      0x0000
+        at GDT.Descriptor.BaseMiddle,           db      0x00
+        at GDT.Descriptor.Access,               db      11111010b
+        at GDT.Descriptor.LimitHighFlags,       db      00100000b
+        at GDT.Descriptor.BaseHigh,             db      0x00
+    iend
+
+    ; 64-bit TSS descriptor (selector = 0x28)
+    istruc TSS64.Descriptor
+        at TSS64.Descriptor.LimitLow,           dw    TSS64_size - 1
+        at TSS64.Descriptor.BaseLow,            dw    Mem.TSS64 & 0xffff
+        at TSS64.Descriptor.BaseMiddle,         db    (Mem.TSS64 >> 16) & 0xff
+        at TSS64.Descriptor.Access,             db    10001001b
+        at TSS64.Descriptor.LimitHighFlags,     db    00000000b
+        at TSS64.Descriptor.BaseHigh,           db    (Mem.TSS64 >> 24) & 0xff
+        at TSS64.Descriptor.BaseHighest,        dd    (Mem.TSS64 >> 32)
+        at TSS64.Descriptor.Reserved,           dd    0x00000000
     iend
 
 GDT64.Table.Size    equ     ($ - GDT64.Table)
 
 ; GDT64 table pointer
 ; This pointer references Mem.GDT, not GDT64.Table, because that's where the
-; long mode GDT will reside after we copy it.
+; 64-bit mode GDT will reside after we copy it.
 GDT64.Table.Pointer:
     dw  GDT64.Table.Size - 1    ; Limit = offset of last byte in table
     dq  Mem.GDT                 ; Address of table copy
+
+
+;-----------------------------------------------------------------------------
+; Task State Segment for 64-bit mode
+;-----------------------------------------------------------------------------
+align 8
+TSS64.Entry:
+
+    ; Create a TSS that causes the CPU to use a special "exception stack"
+    ; whenever an exception occurs.  As long as the interrupt sets IST=1
+    ; in its IDT entry, it will use the interrupt stack.
+    istruc TSS64
+        at TSS64.RSP0,          dq      Mem.Kernel.ExcStack.Top
+        at TSS64.RSP1,          dq      0
+        at TSS64.RSP2,          dq      0
+        at TSS64.IST1,          dq      Mem.Kernel.ExcStack.Top
+        at TSS64.IST2,          dq      0
+        at TSS64.IST3,          dq      0
+        at TSS64.IST4,          dq      0
+        at TSS64.IST5,          dq      0
+        at TSS64.IST6,          dq      0
+        at TSS64.IST7,          dq      0
+        at TSS64.IOPB,          dw      TSS64_size          ; no IOPB
+    iend
+
+TSS64.Entry.Size    equ     ($ - GDT64.Table)
 
 
 ;=============================================================================

@@ -1,6 +1,6 @@
 //============================================================================
-/// @file   kernel/asm/io.h
-/// @brief  Inline assembly for port I/O routines.
+/// @file   io.h
+/// @brief  Port I/O routines.
 //
 // Copyright 2016 Brett Vickers.
 // Use of this source code is governed by a BSD-style license that can
@@ -10,7 +10,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <kernel/asm/asm.h>
+#include <kernel/compiler.h>
 
 //----------------------------------------------------------------------------
 //  @function   io_inb
@@ -21,11 +21,9 @@
 force_inline uint8_t
 io_inb(uint16_t port)
 {
-    uint8_t ret;
-    asm volatile ("in %0, %1"
-                  : "=a" (ret)
-                  : "Nd" (port));
-    return ret;
+    uint8_t value;
+    asm volatile ("in %[v], %[p]" : [v] "=a" (value) : [p] "Nd" (port));
+    return value;
 }
 
 //----------------------------------------------------------------------------
@@ -37,7 +35,5 @@ io_inb(uint16_t port)
 force_inline void
 io_outb(uint16_t port, uint8_t value)
 {
-    asm volatile ("out %0, %1"
-                  :
-                  : "Nd" (port), "a" (value));
+    asm volatile ("out %[p], %[v]" : : [p] "Nd" (port), [v] "a" (value));
 }

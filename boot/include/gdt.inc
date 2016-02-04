@@ -1,7 +1,8 @@
 ;=============================================================================
 ; @file gdt.inc
 ;
-; Global Descrtiptor Table structure definitions for 32-bit and 64-bit modes.
+; Global Descriptor Table and Task State Segment structure definitions
+; for 32-bit and 64-bit modes.
 ;
 ; Copyright 2016 Brett Vickers.
 ; Use of this source code is governed by a BSD-style license that can
@@ -23,8 +24,11 @@ GDT32.Selector.Data32       equ     0x10    ; 32-bit protected mode (data)
 GDT32.Selector.Code16       equ     0x18    ; 16-bit protected mode (code)
 GDT32.Selector.Data16       equ     0x20    ; 16-bit protected mode (data)
 
-GDT64.Selector.Code         equ     0x08    ; 64-bit long mode (code)
-GDT64.Selector.Data         equ     0x10    ; 64-bit long mode (data)
+GDT64.Selector.Kernel.Code  equ     0x08    ; 64-bit mode (kernel code)
+GDT64.Selector.Kernel.Data  equ     0x10    ; 64-bit mode (kernel data)
+GDT64.Selector.User.Data    equ     0x18    ; 64-bit mode (user data)
+GDT64.Selector.User.Code    equ     0x20    ; 64-bit mode (user code)
+GDT64.Selector.TSS          equ     0x28    ; 64-bit task state segment
 
 
 ;=============================================================================
@@ -68,6 +72,54 @@ struc GDT.Descriptor
     .Access:                resb    1
     .LimitHighFlags:        resb    1   ; LimitHigh (4 bits) + Flags (4 bits)
     .BaseHigh:              resb    1
+
+endstruc
+
+
+;=============================================================================
+; 64-bit TSS Descriptor
+;
+; Similar layout to GDT.Descriptor, but with two additional dwords, one of
+; which is used to extend the base address.
+;=============================================================================
+struc TSS64.Descriptor
+
+    .LimitLow:              resw    1
+    .BaseLow:               resw    1
+    .BaseMiddle:            resb    1
+    .Access:                resb    1
+    .LimitHighFlags:        resb    1   ; LimitHigh (4 bits) + Flags (4 bits)
+    .BaseHigh:              resb    1
+    .BaseHighest:           resd    1
+    .Reserved:              resd    1
+
+endstruc
+
+
+;=============================================================================
+; 64-bit TSS
+;
+; The 64-bit Task State Segment data structure.
+;
+; Contains information used during privilege mode changes.
+;=============================================================================
+struc TSS64
+
+                            resd    1   ; Reserved
+    .RSP0:                  resq    1   ; Stack pointer (priv 0)
+    .RSP1:                  resq    1   ; ...
+    .RSP2:                  resq    1
+                            resq    1   ; Reserved
+    .IST1:                  resq    1   ; Interrupt Stack Table pointer 1
+    .IST2:                  resq    1   ; ...
+    .IST3:                  resq    1
+    .IST4:                  resq    1
+    .IST5:                  resq    1
+    .IST6:                  resq    1
+    .IST7:                  resq    1
+                            resq    1   ; Reserved
+                            resw    1   ; Reserved
+    .IOPB:                  resw    1   ; I/O permission bitmap offset
 
 endstruc
 

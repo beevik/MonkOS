@@ -23,8 +23,8 @@ TARGET      :=  x86_64-elf
 
 CC          :=  $(TARGET)-gcc
 
-CCFLAGS     :=  -std=gnu11 -m64 -mno-red-zone -mno-mmx -mfpmath=sse \
-                -masm=intel -ffreestanding -fno-asynchronous-unwind-tables \
+CCFLAGS     :=  -Og -std=gnu11 -m64 -mno-red-zone -mno-mmx -mfpmath=sse \
+				-masm=intel -ffreestanding -fno-asynchronous-unwind-tables \
 				-I$(DIR_INCLUDE) -g -Wall -Wextra -Qn
 
 AS          :=  nasm

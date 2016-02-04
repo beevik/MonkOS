@@ -10,13 +10,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/asm/io.h>
-#include <kernel/console.h>
 #include <libc/string.h>
+#include <kernel/console.h>
+#include <kernel/io.h>
 
 // CRTC ports
-#define CRTC_PORT_CMD             0x03d4 ///< Command port for CRT controller.
-#define CRTC_PORT_DATA            0x03d5 ///< Data port for CRT controller.
+#define CRTC_PORT_CMD     0x03d4         ///< Command port for CRT controller.
+#define CRTC_PORT_DATA    0x03d5         ///< Data port for CRT controller.
 
 // CRTC commands
 #define CRTC_CMD_STARTADDR_HI     0x0c  ///< Hi-byte of buffer start address.
@@ -25,14 +25,14 @@
 #define CRTC_CMD_CURSORADDR_LO    0x0f  ///< Lo-byte of cursor start address.
 
 // Visible screen geometry
-#define SCREEN_ROWS               25
-#define SCREEN_COLS               80
-#define SCREEN_SIZE               (SCREEN_ROWS * SCREEN_COLS)
-#define SCREEN_BUFFER             0x000b8000
+#define SCREEN_ROWS      25
+#define SCREEN_COLS      80
+#define SCREEN_SIZE      (SCREEN_ROWS * SCREEN_COLS)
+#define SCREEN_BUFFER    0x000b8000
 
 //----------------------------------------------------------------------------
 //  @struct     console_t
-/// @brief      The full state of a virtual console.
+//  @brief      The full state of a virtual console.
 //----------------------------------------------------------------------------
 typedef struct console
 {
@@ -49,8 +49,8 @@ static console_t *active_console;          ///< The currently visible console.
 
 //----------------------------------------------------------------------------
 //  @function   color
-/// @brief      Return a 16-bit textcolor field that can be quickly or'd with
-///             a character before being placed into the screen buffer.
+//  @brief      Return a 16-bit textcolor field that can be quickly or'd with
+//              a character before being placed into the screen buffer.
 //----------------------------------------------------------------------------
 static inline uint16_t
 color(textcolor_t fg, textcolor_t bg)
@@ -60,8 +60,8 @@ color(textcolor_t fg, textcolor_t bg)
 
 //----------------------------------------------------------------------------
 //  @function   update_buffer_offset
-/// @brief      Adjust the video hardware's buffer offset based on the
-///             active console's state.
+//  @brief      Adjust the video hardware's buffer offset based on the
+//              active console's state.
 //----------------------------------------------------------------------------
 static void
 update_buffer_offset()
@@ -82,8 +82,8 @@ update_buffer_offset()
 
 //----------------------------------------------------------------------------
 //  @function   update_cursor
-/// @brief      Adjust the video hardware's cursor position based on the
-///             active console's state.
+//  @brief      Adjust the video hardware's cursor position based on the
+//              active console's state.
 //----------------------------------------------------------------------------
 static void
 update_cursor()

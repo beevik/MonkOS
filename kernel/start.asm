@@ -13,7 +13,7 @@ bits 64
 
 ; Use a special section .start, which comes first in the linker.ld .text
 ; section. This way, the _start label will be given the lowest possible code
-; address (0x00101000 in our case).
+; address (0x00301000 in our case).
 section .start
     global _start
 

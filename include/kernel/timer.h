@@ -1,5 +1,5 @@
 //============================================================================
-/// @file       kernel/timer.h
+/// @file       timer.h
 /// @brief      Programmable interval timer (8253/8254) controller.
 //
 //  Copyright 2016 Brett Vickers.

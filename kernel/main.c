@@ -12,10 +12,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/asm/interrupt.h>
 #include <kernel/console.h>
 #include <kernel/interrupt.h>
 #include <kernel/keyboard.h>
+#include <kernel/syscall.h>
 #include <kernel/timer.h>
 
 #if defined(__linux__)
@@ -50,6 +50,9 @@ kmain()
     console_init();
     console_set_textcolor(0, TEXTCOLOR_WHITE, TEXTCOLOR_BLACK);
     console_clear(0);
+
+    // Set up CPU for system calls.
+    syscall_init();
 
     // Initialize all interrupt data structures.
     interrupts_init();

@@ -110,9 +110,9 @@ align 8
 ISR.Thunk.Template:
     push    0       ; push dummy error code (instruction skipped for 8,10-14).
     push    0       ; push the interrupt number. 0 is modified during init.
-    push    rax     ; preserve rax here instead of in dispatcher.
-    mov     rax,    ISR.Dispatcher
-    jmp     rax     ; do absolute jump to ISR.Dispatcher.
+    push    r15     ; preserve r15 here instead of in dispatcher.
+    mov     r15,    ISR.Dispatcher
+    jmp     r15     ; do absolute jump to ISR.Dispatcher.
 
 ISR.Thunk.Size   equ     ($ - ISR.Thunk.Template)
 
@@ -131,29 +131,28 @@ ISR.Dispatcher:
 
     ; Preserve registers.  rax was preserved just before the jmp from the
     ; thunk.
-    push    rbx
-    push    rcx
-    push    rdx
-    push    r8
-    push    r9
-    push    r10
-    push    r11
-    push    r12
-    push    r13
     push    r14
-    push    r15
-    push    rsi
-    push    rdi
+    push    r13
+    push    r12
+    push    r11
+    push    r10
+    push    r9
+    push    r8
     push    rbp
+    push    rdi
+    push    rsi
+    push    rdx
+    push    rcx
+    push    rbx
+    push    rax
 
-    ; Grab the interrupt number and error code.
-    xor     rax,    rax
-    mov     al,     [esp + 15 * 8]      ; al = interrupt number
-    mov     rdi,    rax                 ; rdi = interrupt number
-    mov     rsi,    [esp + 16 * 8]      ; rsi = error code
+    ; The interrupt context is on the stack, so pass it a pointer as the first
+    ; parameter.
+    mov     rdi,    rsp
 
     ; Look up the kernel-defined ISR in the table.
-    mov     rax,    [Mem.ISR.Table + rdi * 8]
+    mov     rax,    [rsp + 15 * 8]      ; interrupt number
+    mov     rax,    [Mem.ISR.Table + rax * 8]
 
     ; If there is no ISR, then we're done.
     cmp     rax,    0
@@ -171,21 +170,21 @@ ISR.Dispatcher:
     .done:
 
         ; Restore registers
-        pop     rbp
-        pop     rdi
-        pop     rsi
-        pop     r15
-        pop     r14
-        pop     r13
-        pop     r12
-        pop     r11
-        pop     r10
-        pop     r9
-        pop     r8
-        pop     rdx
-        pop     rcx
-        pop     rbx
         pop     rax
+        pop     rbx
+        pop     rcx
+        pop     rdx
+        pop     rsi
+        pop     rdi
+        pop     rbp
+        pop     r8
+        pop     r9
+        pop     r10
+        pop     r11
+        pop     r12
+        pop     r13
+        pop     r14
+        pop     r15
         add     rsp,    16      ; Chop error code and interrupt #
 
         iretq
@@ -308,13 +307,13 @@ interrupts_init:
 
     .useInterrupt:
 
-        ; Write the flags (IST=0, Type=interrupt, DPL=0, P=1)
-        mov     word [rdi + IDT.Descriptor.Flags], 1000111000000000b
+        ; Write the flags (IST=0, Type=interrupt, DPL=0, P=1, IST=1)
+        mov     word [rdi + IDT.Descriptor.Flags], 1000111000000001b
         jmp     .nextDescriptor
 
     .useTrap:
 
-        ; Write the flags (IST=0, Type=trap, DPL=0, P=1)
+        ; Write the flags (IST=0, Type=trap, DPL=0, P=1, IST=0)
         mov     word [rdi + IDT.Descriptor.Flags], 1000111100000000b
 
     .nextDescriptor:

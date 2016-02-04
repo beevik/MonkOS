@@ -11,52 +11,52 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdatomic.h>
-#include <kernel/asm/io.h>
-#include <kernel/interrupt.h>
-#include <kernel/keyboard.h>
 #include <libc/string.h>
+#include <kernel/interrupt.h>
+#include <kernel/io.h>
+#include <kernel/keyboard.h>
 
 // Keyboard I/O ports
 #define KB_PORT_DATA    0x60    ///< Keyboard I/O data port.
 
 // Other constants
-#define MAX_BUFSIZ      32      ///< Keyboard input buffer size.
+#define MAX_BUFSIZ    32        ///< Keyboard input buffer size.
 
 // Key code abbreviations, used to set up the default scan map table below.
-#define CTL             KEY_CTRL
-#define SH              KEY_SHIFT
-#define ALT             KEY_ALT
-#define PS              KEY_PRTSCR
-#define CL              KEY_CAPSLOCK
-#define NL              KEY_NUMLOCK
-#define SL              KEY_SCRLOCK
-#define KI              KEY_INSERT
-#define KE              KEY_END
-#define KD              KEY_DOWN
-#define KPD             KEY_PGDN
-#define KL              KEY_LEFT
-#define KC              KEY_CENTER
-#define KR              KEY_RIGHT
-#define KH              KEY_HOME
-#define KU              KEY_UP
-#define KPU             KEY_PGUP
-#define KDL             KEY_DEL
-#define KM              KEY_MINUS
-#define KP              KEY_PLUS
-#define F1              KEY_F1
-#define F2              KEY_F2
-#define F3              KEY_F3
-#define F4              KEY_F4
-#define F5              KEY_F5
-#define F6              KEY_F6
-#define F7              KEY_F7
-#define F8              KEY_F8
-#define F9              KEY_F9
-#define F10             KEY_F10
-#define F11             KEY_F11
-#define F12             KEY_F12
-#define SE              KEY_SCANESC
-#define INV             KEY_INVALID
+#define CTL    KEY_CTRL
+#define SH     KEY_SHIFT
+#define ALT    KEY_ALT
+#define PS     KEY_PRTSCR
+#define CL     KEY_CAPSLOCK
+#define NL     KEY_NUMLOCK
+#define SL     KEY_SCRLOCK
+#define KI     KEY_INSERT
+#define KE     KEY_END
+#define KD     KEY_DOWN
+#define KPD    KEY_PGDN
+#define KL     KEY_LEFT
+#define KC     KEY_CENTER
+#define KR     KEY_RIGHT
+#define KH     KEY_HOME
+#define KU     KEY_UP
+#define KPU    KEY_PGUP
+#define KDL    KEY_DEL
+#define KM     KEY_MINUS
+#define KP     KEY_PLUS
+#define F1     KEY_F1
+#define F2     KEY_F2
+#define F3     KEY_F3
+#define F4     KEY_F4
+#define F5     KEY_F5
+#define F6     KEY_F6
+#define F7     KEY_F7
+#define F8     KEY_F8
+#define F9     KEY_F9
+#define F10    KEY_F10
+#define F11    KEY_F11
+#define F12    KEY_F12
+#define SE     KEY_SCANESC
+#define INV    KEY_INVALID
 
 /// US English PS/2 keyboard scan map (default setting)
 static const keylayout_t ps2_layout =
@@ -178,14 +178,12 @@ addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
 //----------------------------------------------------------------------------
 //  @function   isr_keyboard
 /// @brief      Interrupt service routine for keyboard IRQ 1.
-/// @param[in]  interrupt   Interrupt number (unused).
-/// @param[in]  error       Interrupt error code (unused).
+/// @param[in]  context     The CPU state at the time of the interrupt.
 //----------------------------------------------------------------------------
 static void
-isr_keyboard(uint8_t interrupt, uint64_t error)
+isr_keyboard(const interrupt_context_t *context)
 {
-    (void)interrupt;
-    (void)error;
+    (void)context;
 
     // Get the scan code and the break state (key up or key down).
     uint8_t scancode = io_inb(KB_PORT_DATA);
@@ -302,10 +300,10 @@ kb_init()
     memzero(&state.buf, sizeof(state.buf));
 
     // Assign the interrupt service routine.
-    isr_set(0x21, isr_keyboard);
+    isr_set(TRAP_IRQ_KEYBOARD, isr_keyboard);
 
     // Enable the keyboard hardware interrupt (IRQ1).
-    irq_enable(1);
+    irq_enable(IRQ_KEYBOARD);
 }
 
 //----------------------------------------------------------------------------

@@ -17,6 +17,7 @@
 
 Mem.Globals                     equ     0x00000500
 Mem.GDT                         equ     0x00000700
+Mem.TSS64                       equ     0x00000780
 Mem.Sector.Buffer               equ     0x00000800
 Mem.Stack.Bottom                equ     0x00001000
 Mem.Stack.Top                   equ     0x00007c00
@@ -35,9 +36,12 @@ Mem.PageTable.End               equ     0x00018000
 Mem.Stack32.Temp.Bottom         equ     0x0006f000
 Mem.Stack32.Temp.Top            equ     0x00070000
 Mem.Kernel.LoadBuffer           equ     0x00070000
-Mem.Kernel.Stack                equ     0x00090000
-Mem.Kernel.Image                equ     0x00100000
-Mem.Kernel.Code                 equ     0x00101000
+Mem.Kernel.Stack.Bottom         equ     0x00100000  ; kernel stack
+Mem.Kernel.Stack.Top            equ     0x00200000
+Mem.Kernel.ExcStack.Bottom      equ     0x00200000  ; kernel exception stack
+Mem.Kernel.ExcStack.Top         equ     0x00300000
+Mem.Kernel.Image                equ     0x00300000
+Mem.Kernel.Code                 equ     0x00301000
 
 ; Layout region sizes
 Mem.Sector.Buffer.Size          equ     0x00000800

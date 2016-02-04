@@ -11,6 +11,10 @@
 
 #include <stdint.h>
 
+//----------------------------------------------------------------------------
+// Constants
+//----------------------------------------------------------------------------
+
 // Meta-key bit masks
 #define META_SHIFT       (1 << 0)   ///< Set while the shift key is pressed.
 #define META_CTRL        (1 << 1)   ///< Set while the ctrl key is pressed.

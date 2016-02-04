@@ -10,8 +10,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/asm/io.h>
 #include <kernel/interrupt.h>
+#include <kernel/io.h>
 #include <kernel/timer.h>
 
 // 8253 timer ports
@@ -21,20 +21,18 @@
 #define TIMER_PORT_CMD         0x43     ///< Timer command port.
 
 // Frequency bounds
-#define MIN_FREQUENCY          19
-#define MAX_FREQUENCY          1193181
+#define MIN_FREQUENCY    19
+#define MAX_FREQUENCY    1193181
 
 //----------------------------------------------------------------------------
 //  @function   isr_timer
 /// @brief      Interrupt service routine for timer IRQ 0.
-/// @param[in]  interrupt   Interrupt number (unused).
-/// @param[in]  error       Interrupt error code (unused).
+/// @param[in]  context     The CPU state at the time of the interrupt.
 //----------------------------------------------------------------------------
 static void
-isr_timer(uint8_t interrupt, uint64_t error)
+isr_timer(const interrupt_context_t *context)
 {
-    (void)interrupt;
-    (void)error;
+    (void)context;
 
     // Do nothing for now.
 
@@ -69,10 +67,10 @@ timer_init(uint32_t frequency)
     io_outb(TIMER_PORT_DATA_CH0, (uint8_t)(count >> 8));
 
     // Assign the interrupt service routine.
-    isr_set(0x20, isr_timer);
+    isr_set(TRAP_IRQ_TIMER, isr_timer);
 
     // Enable the timer interrupt (IRQ0).
-    irq_enable(0);
+    irq_enable(IRQ_KEYBOARD);
 }
 
 //----------------------------------------------------------------------------

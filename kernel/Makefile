@@ -14,18 +14,17 @@ DIR_TARGET := $(DIR_BUILD)/kernel
 # Build targets
 #----------------------------------------------------------------------------
 
-C_FILES		:= main.c console.c keyboard.c timer.c
-H_FILES		:= console.h interrupt.h keyboard.h timer.h
-ASM_H_FILES := asm.h io.h interrupt.h
+C_FILES		:= main.c console.c keyboard.c timer.c syscall.c
+H_FILES		:= compiler.h console.h cpu.h interrupt.h keyboard.h syscall.h \
+				timer.h
 ASM_FILES	:= interrupt.asm start.asm
 LIB_FILES	:= libc/libc.a kernel/libkernel.a
 
 H_FILES		:= $(foreach F,$(H_FILES),$(patsubst %,$(DIR_INCLUDE)/kernel/%,$(F)))
-ASM_H_FILES	:= $(foreach F,$(ASM_H_FILES),$(patsubst %,$(DIR_INCLUDE)/kernel/asm/%,$(F)))
 LIB_FILES	:= $(foreach F,$(LIB_FILES),$(patsubst %,$(DIR_BUILD)/%,$(F)))
 
 CODE_FILES	:= $(C_FILES) $(ASM_FILES)
-HDR_FILES	:= $(H_FILES) $(ASM_H_FILES)
+HDR_FILES	:= $(H_FILES)
 
 OBJ_FILES	:= $(foreach F,$(CODE_FILES),$(F:.c=.o))
 OBJ_FILES	:= $(foreach F,$(OBJ_FILES),$(F:.asm=.o))
@@ -86,7 +85,15 @@ $(DIR_TARGET)/console.o: console.c $(HDR_FILES)
 	@echo "$(TAG) Compiling $<"
 	@$(CC) $(CCFLAGS) -c $< -o $@
 
+$(DIR_TARGET)/cpu.o: cpu.c $(HDR_FILES)
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
 $(DIR_TARGET)/keyboard.o: keyboard.c $(HDR_FILES)
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(DIR_TARGET)/syscall.o: syscall.c $(HDR_FILES)
 	@echo "$(TAG) Compiling $<"
 	@$(CC) $(CCFLAGS) -c $< -o $@
 
