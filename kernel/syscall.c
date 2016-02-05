@@ -7,24 +7,17 @@
 // be found in the MonkOS LICENSE file.
 //============================================================================
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <core.h>
 #include <kernel/cpu.h>
 #include <kernel/exception.h>
 #include <kernel/interrupt.h>
+#include <kernel/memlayout.h>
 #include <kernel/syscall.h>
 
 // Model-specific registers used to set up system calls.
 #define MSR_IA32_STAR     0xc0000081
 #define MSR_IA32_LSTAR    0xc0000082
 #define MSR_IA32_FMASK    0xc0000084
-
-// Segment selector values.  (Should be moved to a header)
-#define SEGMENT_KERNEL_CODE    0x08
-#define SEGMENT_KERNEL_DATA    0x10
-#define SEGMENT_USER_DATA      0x18
-#define SEGMENT_USER_CODE      0x20
 
 //----------------------------------------------------------------------------
 //  @function   syscall_handle
@@ -56,8 +49,8 @@ syscall_init()
     // by SYSCALL and SYSRET.
     uint64_t star = rdmsr(MSR_IA32_STAR);
     star &= 0x00000000ffffffff;
-    star |= (uint64_t)SEGMENT_KERNEL_CODE << 32;
-    star |= (uint64_t)((SEGMENT_USER_CODE - 16) | 3) << 48;
+    star |= (uint64_t)SEGMENT_SELECTOR_KERNEL_CODE << 32;
+    star |= (uint64_t)((SEGMENT_SELECTOR_USER_CODE - 16) | 3) << 48;
     wrmsr(MSR_IA32_STAR, star);
 
     // Write the address of the system call handler used by SYSCALL.

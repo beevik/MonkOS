@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <core.h>
 
 //----------------------------------------------------------------------------
 //  @function   syscall_init

@@ -9,8 +9,7 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <kernel/compiler.h>
+#include <core.h>
 
 //----------------------------------------------------------------------------
 // Constants
@@ -77,7 +76,7 @@ typedef struct registers4
 /// @param[in]  code    The cpuid group code.
 /// @param[out] regs    The contents of registers rax, rbx, rcx, and rdx.
 //----------------------------------------------------------------------------
-force_inline void
+__forceinline void
 cpuid(uint32_t code, registers4_t *regs)
 {
     asm volatile ("cpuid"
@@ -92,7 +91,7 @@ cpuid(uint32_t code, registers4_t *regs)
 /// @param[in]  id      The register id to read.
 /// @returns    The contents of the requested MSR.
 //----------------------------------------------------------------------------
-force_inline uint64_t
+__forceinline uint64_t
 rdmsr(uint32_t id)
 {
     uint64_t value;

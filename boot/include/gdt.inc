@@ -24,8 +24,8 @@ GDT32.Selector.Data32       equ     0x10    ; 32-bit protected mode (data)
 GDT32.Selector.Code16       equ     0x18    ; 16-bit protected mode (code)
 GDT32.Selector.Data16       equ     0x20    ; 16-bit protected mode (data)
 
-GDT64.Selector.Kernel.Code  equ     0x08    ; 64-bit mode (kernel code)
-GDT64.Selector.Kernel.Data  equ     0x10    ; 64-bit mode (kernel data)
+GDT64.Selector.Kernel.Data  equ     0x08    ; 64-bit mode (kernel data)
+GDT64.Selector.Kernel.Code  equ     0x10    ; 64-bit mode (kernel code)
 GDT64.Selector.User.Data    equ     0x18    ; 64-bit mode (user data)
 GDT64.Selector.User.Code    equ     0x20    ; 64-bit mode (user code)
 GDT64.Selector.TSS          equ     0x28    ; 64-bit task state segment

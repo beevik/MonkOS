@@ -9,9 +9,7 @@
 // be found in the MonkOS LICENSE file.
 //============================================================================
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <core.h>
 #include <kernel/console.h>
 #include <kernel/exception.h>
 #include <kernel/interrupt.h>
@@ -39,13 +37,11 @@ hexchar(int value)
 }
 
 //----------------------------------------------------------------------------
-//  @function   kmain
-/// @brief      Kernel main entry point.
-/// @details    kmain is the first function called by the kernel bootstrapper
-///             in start.asm.
+//  @function   sysinit
+/// @brief      Initialize the kernel's system modules.
 //----------------------------------------------------------------------------
-void
-kmain()
+static void
+sysinit()
 {
     // Initialize the console screen.
     console_init();
@@ -65,13 +61,16 @@ kmain()
 
     // Turn on interrupt service routines.
     interrupts_enable();
+}
 
-    // Display a welcome message on each virtual console.
-    for (int id = 0; id < MAX_CONSOLES; id++) {
-        console_print(id, "Welcome to \033[e]MonkOS\033[-] (v0.1).\n");
-        console_set_textcolor_fg(id, TEXTCOLOR_LTGRAY);
-    }
-
+//----------------------------------------------------------------------------
+//  @function   do_test
+/// @brief      Test code (temporary)
+//----------------------------------------------------------------------------
+static void
+do_test()
+{
+    // Test code below...
     int console_id = 0;
     for (;;) {
         halt();
@@ -111,4 +110,24 @@ kmain()
             }
         }
     }
+}
+
+//----------------------------------------------------------------------------
+//  @function   kmain
+/// @brief      Kernel main entry point.
+/// @details    kmain is the first function called by the kernel bootstrapper
+///             in start.asm.
+//----------------------------------------------------------------------------
+void
+kmain()
+{
+    sysinit();
+
+    // Display a welcome message on each virtual console.
+    for (int id = 0; id < MAX_CONSOLES; id++) {
+        console_print(id, "Welcome to \033[e]MonkOS\033[-] (v0.1).\n");
+        console_set_textcolor_fg(id, TEXTCOLOR_LTGRAY);
+    }
+
+    do_test();
 }

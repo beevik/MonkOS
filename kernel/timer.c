@@ -7,9 +7,7 @@
 // be found in the MonkOS LICENSE file.
 //============================================================================
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <core.h>
 #include <kernel/interrupt.h>
 #include <kernel/io.h>
 #include <kernel/timer.h>
@@ -70,7 +68,7 @@ timer_init(uint32_t frequency)
     isr_set(TRAP_IRQ_TIMER, isr_timer);
 
     // Enable the timer interrupt (IRQ0).
-    irq_enable(IRQ_KEYBOARD);
+    irq_enable(IRQ_TIMER);
 }
 
 //----------------------------------------------------------------------------

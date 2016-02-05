@@ -15,8 +15,8 @@ DIR_TARGET := $(DIR_BUILD)/kernel
 #----------------------------------------------------------------------------
 
 C_FILES		:= main.c console.c exception.c keyboard.c timer.c syscall.c
-H_FILES		:= compiler.h console.h cpu.h exception.h interrupt.h keyboard.h \
-				syscall.h timer.h
+H_FILES		:= console.h cpu.h exception.h interrupt.h keyboard.h \
+				memlayout.h syscall.h timer.h
 ASM_FILES	:= interrupt.asm start.asm
 LIB_FILES	:= libc/libc.a kernel/libkernel.a
 

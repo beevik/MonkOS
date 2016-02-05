@@ -7,10 +7,7 @@
 // be found in the MonkOS LICENSE file.
 //============================================================================
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdatomic.h>
+#include <core.h>
 #include <libc/string.h>
 #include <kernel/interrupt.h>
 #include <kernel/io.h>

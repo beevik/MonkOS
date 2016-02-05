@@ -1425,23 +1425,23 @@ GDT64.Table:
         at GDT.Descriptor.BaseHigh,             db      0x00
     iend
 
-    ; kernel: code segment descriptor (selector = 0x08)
-    istruc GDT.Descriptor
-        at GDT.Descriptor.LimitLow,             dw      0x0000
-        at GDT.Descriptor.BaseLow,              dw      0x0000
-        at GDT.Descriptor.BaseMiddle,           db      0x00
-        at GDT.Descriptor.Access,               db      10011010b
-        at GDT.Descriptor.LimitHighFlags,       db      00100000b
-        at GDT.Descriptor.BaseHigh,             db      0x00
-    iend
-
-    ; kernel: data segment descriptor (selector = 0x10)
+    ; kernel: data segment descriptor (selector = 0x08)
     istruc GDT.Descriptor
         at GDT.Descriptor.LimitLow,             dw      0x0000
         at GDT.Descriptor.BaseLow,              dw      0x0000
         at GDT.Descriptor.BaseMiddle,           db      0x00
         at GDT.Descriptor.Access,               db      10010010b
         at GDT.Descriptor.LimitHighFlags,       db      00000000b
+        at GDT.Descriptor.BaseHigh,             db      0x00
+    iend
+
+    ; kernel: code segment descriptor (selector = 0x10)
+    istruc GDT.Descriptor
+        at GDT.Descriptor.LimitLow,             dw      0x0000
+        at GDT.Descriptor.BaseLow,              dw      0x0000
+        at GDT.Descriptor.BaseMiddle,           db      0x00
+        at GDT.Descriptor.Access,               db      10011010b
+        at GDT.Descriptor.LimitHighFlags,       db      00100000b
         at GDT.Descriptor.BaseHigh,             db      0x00
     iend
 

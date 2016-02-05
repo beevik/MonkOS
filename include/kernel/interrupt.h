@@ -9,8 +9,7 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <kernel/compiler.h>
+#include <core.h>
 #include <kernel/cpu.h>
 
 //----------------------------------------------------------------------------
@@ -99,7 +98,7 @@ irq_disable(uint8_t irq);
 //  @function   interrupts_enable
 /// @brief      Enable interrupts.
 //----------------------------------------------------------------------------
-force_inline void
+__forceinline void
 interrupts_enable()
 {
     asm volatile ("sti");
@@ -109,7 +108,7 @@ interrupts_enable()
 //  @function   interrupts_disable
 /// @brief      Disable interrupts.
 //----------------------------------------------------------------------------
-force_inline void
+__forceinline void
 interrupts_disable()
 {
     asm volatile ("cli");
@@ -119,7 +118,7 @@ interrupts_disable()
 //  @function   halt
 /// @brief      Halt the CPU until an interrupt occurs.
 //----------------------------------------------------------------------------
-force_inline void
+__forceinline void
 halt()
 {
     asm volatile ("hlt");
@@ -130,7 +129,7 @@ halt()
 /// @brief      Raise a software interrupt.
 /// @param[in]  vector  The interrupt vector number.
 //----------------------------------------------------------------------------
-force_inline void
+__forceinline void
 raise(uint8_t vector)
 {
     asm volatile ("int %[v]" : : [v] "Nq" (vector));

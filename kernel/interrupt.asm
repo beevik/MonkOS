@@ -42,6 +42,13 @@ Mem.ISR.Table.Size  equ     8 * 256         ; Pointer per interrupt
 Mem.ISR.Thunks      equ     0x00002800
 Mem.ISR.Thunks.Size equ     17 * 256        ; 17 bytes of code per interrupt
 
+; Segment selectors
+Segment.Kernel.Data equ     0x08
+Segment.Kernel.Code equ     0x10
+Segment.User.Data   equ     0x18
+Segment.User.Code   equ     0x20
+Segment.TSS         equ     0x28
+
 
 ;-----------------------------------------------------------------------------
 ; IDT descriptor
@@ -99,8 +106,8 @@ IDT.Pointer:
 ; ISR.Thunk.Template
 ;
 ; During initialization, the ISR thunk template is copied and modified 256
-; times into the ISR thunk table. The purpose of the thunk is to push the
-; interrupt number on the stack before calling a general-purpose interrupt
+; times into the ISR thunk table. The purpose of the thunk code is to push the
+; interrupt number onto the stack before calling a general-purpose interrupt
 ; dispatcher. This is necessary because the interrupt number would otherwise
 ; be unavailable to the interrupt service routine. The thunk must be 8 bytes
 ; in length.
@@ -119,10 +126,11 @@ ISR.Thunk.Size   equ     ($ - ISR.Thunk.Template)
 ; ISR.Dispatcher
 ;
 ; A general-purpose ISR dispatch routine that all ISR thunks jump to when an
-; interrupt arrives. The dispatcher receives an interrupt number on the stack,
-; which it uses the to look up a kernel-defined ISR. If a valid ISR is found,
-; the dispatcher calls it with the interrupt number (and a dummy error code)
-; as parameters. All scratch registers are preserved before calling the ISR.
+; interrupt arrives. The dispatcher receives from the stack an interrupt
+; number, which it uses the to look up a kernel-defined ISR. If a valid ISR is
+; found, the dispatcher calls it with a pointer to an interrupt context, which
+; contains the contents on all general-purpose CPU registers, the interrupt
+; number, and the error code if any.
 ;-----------------------------------------------------------------------------
 ISR.Dispatcher:
 
@@ -150,10 +158,14 @@ ISR.Dispatcher:
         push    rbx
         push    rax
 
+        ; Preserve the MXCSR register.
+        sub     rsp,    8
+        stmxcsr [rsp]
+
     .lookup:
 
         ; Look up the kernel-defined ISR in the table.
-        mov     rax,    [rsp + 8 * 16]              ; rax=interrupt number
+        mov     rax,    [rsp + 8 * 17]              ; rax=interrupt number
         mov     rax,    [Mem.ISR.Table + 8 * rax]   ; rax=ISR address
 
         ; If there is no ISR, then we're done.
@@ -166,16 +178,20 @@ ISR.Dispatcher:
         ; function entry.
         cld
 
-        ; The interrupt context is on the stack, so pass the ISR a pointer as
-        ; the first parameter.
-        mov     rdi,    rsp
+        ; The interrupt context is on the stack, so pass the ISR a pointer to
+        ; the stack as the first parameter.
+        lea     rdi,    [rsp + 8]   ; skip the MXCSR register.
 
         ; Call the ISR.
         call    rax
 
     .done:
 
-        ; Restore registers
+        ; Restore the MXCSR register.
+        ldmxcsr [rsp]
+        add     rsp,    8
+
+        ; Restore general-purpose registers.
         pop     rax
         pop     rbx
         pop     rcx
@@ -199,17 +215,20 @@ ISR.Dispatcher:
 ;-----------------------------------------------------------------------------
 ; ISR.Dispatcher.Special
 ;
-; A special dispatcher used for exceptions 8 and 10 through 14. The CPU pushes
-; an error code onto the stack before calling these exceptions' interrupt
-; handlers. So, to be compatible with the normal ISR.Dispatcher routine, we
-; need to swap the places of the thunk-placed interrupt number and the error
-; code on the stack.
+; A special dispatcher is used for exceptions 8 and 10 through 14. The CPU
+; pushes an error code onto the stack before calling these exceptions'
+; interrupt handlers. So, to be compatible with the normal ISR.Dispatcher
+; routine, we need to swap the places of the thunk-placed interrupt number and
+; the error code on the stack.
 ;-----------------------------------------------------------------------------
 ISR.Dispatcher.Special:
 
-    ; Swap interrupt and error code values on the stack.
+    ; First preserve r14 and r15.
     push    r15
     push    r14
+
+    ; Use r14 and r15 to swap the interrupt number and error code entries on
+    ; the stack.
     mov     r14,            [rsp + 8 * 2]    ; interrupt
     mov     r15,            [rsp + 8 * 3]    ; error code
     mov     [rsp + 8 * 2],  r15
@@ -227,7 +246,7 @@ ISR.Dispatcher.Special:
 ;               for each of the 256 possible interrupts. Then set up the
 ;               interrupt descriptor table (IDT) to point to each of the
 ;               thunks.
-; @killedregs   rax, rcx, rdx, rsi, rdi, r8
+; @killedregs   rax, rcx, rsi, rdi, r8
 ;-----------------------------------------------------------------------------
 interrupts_init:
 
@@ -266,8 +285,10 @@ interrupts_init:
         ; Duplicate the ISR thunk template 256 times into the ISR thunk table.
         ; As the entry is duplicated, modify the interrupt number it pushes on
         ; the stack.
-        mov     rdi,    Mem.ISR.Thunks
-        xor     rdx,    rdx         ; rdx = interrupt number
+
+        ; Initialize target pointer and interrupt counter.
+        mov     rdi,    Mem.ISR.Thunks  ; rdi = thunk table offset
+        xor     rcx,    rcx             ; rcx = interrupt number
 
     .installThunk:
 
@@ -275,9 +296,9 @@ interrupts_init:
         mov     rsi,    ISR.Thunk.Template
         movsq       ; assumes thunk is 8 bytes.
 
-        ; Modify the "push 0" with "push X", where X is the current interrupt
+        ; Replace "push 0" with "push X", where X is the current interrupt
         ; number.
-        mov     byte [rdi - ISR.Thunk.Size + 2],  dl
+        mov     byte [rdi - ISR.Thunk.Size + 2],  cl
 
         ; By default, all thunks jump to ISR.Dispatcher.
         mov     r8,     ISR.Dispatcher
@@ -286,13 +307,12 @@ interrupts_init:
 
         ; If the current thunk is for an interrupt greater than 14, it will
         ; not use the special dispatcher, so jump ahead.
-        cmp     rdx,    14
+        cmp     rcx,    14
         ja      .updateDispatcher
 
         ; If the current thunk isn't for one of the exceptions that pushes an
         ; error code onto the stack, then jump ahead. (Use a bit mask to
         ; perform the check quickly.)
-        mov     cl,     dl
         mov     eax,    1
         shl     eax,    cl
         test    eax,    .PushesError
@@ -304,13 +324,13 @@ interrupts_init:
 
     .updateDispatcher:
 
-        ; Modify the "jmp 0" with "jmp <dispatcher offset>".
+        ; Replace "jmp 0" with "jmp <dispatcher offset>".
         sub     r8,                                 rdi
         mov     dword [rdi - ISR.Thunk.Size + 4],   r8d
 
         ; Advance to the next interrupt, and stop when we hit 256.
-        inc     edx
-        cmp     edx,    256
+        inc     ecx
+        cmp     ecx,    256
         jne     .installThunk
 
     ;-------------------------------------------------------------------------
@@ -327,7 +347,7 @@ interrupts_init:
         ; Initialize pointers to transfer ISR thunk addresses into the IDT.
         mov     rsi,    Mem.ISR.Thunks      ; rsi = thunk table offset
         mov     rdi,    Mem.IDT             ; rdi = IDT offset
-        xor     rdx,    rdx                 ; rdx = interrupt number
+        xor     rcx,    rcx                 ; rcx = interrupt number
 
     .installDescriptor:
 
@@ -347,13 +367,13 @@ interrupts_init:
         mov     dword [rdi + IDT.Descriptor.OffsetHi],  r8d
 
         ; Write the kernel code segment selector.
-        mov     r8w,    0x08
+        mov     r8w,    Segment.Kernel.Code
         mov     word [rdi + IDT.Descriptor.Segment],    r8w
 
         ; CPU exceptions are interrupts with vector numbers less than 32. For
         ; these interrupts, use an interrupt gate. For all others, use a trap
         ; gate.
-        cmp     rdx,    31
+        cmp     cl,     31
         ja      .useTrap
 
     .useInterrupt:
@@ -369,13 +389,13 @@ interrupts_init:
 
     .nextDescriptor:
 
-        ; Advance to next interrupt, ISR thunk, and IDT entry.
-        inc     edx
+        ; Advance to next thunk and IDT entry.
         add     rsi,    ISR.Thunk.Size
         add     rdi,    IDT.Descriptor_size
 
-        ; Are we done?
-        cmp     edx,    256
+        ; Stop when we hit interrupt 256.
+        inc     ecx
+        cmp     ecx,    256
         jne     .installDescriptor
 
     .replaceSpecialStacks:
@@ -385,17 +405,20 @@ interrupts_init:
         ; interrupt stack table (IST) settings.
 
         ; NMI exception (IST=1, Type=interrupt, DPL=0, P=1)
-        mov     rdi,        Mem.IDT + IDT.Descriptor_size * .Exception.NMI + \
+        mov     rdi,        Mem.IDT + \
+                                IDT.Descriptor_size * .Exception.NMI + \
                                 IDT.Descriptor.Flags
         mov     word [rdi], 1000111000000001b
 
         ; Double-fault exception (IST=2, Type=interrupt, DPL=0, P=1)
-        mov     rdi,        Mem.IDT + IDT.Descriptor_size * .Exception.DF + \
+        mov     rdi,        Mem.IDT + \
+                                IDT.Descriptor_size * .Exception.DF + \
                                 IDT.Descriptor.Flags
         mov     word [rdi], 1000111000000010b
 
         ; Machine-check exception (IST=3, Type=interrupt, DPL=0, P=1)
-        mov     rdi,        Mem.IDT + IDT.Descriptor_size * .Exception.MC + \
+        mov     rdi,        Mem.IDT + \
+                                IDT.Descriptor_size * .Exception.MC + \
                                 IDT.Descriptor.Flags
         mov     word [rdi], 1000111000000011b
 

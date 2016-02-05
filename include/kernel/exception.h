@@ -9,8 +9,7 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <kernel/compiler.h>
+#include <core.h>
 
 // CPU exception constants
 #define EXCEPTION_DIVBYZERO              0x00
