@@ -18,10 +18,13 @@
 #define SEGMENT_SELECTOR_USER_CODE      0x20
 #define SEGMENT_SELECTOR_TSS            0x28
 
-// Memory layout
+// Physical memory layout
+#define MEM_GDT                       0x00000100
+#define MEM_TSS                       0x00000200
 #define MEM_GLOBALS                   0x00000500
-#define MEM_GDT                       0x00000700
-#define MEM_TSS                       0x00000780
+#define MEM_IDT                       0x00001000
+#define MEM_ISR_TABLE                 0x00002000
+#define MEM_ISR_THUNKS                0x00002800
 #define MEM_PAGETABLE                 0x00010000
 #define MEM_PAGETABLE_PML4T           0x00010000
 #define MEM_PAGETABLE_PDPT            0x00011000

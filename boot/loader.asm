@@ -63,8 +63,8 @@ org 0x8000
 ;
 ; Memory regions used or modified by this code:
 ;
-;   00000700 - 0000077f          128 bytes     Global Descriptor Table (GDT)
-;   00000780 - 000007ff          128 bytes     Task State Segment (TSS)
+;   00000100 - 000001ff          128 bytes     Global Descriptor Table (GDT)
+;   00000200 - 000002ff          128 bytes     Task State Segment (TSS)
 ;   00000800 - 00000fff        2,048 bytes     Cdrom sector read buffer
 ;   00001000 - 00007bff       27,648 bytes     Real mode stack
 ;   00010000 - 00017fff       32,768 bytes     Page tables
@@ -135,10 +135,6 @@ load:
         cpuid
         test    edx,    (1 << 29)   ; 64-bit mode bit
         jz      .error.no64BitMode
-
-        ; Check if the SYSCALL/SYSRET instructions are supported.
-        ; test    edx,    (1 << 11)   ; SYSCALL/SYSRET support
-        ; jz      .error.noSysCall
 
         ; Clear 32-bit register values.
         xor     eax,    eax
@@ -226,73 +222,92 @@ load:
     ;-------------------------------------------------------------------------
     .setupPIC:
 
-        ; Save IRQ masks.
-        in      al,     0x21
-        mov     cl,     al          ; cl = cached mask from data port 0x21
-        in      al,     0xa1
-        mov     ch,     al          ; ch = cached mask from data port 0xa1
+        ; (ICW = initialization command word)
 
-        ; Start PIC initialization.
-        mov     al,     0x11        ; 0x11 = INIT + ICW4_not_needed
+        ; Initialize the master PIC.
+        mov     al,     0x11        ; ICW1: 0x11 = init with 4 ICW's
         out     0x20,   al
-        call    .wait
+        mov     al,     0x20        ; ICW2: 0x20 = interrupt offset 32
+        out     0x21,   al
+        mov     al,     0x04        ; ICW3: 0x04 = IRQ2 has a slave
+        out     0x21,   al
+        mov     al,     0x01        ; ICW4: 0x01 = x86 mode
+        out     0x21,   al
+
+        ; Initialize the slave PIC.
+        mov     al,     0x11        ; ICW1: 0x11 = init with 4 ICW's
         out     0xa0,   al
-        call    .wait
-
-        ; Remap master PIC IRQs 0 thru 7 to interrupt numbers 0x20 thru 0x27.
-        mov     al,     0x20        ; 0x20 = interrupt offset 32
-        out     0x21,   al
-        call    .wait
-
-        ; Remap slave PIC IRQs 8 thru 15 to interrupt numbers 0x28 thru 0x2f.
-        mov     al,     0x28        ; 0x28 = interrupt offset 40
+        mov     al,     0x28        ; ICW2: 0x28 = interrupt offset 40
         out     0xa1,   al
-        call    .wait
-
-        ; Tell master PIC there is a slave PIC at IRQ 4.
-        mov     al,     4           ; 4 = IRQ 4
-        out     0x21,   al
-        call    .wait
-
-        ; Tell slave PIC its cascade identity (IRQ2).
-        mov     al,     2           ; 2 = IRQ 2
+        mov     al,     0x02        ; ICW3: 0x02 = attached to master IRQ2.
         out     0xa1,   al
-        call    .wait
-
-        ; Set 8086 mode.
-        mov     al,     1           ; 1 = 8086/8088 mode.
-        out     0x21,   al
-        call    .wait
+        mov     al,     0x01        ; ICW4: 0x01 = x86 mode
         out     0xa1,   al
-        call    .wait
 
-        ; Disable all IRQs. Kernel will re-enable the ones it wants to handle
-        ; later.
+        ; Disable all IRQs. The kernel will re-enable the ones it wants to
+        ; handle later.
         mov     al,     0xff
         out     0x21,   al
         out     0xa1,   al
 
-        jmp     .setupGDT64
+    ;-------------------------------------------------------------------------
+    ; Wipe memory zones that the loaders used
+    ;-------------------------------------------------------------------------
+    .wipeMemory:
 
-        .wait:
+        cld
+        push    es
 
-            xor     ax,     ax
-            out     0x80,   al
-            ret
+        ; Wipe the real mode BIOS IVT.
+        xor     ax,     ax
+        mov     es,     ax
+        xor     di,     Mem.BIOS.IVT
+        mov     cx,     Mem.BIOS.IVT.Size
+        rep     stosb
+
+        ; Wipe the real mode BIOS data area.
+        mov     di,     Mem.BIOS.Data
+        mov     cx,     Mem.BIOS.Data.Size
+        rep     stosb
+
+        ; Wipe the sector load buffer.
+        mov     ax,     Mem.Kernel.LoadBuffer.Segment
+        mov     es,     ax
+        xor     ax,     ax
+        xor     di,     di
+        mov     cx,     Mem.Kernel.LoadBuffer.Size - 1
+        rep     stosb
+        inc     cx
+        stosb
+
+        ; Wipe the stage-1 boot loader.
+        xor     ax,     ax
+        mov     es,     ax
+        mov     di,     Mem.Loader1
+        mov     cx,     Mem.Loader1.Size
+        rep     stosb
+
+        ; Wipe the temporary 32-bit protected mode stack.
+        mov     ax,     Mem.Stack32.Temp.Bottom >> 4
+        mov     es,     ax
+        xor     ax,     ax
+        xor     di,     di
+        mov     cx,     Mem.Stack32.Temp.Top - Mem.Stack32.Temp.Bottom
+        rep     stosb
+
+        ; Restore original es register.
+        pop     es
 
     ;-------------------------------------------------------------------------
     ; Set up (but don't yet install) the 64-bit GDT
     ;-------------------------------------------------------------------------
     .setupGDT64:
 
-        ; Set up a copy of the GDT to its memory layout location (0x0700).
+        ; Copy the GDT to its memory layout location.
         mov     si,     GDT64.Table
         mov     di,     Mem.GDT
         mov     cx,     GDT64.Table.Size
-        shr     cx,     1           ; div table size by 2, copying words
-
-        ; Do the copy.
-        cld
+        shr     cx,     1
         rep     movsw
 
     ;-------------------------------------------------------------------------
@@ -300,14 +315,11 @@ load:
     ;-------------------------------------------------------------------------
     .setupTSS:
 
-        ; Set up a copy of the TSS to its memory layout location (0x0780).
+        ; Copy the TSS entry to its target memory location.
         mov     si,     TSS64.Entry
         mov     di,     Mem.TSS64
         mov     cx,     TSS64.Entry.Size
         shr     cx,     1
-
-        ; Do the copy.
-        cld
         rep     movsw
 
     ;-------------------------------------------------------------------------
@@ -316,7 +328,7 @@ load:
     .setupPageTables:
 
         ; Create page tables that identity-map the first 10MiB of memory. This
-        ; should be more than enough to hold the kernel.
+        ; should be more than enough to hold the kernel and its stacks.
         call    SetupPageTables
 
         ; Enable PAE paging.
@@ -325,7 +337,7 @@ load:
         mov     cr4,    eax
 
     ;-------------------------------------------------------------------------
-    ; Enable 64-bit protected mode, and paging
+    ; Enable 64-bit protected mode and paging
     ;-------------------------------------------------------------------------
     .enable64BitMode:
 
@@ -353,6 +365,11 @@ bits 64
     ; Launch the 64-bit kernel
     ;-------------------------------------------------------------------------
     .launch64:
+
+        ; Wipe the real mode stack.
+        mov     rdi,    Mem.Stack.Bottom
+        mov     ecx,    Mem.Stack.Top - Mem.Stack.Bottom
+        rep     movsb
 
         ; Load the mandatory 64-bit task state segment.
         mov     ax,     GDT64.Selector.TSS
@@ -411,11 +428,6 @@ bits 16
     .error.no64BitMode:
 
         mov     si,     String.Error.No64BitMode
-        jmp     .error
-
-    .error.noSysCall:
-
-        mov     si,     String.Error.NoSysCall
         jmp     .error
 
     .error.kernelNotFound:
@@ -696,8 +708,8 @@ HasCPUID:
 ;=============================================================================
 ; FindKernel
 ;
-; Scan the root directory of the cdrom for a file called "MONK.SYS". If
-; found, return its start sector and file size.
+; Scan the root directory of the cdrom for a file called "MONK.SYS". If found,
+; return its start sector and file size.
 ;
 ; Return registers:
 ;   EAX     Kernel file size in bytes
@@ -978,8 +990,8 @@ bits 32
         add     [LoadKernel.CurrentSector],     bx
 
         ; Copy the chunk.
-        shr     ecx,    2       ; divide by 4 since we're copying dwords.
         cld
+        shr     ecx,    2       ; divide by 4 since we're copying dwords.
         rep     movsd
 
     .prepareProtected16Mode:
@@ -1086,23 +1098,24 @@ SetupPageTables:
     ; Constants for page table bits
     .Present     equ     1 << 0
     .ReadWrite   equ     1 << 1
+    .Guard       equ     1 << 9         ; use a bit ignored by the CPU
     .PageBits    equ     .Present | .ReadWrite
 
     ; Preserve registers
     pusha
     push    es
 
+    ; Set segment to the root of the page table.
+    mov     ax,     Mem.PageTable >> 4
+    mov     es,     ax
+
     .clearMemory:
 
         ; Clear all memory used to hold the page tables.
-        mov     ax,     Mem.PageTable >> 4
-        mov     es,     ax
-
+        cld
         xor     eax,    eax
         xor     edi,    edi
         mov     ecx,    (Mem.PageTable.End - Mem.PageTable) >> 2
-
-        cld
         rep     stosd
 
     .makeTables:
@@ -1126,15 +1139,15 @@ SetupPageTables:
         ; Prepare to create page table entries.
         mov     edi,    Mem.PageTable.PT0 & 0xffff
         mov     eax,    .PageBits
-        mov     ecx,    512 * 5     ; 5 contiguous page tables
+        mov     ecx,    512 * 5         ; 5 contiguous page tables
 
     .makePage:
 
         ; Loop through each page table entry, incrementing the physical
         ; address by one page each time.
-        mov     dword [es:edi],         eax     ; store addr + .PageBits
-        add     eax,                    0x1000  ; next physical address
-        add     edi,                    8       ; next page table entry
+        mov     [es:edi],     eax       ; store physical address + .PageBits
+        add     eax,          0x1000    ; next physical address
+        add     edi,          8         ; next page table entry
         loop    .makePage
 
     .makeStackGuardPages:
@@ -1144,12 +1157,9 @@ SetupPageTables:
         mov     edi,        Mem.Kernel.Stack.Bottom
         call    .makeGuardPage
 
-        ; Create another guard page at the bottom of the kernel interrupt
-        ; stack.
+        ; Create a guard page at the bottom of each interrupt stack.
         mov     edi,        Mem.Kernel.Stack.Interrupt.Bottom
         call    .makeGuardPage
-
-        ; Create guard pages for the special exception stacks.
         mov     edi,        Mem.Kernel.Stack.NMI.Bottom
         call    .makeGuardPage
         mov     edi,        Mem.Kernel.Stack.DF.Bottom
@@ -1178,12 +1188,13 @@ SetupPageTables:
 
     .makeGuardPage:
 
-        ; Locate the page table entry for the address in edi, and clear
-        ; its present bit.
+        ; Locate the page table entry for the address in edi. Clear its
+        ; present bit, and set its guard bit.
         shr     edi,        9               ; Divide by 4096, then mul by 8.
         add     edi,        Mem.PageTable.PT0 & 0xffff
         mov     eax,        [es:edi]
-        and     eax,        ~(.Present)     ; disable the present bit.
+        and     eax,        ~(.Present)     ; clear the present bit.
+        or      eax,        .Guard          ; set the guard bit.
         mov     [es:di],    eax
 
         ret
@@ -1281,7 +1292,7 @@ DisplayString:
         cmp     al,     0
         je      .done
 
-        ; Call int 10 function 0eh (print character to teletype)
+        ; Call int 10 function 0eh (print character to teletype).
         int     0x10
         jmp     .loop
 
@@ -1315,7 +1326,6 @@ String.Error.Prefix           db "ERROR: ",                 0
 String.Error.A20              db "A20 line not enabled",    0
 String.Error.NoCPUID          db "CPUID not supported",     0
 String.Error.No64BitMode      db "CPU is not 64-bit",       0
-String.Error.NoSysCall        db "SYSCALL not supported",   0
 String.Error.NoSSE            db "No SSE support",          0
 String.Error.NoSSE2           db "No SSE2 support",         0
 String.Error.NoFXinst         db "No FXSAVE/FXRSTOR",       0
@@ -1498,8 +1508,8 @@ TSS64.Entry:
     ; mode.
     ;
     ; If a catastrophic exception occurs -- such as an NMI, double fault, or
-    ; machine check -- use an exception-specific stack (IST1 .. IST3)
-    ; that is guaranteed to be valid.
+    ; machine check -- use an exception-specific stack (IST1 .. IST3) that is
+    ; guaranteed to be valid.
     ;
     ; See section 6.14.5 in volume 3 of the Intel 64 and IA-32 Architectures
     ; Software Developer’s Manual for more information.

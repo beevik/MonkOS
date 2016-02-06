@@ -15,9 +15,11 @@
 ; Memory layout
 ;=============================================================================
 
+Mem.BIOS.IVT                        equ     0x00000000
+Mem.BIOS.Data                       equ     0x00000400
+Mem.GDT                             equ     0x00000100
+Mem.TSS64                           equ     0x00000200
 Mem.Globals                         equ     0x00000500
-Mem.GDT                             equ     0x00000700
-Mem.TSS64                           equ     0x00000780
 Mem.Sector.Buffer                   equ     0x00000800
 Mem.Stack.Bottom                    equ     0x00001000
 Mem.Stack.Top                       equ     0x00007c00
@@ -50,6 +52,10 @@ Mem.Kernel.Image                    equ     0x00300000
 Mem.Kernel.Code                     equ     0x00301000
 
 ; Layout region sizes
+Mem.BIOS.IVT.Size               equ     0x00000400
+Mem.BIOS.Data.Size              equ     0x00000100
+Mem.Loader1.Size                equ     0x00000200
+Mem.Loader2.Size                equ     0x00008000
 Mem.Sector.Buffer.Size          equ     0x00000800
 Mem.Kernel.LoadBuffer.Size      equ     0x00010000
 

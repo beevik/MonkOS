@@ -95,11 +95,11 @@ struc IDT.Descriptor
 
 endstruc
 
-; IDT pointer, which is loaded by the lidt instruction.
+; The IDT pointer, which is loaded by the lidt instruction.
 align 8
 IDT.Pointer:
-    dw  Mem.IDT.Size - 1    ; Limit = offset of last byte in table
-    dq  Mem.IDT             ; Address of table copy
+    dw  Mem.IDT.Size - 1    ; Limit = offset of last byte in table.
+    dq  Mem.IDT             ; Address of table.
 
 
 ;-----------------------------------------------------------------------------
@@ -389,7 +389,7 @@ interrupts_init:
 
     .nextDescriptor:
 
-        ; Advance to next thunk and IDT entry.
+        ; Advance to the next thunk and IDT entry.
         add     rsi,    ISR.Thunk.Size
         add     rdi,    IDT.Descriptor_size
 
