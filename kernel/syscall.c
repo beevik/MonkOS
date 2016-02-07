@@ -20,18 +20,12 @@
 #define MSR_IA32_FMASK    0xc0000084
 
 //----------------------------------------------------------------------------
-//  @function   syscall_handle
-/// @brief      Handle system calls.
-//----------------------------------------------------------------------------
 static void
 syscall_handle()
 {
     // Do nothing for now.
 }
 
-//----------------------------------------------------------------------------
-//  @function   syscall_init
-//  @brief      Set up the CPU to handle system calls.
 //----------------------------------------------------------------------------
 void
 syscall_init()

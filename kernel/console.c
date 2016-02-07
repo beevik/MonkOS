@@ -28,10 +28,7 @@
 #define SCREEN_SIZE      (SCREEN_ROWS * SCREEN_COLS)
 #define SCREEN_BUFFER    0x000b8000
 
-//----------------------------------------------------------------------------
-//  @struct     console_t
-//  @brief      The full state of a virtual console.
-//----------------------------------------------------------------------------
+/// Virtual console state.
 typedef struct console
 {
     uint16_t    textcolor;          ///< Current fg/bg color (shifted left 8).
@@ -46,20 +43,12 @@ static console_t  console[MAX_CONSOLES];   ///< All virtual consoles.
 static console_t *active_console;          ///< The currently visible console.
 
 //----------------------------------------------------------------------------
-//  @function   color
-//  @brief      Return a 16-bit textcolor field that can be quickly or'd with
-//              a character before being placed into the screen buffer.
-//----------------------------------------------------------------------------
 static inline uint16_t
 color(textcolor_t fg, textcolor_t bg)
 {
     return (uint16_t)bg << 12 | (uint16_t)fg << 8;
 }
 
-//----------------------------------------------------------------------------
-//  @function   update_buffer_offset
-//  @brief      Adjust the video hardware's buffer offset based on the
-//              active console's state.
 //----------------------------------------------------------------------------
 static void
 update_buffer_offset()
@@ -79,10 +68,6 @@ update_buffer_offset()
 }
 
 //----------------------------------------------------------------------------
-//  @function   update_cursor
-//  @brief      Adjust the video hardware's cursor position based on the
-//              active console's state.
-//----------------------------------------------------------------------------
 static void
 update_cursor()
 {
@@ -100,11 +85,6 @@ update_cursor()
     io_outb(CRTC_PORT_CMD, save);
 }
 
-//----------------------------------------------------------------------------
-//  @function   console_init
-//  @brief      Initialize all virtual consoles.
-//  @details    This function must be called before any other console
-//              functions can be used.
 //----------------------------------------------------------------------------
 void
 console_init()
@@ -125,12 +105,6 @@ console_init()
 }
 
 //----------------------------------------------------------------------------
-//  @function   console_activate
-//  @brief      Activate the requested virtual console.
-//  @details    The virtual console's buffer is immediately displayed on the
-//              screen.
-//  @param[in]  id      Virtual console id (0-3).
-//----------------------------------------------------------------------------
 void
 console_activate(int id)
 {
@@ -145,13 +119,6 @@ console_activate(int id)
 }
 
 //----------------------------------------------------------------------------
-//  @function   console_set_textcolor
-//  @brief      Set the foreground and background colors used to display
-//              text on the virtual console.
-//  @param[in]  id      Virtual console id (0-3).
-//  @param[in]  fg      Foreground color.
-//  @param[in]  bg      Background color.
-//----------------------------------------------------------------------------
 void
 console_set_textcolor(int id, textcolor_t fg, textcolor_t bg)
 {
@@ -161,12 +128,6 @@ console_set_textcolor(int id, textcolor_t fg, textcolor_t bg)
     console[id].textcolor = console[id].textcolor_orig = color(fg, bg);
 }
 
-//----------------------------------------------------------------------------
-//  @function   console_set_textcolor_fg
-//  @brief      Set the foreground color used to display text on the virtual
-//              console.
-//  @param[in]  id      Virtual console id (0-3).
-//  @param[in]  fg      Foreground color.
 //----------------------------------------------------------------------------
 void
 console_set_textcolor_fg(int id, textcolor_t fg)
@@ -179,12 +140,6 @@ console_set_textcolor_fg(int id, textcolor_t fg)
 }
 
 //----------------------------------------------------------------------------
-//  @function   console_set_textcolor_bg
-//  @brief      Set the background color used to display text on the virtual
-//              console.
-//  @param[in]  id      Virtual console id (0-3).
-//  @param[in]  bg      Background color.
-//----------------------------------------------------------------------------
 void
 console_set_textcolor_bg(int id, textcolor_t bg)
 {
@@ -196,12 +151,6 @@ console_set_textcolor_bg(int id, textcolor_t bg)
 }
 
 //----------------------------------------------------------------------------
-//  @function   console_get_textcolor_fg
-//  @brief      Get the foreground color used to display text on the virtual
-//              console.
-//  @param[in]  id      Virtual console id (0-3).
-//  @returns    Foreground color.
-//----------------------------------------------------------------------------
 textcolor_t
 console_get_textcolor_fg(int id)
 {
@@ -212,12 +161,6 @@ console_get_textcolor_fg(int id)
 }
 
 //----------------------------------------------------------------------------
-//  @function   console_get_textcolor_bg
-//  @brief      Get the background color used to display text on the virtual
-//              console.
-//  @param[in]  id      Virtual console id (0-3).
-//  @returns    Background color.
-//----------------------------------------------------------------------------
 textcolor_t
 console_get_textcolor_bg(int id)
 {
@@ -227,11 +170,6 @@ console_get_textcolor_bg(int id)
     return (textcolor_t)((console[id].textcolor_orig >> 12) & 0x0f);
 }
 
-//----------------------------------------------------------------------------
-//  @function   console_clear
-//  @brief      Clear the virtual console screen's contents using the current
-//              text background color.
-//  @param[in]  id      Virtual console id (0-3).
 //----------------------------------------------------------------------------
 void
 console_clear(int id)
@@ -248,13 +186,6 @@ console_clear(int id)
 }
 
 //----------------------------------------------------------------------------
-//  @function   console_setpos
-//  @brief      Set the position of the cursor on the virtual console.
-//  @details    Text written to the console after this function will be
-//              located at the requested screen position.
-//  @param[in]  id      Virtual console id (0-3).
-//  @param[in]  pos     The screen position of the cursor.
-//----------------------------------------------------------------------------
 void
 console_setpos(int id, screenpos_t pos)
 {
@@ -269,11 +200,6 @@ console_setpos(int id, screenpos_t pos)
 }
 
 //----------------------------------------------------------------------------
-//  @function   console_getpos
-//  @brief      Get the current position of the cursor on the virtual console.
-//  @param[in]  id      Virtual console id (0-3).
-//  @param[out] pos     A pointer to a screenpos_t to receive the position.
-//----------------------------------------------------------------------------
 void
 console_getpos(int id, screenpos_t *pos)
 {
@@ -282,14 +208,6 @@ console_getpos(int id, screenpos_t *pos)
     *pos = console[id].pos;
 }
 
-//----------------------------------------------------------------------------
-//  @function   colorcode
-/// @brief      Return the textcolor corresponding to the escape sequence
-///             character 'x' contained in \033[x].
-/// @param[in]  x       The escape sequence character.
-/// @param[in]  orig    The console's original color. Used when x is '-'.
-/// @returns    Return the textcolor as an integer in the range [0:15] if
-///             x is valid. Otherwise return -1.
 //----------------------------------------------------------------------------
 static int
 colorcode(char x, int orig)
@@ -308,15 +226,6 @@ colorcode(char x, int orig)
         return -1;
 }
 
-//----------------------------------------------------------------------------
-//  @function   console_printchar
-/// @brief      Print a single character to the virtual console.
-/// @details    Use the console's current text color and screen position. A
-///             newline character ('\\n') causes the screen position to
-///             be updated as though a carriage return and line feed were
-///             performed.
-/// @param[in]      cons    Virtual console pointer.
-/// @param[in,out]  strptr  Pointer to the string.
 //----------------------------------------------------------------------------
 static void
 console_printchar(console_t *cons, const char **strptr)
@@ -413,12 +322,6 @@ console_printchar(console_t *cons, const char **strptr)
     }
 }
 
-//----------------------------------------------------------------------------
-//  @function   console_print
-//  @brief      Output a null-terminated string to the virtual console using
-//              the console's current text color and screen position.
-//  @param[in]  id      Virtual console id (0-3).
-//  @param[in]  str     The null-terminated string to be printed.
 //----------------------------------------------------------------------------
 void
 console_print(int id, const char *str)

@@ -22,11 +22,6 @@
 #endif
 
 //----------------------------------------------------------------------------
-//  @function   hexchar
-/// @brief      Convert a 4-byte integer to its hexadecimal representation.
-/// @param[in]  value   An integer value between 0 and 15.
-/// @returns    A character representing the hexadecimal digit.
-//----------------------------------------------------------------------------
 static inline char
 hexchar(int value)
 {
@@ -37,35 +32,27 @@ hexchar(int value)
 }
 
 //----------------------------------------------------------------------------
-//  @function   sysinit
-/// @brief      Initialize the kernel's system modules.
-//----------------------------------------------------------------------------
 static void
 sysinit()
 {
-    // Initialize the console screen.
+    // Initialize the interrupt controllers and tables.
+    interrupts_init();
+
+    // Initialize the console.
     console_init();
     console_set_textcolor(0, TEXTCOLOR_WHITE, TEXTCOLOR_BLACK);
     console_clear(0);
 
-    // Set up CPU for system calls.
-    syscall_init();
-
-    // Initialize all interrupt and exception handling.
-    interrupts_init();
+    // Initialize various system modules.
     exceptions_init();
-
-    // Initialize various interrupt-generating kernel modules.
+    syscall_init();
     kb_init();
     timer_init(20);         // 20Hz
 
-    // Turn on interrupt service routines.
+    // Enable interrupts.
     interrupts_enable();
 }
 
-//----------------------------------------------------------------------------
-//  @function   do_test
-/// @brief      Test code (temporary)
 //----------------------------------------------------------------------------
 static void
 do_test()
@@ -112,11 +99,6 @@ do_test()
     }
 }
 
-//----------------------------------------------------------------------------
-//  @function   kmain
-/// @brief      Kernel main entry point.
-/// @details    kmain is the first function called by the kernel bootstrapper
-///             in start.asm.
 //----------------------------------------------------------------------------
 void
 kmain()

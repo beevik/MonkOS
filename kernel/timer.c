@@ -23,10 +23,6 @@
 #define MAX_FREQUENCY    1193181
 
 //----------------------------------------------------------------------------
-//  @function   isr_timer
-/// @brief      Interrupt service routine for timer IRQ 0.
-/// @param[in]  context     The CPU state at the time of the interrupt.
-//----------------------------------------------------------------------------
 static void
 isr_timer(const interrupt_context_t *context)
 {
@@ -38,12 +34,6 @@ isr_timer(const interrupt_context_t *context)
     io_outb(PIC_PORT_CMD_MASTER, PIC_CMD_EOI);
 }
 
-//----------------------------------------------------------------------------
-//  @function   timer_init
-//  @brief      Initialize the timer controller so that it interrupts the
-//              kernel at the requested frequency.
-//  @param[in]  frequency   The interrupt frequency in Hz. Clamped to the
-//                          range [19:1193181].
 //----------------------------------------------------------------------------
 void
 timer_init(uint32_t frequency)
@@ -72,9 +62,6 @@ timer_init(uint32_t frequency)
 }
 
 //----------------------------------------------------------------------------
-//  @function   timer_enable
-//  @brief      Enable timer interrupts.
-//----------------------------------------------------------------------------
 void
 timer_enable()
 {
@@ -82,9 +69,6 @@ timer_enable()
     irq_enable(0);
 }
 
-//----------------------------------------------------------------------------
-//  @function   timer_disable
-//  @brief      Disable timer interrupts.
 //----------------------------------------------------------------------------
 void
 timer_disable()

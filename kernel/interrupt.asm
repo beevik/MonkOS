@@ -49,6 +49,16 @@ Segment.User.Data   equ     0x18
 Segment.User.Code   equ     0x20
 Segment.TSS         equ     0x28
 
+; CPU exception constants used by this code.
+Exception.NMI       equ     0x02
+Exception.DF        equ     0x08
+Exception.TS        equ     0x0a
+Exception.NP        equ     0x0b
+Exception.SS        equ     0x0c
+Exception.GP        equ     0x0d
+Exception.PF        equ     0x0e
+Exception.MC        equ     0x12
+
 
 ;-----------------------------------------------------------------------------
 ; IDT descriptor
@@ -240,42 +250,42 @@ ISR.Dispatcher.Special:
 
 
 ;-----------------------------------------------------------------------------
-; @function     interrupts_init
-; @brief        Initialize all interrupt tables.
-; @details      Initialize a table of interrupt service routine thunks, one
-;               for each of the 256 possible interrupts. Then set up the
-;               interrupt descriptor table (IDT) to point to each of the
-;               thunks.
-; @killedregs   rax, rcx, rsi, rdi, r8
+; @function interrupts_init
 ;-----------------------------------------------------------------------------
 interrupts_init:
 
-    ; CPU exception constants used by this code.
-    .Exception.NMI  equ     0x02
-    .Exception.DF   equ     0x08
-    .Exception.TS   equ     0x0a
-    .Exception.NP   equ     0x0b
-    .Exception.SS   equ     0x0c
-    .Exception.GP   equ     0x0d
-    .Exception.PF   equ     0x0e
-    .Exception.MC   equ     0x12
+    ;-------------------------------------------------------------------------
+    ; Set up the 8259 programmable interrupt controller (PIC)
+    ;-------------------------------------------------------------------------
+    .setupPIC:
 
-    ; Certain CPU exceptions push an error code onto the stack before calling
-    ; the interrupt trap. We need to use a special dispatcher for these
-    ; exceptions so it doesn't push an extra dummy error code onto the stack
-    ; before calling the ISR.
-    .PushesError    equ     (1 << .Exception.DF) | \
-                            (1 << .Exception.TS) | \
-                            (1 << .Exception.NP) | \
-                            (1 << .Exception.SS) | \
-                            (1 << .Exception.GP) | \
-                            (1 << .Exception.PF)
+        ; (ICW = initialization command word)
 
-    ; Preserve flags before disabling interrupts.
-    pushf
+        ; Initialize the master PIC.
+        mov     al,     0x11        ; ICW1: 0x11 = init with 4 ICW's
+        out     0x20,   al
+        mov     al,     0x20        ; ICW2: 0x20 = interrupt offset 32
+        out     0x21,   al
+        mov     al,     0x04        ; ICW3: 0x04 = IRQ2 has a slave
+        out     0x21,   al
+        mov     al,     0x01        ; ICW4: 0x01 = x86 mode
+        out     0x21,   al
 
-    ; Interrupts must be disabled before mucking with interrupt tables.
-    cli
+        ; Initialize the slave PIC.
+        mov     al,     0x11        ; ICW1: 0x11 = init with 4 ICW's
+        out     0xa0,   al
+        mov     al,     0x28        ; ICW2: 0x28 = interrupt offset 40
+        out     0xa1,   al
+        mov     al,     0x02        ; ICW3: 0x02 = attached to master IRQ2.
+        out     0xa1,   al
+        mov     al,     0x01        ; ICW4: 0x01 = x86 mode
+        out     0xa1,   al
+
+        ; Disable all IRQs. The kernel will re-enable the ones it wants to
+        ; handle later.
+        mov     al,     0xff
+        out     0x21,   al
+        out     0xa1,   al
 
     ;-------------------------------------------------------------------------
     ; Initialize the ISR thunk table
@@ -286,52 +296,64 @@ interrupts_init:
         ; As the entry is duplicated, modify the interrupt number it pushes on
         ; the stack.
 
+        ; Certain CPU exceptions push an error code onto the stack before
+        ; calling the interrupt trap. We need to use a special dispatcher for
+        ; these exceptions so it doesn't push an extra dummy error code onto
+        ; the stack before calling the ISR.
+        .PushesError    equ     (1 << Exception.DF) | \
+                                (1 << Exception.TS) | \
+                                (1 << Exception.NP) | \
+                                (1 << Exception.SS) | \
+                                (1 << Exception.GP) | \
+                                (1 << Exception.PF)
+
         ; Initialize target pointer and interrupt counter.
         mov     rdi,    Mem.ISR.Thunks  ; rdi = thunk table offset
         xor     rcx,    rcx             ; rcx = interrupt number
 
-    .installThunk:
+        .installThunk:
 
-        ; Copy the ISR thunk template to the current thunk entry.
-        mov     rsi,    ISR.Thunk.Template
-        movsq       ; assumes thunk is 8 bytes.
+            ; Copy the ISR thunk template to the current thunk entry.
+            mov     rsi,    ISR.Thunk.Template
+            movsq       ; assumes thunk is 8 bytes.
 
-        ; Replace "push 0" with "push X", where X is the current interrupt
-        ; number.
-        mov     byte [rdi - ISR.Thunk.Size + 2],  cl
+            ; Replace "push 0" with "push X", where X is the current interrupt
+            ; number.
+            mov     byte [rdi - ISR.Thunk.Size + 2],  cl
 
-        ; By default, all thunks jump to ISR.Dispatcher.
-        mov     r8,     ISR.Dispatcher
+            ; By default, all thunks jump to ISR.Dispatcher.
+            mov     r8,     ISR.Dispatcher
 
-        ; Do we need to replace the dispatcher with the special dispatcher?
+            ; Do we need to replace the dispatcher with the special
+            ; dispatcher?
 
-        ; If the current thunk is for an interrupt greater than 14, it will
-        ; not use the special dispatcher, so jump ahead.
-        cmp     rcx,    14
-        ja      .updateDispatcher
+            ; If the current thunk is for an interrupt greater than 14, it
+            ; will not use the special dispatcher, so jump ahead.
+            cmp     rcx,    14
+            ja      .updateDispatcher
 
-        ; If the current thunk isn't for one of the exceptions that pushes an
-        ; error code onto the stack, then jump ahead. (Use a bit mask to
-        ; perform the check quickly.)
-        mov     eax,    1
-        shl     eax,    cl
-        test    eax,    .PushesError
-        jz      .updateDispatcher
+            ; If the current thunk isn't for one of the exceptions that pushes
+            ; an error code onto the stack, then jump ahead. (Use a bit mask
+            ; to perform the check quickly.)
+            mov     eax,    1
+            shl     eax,    cl
+            test    eax,    .PushesError
+            jz      .updateDispatcher
 
-        ; Use the special dispatcher for exceptions that push an error code
-        ; onto the stack.
-        mov     r8,     ISR.Dispatcher.Special
+            ; Use the special dispatcher for exceptions that push an error
+            ; code onto the stack.
+            mov     r8,     ISR.Dispatcher.Special
 
-    .updateDispatcher:
+        .updateDispatcher:
 
-        ; Replace "jmp 0" with "jmp <dispatcher offset>".
-        sub     r8,                                 rdi
-        mov     dword [rdi - ISR.Thunk.Size + 4],   r8d
+            ; Replace "jmp 0" with "jmp <dispatcher offset>".
+            sub     r8,                                 rdi
+            mov     dword [rdi - ISR.Thunk.Size + 4],   r8d
 
-        ; Advance to the next interrupt, and stop when we hit 256.
-        inc     ecx
-        cmp     ecx,    256
-        jne     .installThunk
+            ; Advance to the next interrupt, and stop when we hit 256.
+            inc     ecx
+            cmp     ecx,    256
+            jne     .installThunk
 
     ;-------------------------------------------------------------------------
     ; Initialize the interrupt descriptor table (IDT)
@@ -349,98 +371,89 @@ interrupts_init:
         mov     rdi,    Mem.IDT             ; rdi = IDT offset
         xor     rcx,    rcx                 ; rcx = interrupt number
 
-    .installDescriptor:
+        .installDescriptor:
 
-        ; Copy thunk table offset into r8 so we can modify it.
-        mov     r8,     rsi
+            ; Copy thunk table offset into r8 so we can modify it.
+            mov     r8,     rsi
 
-        ; Write the ISR thunk address bits [0:15].
-        inc     r8      ; skip the nop
-        mov     word [rdi + IDT.Descriptor.OffsetLo],   r8w
+            ; Write the ISR thunk address bits [0:15].
+            inc     r8      ; skip the nop
+            mov     word [rdi + IDT.Descriptor.OffsetLo],   r8w
 
-        ; Write the ISR thunk address bits [16:31].
-        shr     r8,     16
-        mov     word [rdi + IDT.Descriptor.OffsetMid],  r8w
+            ; Write the ISR thunk address bits [16:31].
+            shr     r8,     16
+            mov     word [rdi + IDT.Descriptor.OffsetMid],  r8w
 
-        ; Write the ISR thunk address bits [32:63].
-        shr     r8,     16
-        mov     dword [rdi + IDT.Descriptor.OffsetHi],  r8d
+            ; Write the ISR thunk address bits [32:63].
+            shr     r8,     16
+            mov     dword [rdi + IDT.Descriptor.OffsetHi],  r8d
 
-        ; Write the kernel code segment selector.
-        mov     r8w,    Segment.Kernel.Code
-        mov     word [rdi + IDT.Descriptor.Segment],    r8w
+            ; Write the kernel code segment selector.
+            mov     r8w,    Segment.Kernel.Code
+            mov     word [rdi + IDT.Descriptor.Segment],    r8w
 
-        ; CPU exceptions are interrupts with vector numbers less than 32. For
-        ; these interrupts, use an interrupt gate. For all others, use a trap
-        ; gate.
-        cmp     cl,     31
-        ja      .useTrap
+            ; CPU exceptions are interrupts with vector numbers less than 32.
+            ; For these interrupts, use an interrupt gate. For all others, use
+            ; a trap gate.
+            cmp     cl,     31
+            ja      .useTrap
 
-    .useInterrupt:
+        .useInterrupt:
 
-        ; Write the flags (IST=0, Type=interrupt, DPL=0, P=1)
-        mov     word [rdi + IDT.Descriptor.Flags], 1000111000000000b
-        jmp     .nextDescriptor
+            ; Write the flags (IST=0, Type=interrupt, DPL=0, P=1)
+            mov     word [rdi + IDT.Descriptor.Flags], 1000111000000000b
+            jmp     .nextDescriptor
 
-    .useTrap:
+        .useTrap:
 
-        ; Write the flags (IST=0, Type=trap, DPL=0, P=1)
-        mov     word [rdi + IDT.Descriptor.Flags], 1000111100000000b
+            ; Write the flags (IST=0, Type=trap, DPL=0, P=1)
+            mov     word [rdi + IDT.Descriptor.Flags], 1000111100000000b
 
-    .nextDescriptor:
+        .nextDescriptor:
 
-        ; Advance to the next thunk and IDT entry.
-        add     rsi,    ISR.Thunk.Size
-        add     rdi,    IDT.Descriptor_size
+            ; Advance to the next thunk and IDT entry.
+            add     rsi,    ISR.Thunk.Size
+            add     rdi,    IDT.Descriptor_size
 
-        ; Stop when we hit interrupt 256.
-        inc     ecx
-        cmp     ecx,    256
-        jne     .installDescriptor
+            ; Stop when we hit interrupt 256.
+            inc     ecx
+            cmp     ecx,    256
+            jne     .installDescriptor
 
-    .replaceSpecialStacks:
+        .replaceSpecialStacks:
 
-        ; Three exceptions (DF, MC, and NMI) require special stacks. So
-        ; replace their IDT entries' flags with values that use different
-        ; interrupt stack table (IST) settings.
+            ; Three exceptions (DF, MC, and NMI) require special stacks. So
+            ; replace their IDT entries' flags with values that use different
+            ; interrupt stack table (IST) settings.
 
-        ; NMI exception (IST=1, Type=interrupt, DPL=0, P=1)
-        mov     rdi,        Mem.IDT + \
-                                IDT.Descriptor_size * .Exception.NMI + \
-                                IDT.Descriptor.Flags
-        mov     word [rdi], 1000111000000001b
+            ; NMI exception (IST=1, Type=interrupt, DPL=0, P=1)
+            mov     rdi,        Mem.IDT + \
+                                    IDT.Descriptor_size * Exception.NMI + \
+                                    IDT.Descriptor.Flags
+            mov     word [rdi], 1000111000000001b
 
-        ; Double-fault exception (IST=2, Type=interrupt, DPL=0, P=1)
-        mov     rdi,        Mem.IDT + \
-                                IDT.Descriptor_size * .Exception.DF + \
-                                IDT.Descriptor.Flags
-        mov     word [rdi], 1000111000000010b
+            ; Double-fault exception (IST=2, Type=interrupt, DPL=0, P=1)
+            mov     rdi,        Mem.IDT + \
+                                    IDT.Descriptor_size * Exception.DF + \
+                                    IDT.Descriptor.Flags
+            mov     word [rdi], 1000111000000010b
 
-        ; Machine-check exception (IST=3, Type=interrupt, DPL=0, P=1)
-        mov     rdi,        Mem.IDT + \
-                                IDT.Descriptor_size * .Exception.MC + \
-                                IDT.Descriptor.Flags
-        mov     word [rdi], 1000111000000011b
+            ; Machine-check exception (IST=3, Type=interrupt, DPL=0, P=1)
+            mov     rdi,        Mem.IDT + \
+                                    IDT.Descriptor_size * Exception.MC + \
+                                    IDT.Descriptor.Flags
+            mov     word [rdi], 1000111000000011b
 
-    .loadIDT:
+        .loadIDT:
 
-        ; Install the IDT
-        lidt    [IDT.Pointer]
-
-        ; Restore original interrupt flag setting.
-        popf
+            ; Install the IDT
+            lidt    [IDT.Pointer]
 
         ret
 
 
 ;-----------------------------------------------------------------------------
-; @function     isr_set
-; @brief        Set a kernel-defined interrupt service routine for the given
-;               interrupt number.
-; @details      Interrupts should be disabled while setting these handlers.
-;               To disable an ISR, set its handler to null.
-; @reg[in]      rdi     Interrupt number
-; @reg[in]      rsi     ISR function address
+; @function isr_set
 ;-----------------------------------------------------------------------------
 isr_set:
 
@@ -464,10 +477,7 @@ isr_set:
 
 
 ;-----------------------------------------------------------------------------
-; @function     irq_enable
-; @brief        Tell the PIC to enable a hardware interrupt.
-; @reg[in]      rdi     IRQ number.
-; @killedregs   rax, rcx, rdx
+; @function irq_enable
 ;-----------------------------------------------------------------------------
 irq_enable:
 
@@ -519,10 +529,7 @@ irq_enable:
 
 
 ;-----------------------------------------------------------------------------
-; @function     irq_disable
-; @brief        Tell the PIC to disable a hardware interrupt.
-; @reg[in]      rdi     IRQ number.
-; @killedregs   rax, rcx, rdx
+; @function irq_disable
 ;-----------------------------------------------------------------------------
 irq_disable:
 

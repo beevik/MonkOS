@@ -74,7 +74,7 @@ org 0
 ;   00007e00 - 0009fbff      622,080 bytes     Free
 ;   0009fc00 - 0009ffff        1,024 bytes     Extended BIOS data area (EBDA)
 ;   000a0000 - 000bffff      131,072 bytes     BIOS video memory
-;   000c0000 - 000fffff      196,608 bytes     ROM
+;   000c0000 - 000fffff      262,144 bytes     ROM
 ;
 ;   [ See http://wiki.osdev.org/Memory_Map_(x86) ]
 ;

@@ -52,9 +52,14 @@ typedef struct interrupt_context
 
 //----------------------------------------------------------------------------
 //  @function   interrupts_init
-/// @brief      Initialize the interrupt service routine table.
-/// @details    Clear all interrupt handlers and set up the CPU to properly
-///             handle all interrupts.
+/// @brief      Initialize all interrupt tables.
+/// @details    Initialize a table of interrupt service routine thunks, one
+///             for each of the 256 possible interrupts. Then set up the
+///             interrupt descriptor table (IDT) to point to each of the
+///             thunks.
+///
+///             Interrupts should not be enabled until this function has
+///             been called.
 //----------------------------------------------------------------------------
 void
 interrupts_init();

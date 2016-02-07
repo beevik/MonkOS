@@ -13,10 +13,6 @@
 #include <kernel/console.h>
 
 //----------------------------------------------------------------------------
-//  @function   isr_abort
-/// @brief      Handle an exception that requires the system to abort.
-/// @param[in]  context     The CPU context at the time of the interrupt.
-//----------------------------------------------------------------------------
 static void
 isr_abort(const interrupt_context_t *context)
 {
@@ -32,10 +28,6 @@ isr_abort(const interrupt_context_t *context)
 }
 
 //----------------------------------------------------------------------------
-//  @function   isr_breakpoint
-/// @brief      Handle a breakpoint exception.
-/// @param[in]  context     The CPU context at the time of the interrupt.
-//----------------------------------------------------------------------------
 static void
 isr_breakpoint(const interrupt_context_t *context)
 {
@@ -44,9 +36,6 @@ isr_breakpoint(const interrupt_context_t *context)
     console_print(0, "Breakpoint hit.\n");
 }
 
-//----------------------------------------------------------------------------
-//  @function   exceptions_init
-//  @brief      Initialize all exception handling routines.
 //----------------------------------------------------------------------------
 void
 exceptions_init()

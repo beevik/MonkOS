@@ -57,17 +57,18 @@ org 0x8000
 ;   00010000 - 0009fbff      588,800 bytes     Free
 ;   0009fc00 - 0009ffff        1,024 bytes     Extended BIOS data area (EBDA)
 ;   000a0000 - 000bffff      131,072 bytes     BIOS video memory
-;   000c0000 - 000fffff      196,608 bytes     ROM
+;   000c0000 - 000fffff      262,144 bytes     ROM
 ;
 ;   [ See http://wiki.osdev.org/Memory_Map_(x86) ]
 ;
 ; Memory regions used or modified by this code:
 ;
-;   00000100 - 000001ff          128 bytes     Global Descriptor Table (GDT)
-;   00000200 - 000002ff          128 bytes     Task State Segment (TSS)
+;   00000100 - 000001ff          256 bytes     Global Descriptor Table (GDT)
+;   00000200 - 000002ff          256 bytes     Task State Segment (TSS)
 ;   00000800 - 00000fff        2,048 bytes     Cdrom sector read buffer
 ;   00001000 - 00007bff       27,648 bytes     Real mode stack
 ;   00010000 - 00017fff       32,768 bytes     Page tables
+;   00018000 - 0001bfff       16,384 bytes     Memory map (from BIOS)
 ;   0006f000 - 0006ffff        4,096 bytes     32-bit protected mode stack
 ;   00070000 - 0007ffff       65,536 bytes     Kernel load buffer
 ;   00100000 - 001fffff    1,048,576 bytes     Kernel stack
@@ -184,11 +185,20 @@ load:
         call    DisplayStatusString
 
     ;-------------------------------------------------------------------------
+    ; Retrieve memory layout from the BIOS
+    ;-------------------------------------------------------------------------
+    .readLayout:
+
+        ; Use the BIOS to collect an array of memory ranges available and in
+        ; use.
+        call    ReadMemLayout
+
+    ;-------------------------------------------------------------------------
     ; Load the kernel image into upper memory
     ;-------------------------------------------------------------------------
     .loadKernel:
 
-        ; Re-enable interrupts.
+        ; Enable interrupts while loading the kernel.
         sti
 
         ; Use a temporary GDT while loading the kernel, since we use 32-bit
@@ -213,42 +223,9 @@ load:
         call    DisplayStatusString
 
         ; Disable interrupts and leave them disabled until the kernel
-        ; launches. The kernel is responsible for setting up an interrupt
-        ; table before re-enabling interrupts.
+        ; launches. The kernel is responsible for setting up the interrupt
+        ; controllers and tables before re-enabling interrupts.
         cli
-
-    ;-------------------------------------------------------------------------
-    ; Set up the 8259 programmable interrupt controller (PIC)
-    ;-------------------------------------------------------------------------
-    .setupPIC:
-
-        ; (ICW = initialization command word)
-
-        ; Initialize the master PIC.
-        mov     al,     0x11        ; ICW1: 0x11 = init with 4 ICW's
-        out     0x20,   al
-        mov     al,     0x20        ; ICW2: 0x20 = interrupt offset 32
-        out     0x21,   al
-        mov     al,     0x04        ; ICW3: 0x04 = IRQ2 has a slave
-        out     0x21,   al
-        mov     al,     0x01        ; ICW4: 0x01 = x86 mode
-        out     0x21,   al
-
-        ; Initialize the slave PIC.
-        mov     al,     0x11        ; ICW1: 0x11 = init with 4 ICW's
-        out     0xa0,   al
-        mov     al,     0x28        ; ICW2: 0x28 = interrupt offset 40
-        out     0xa1,   al
-        mov     al,     0x02        ; ICW3: 0x02 = attached to master IRQ2.
-        out     0xa1,   al
-        mov     al,     0x01        ; ICW4: 0x01 = x86 mode
-        out     0xa1,   al
-
-        ; Disable all IRQs. The kernel will re-enable the ones it wants to
-        ; handle later.
-        mov     al,     0xff
-        out     0x21,   al
-        out     0xa1,   al
 
     ;-------------------------------------------------------------------------
     ; Wipe memory zones that the loaders used
@@ -270,8 +247,13 @@ load:
         mov     cx,     Mem.BIOS.Data.Size
         rep     stosb
 
+        ; Wipe the stage-1 boot loader.
+        mov     di,     Mem.Loader1
+        mov     cx,     Mem.Loader1.Size
+        rep     stosb
+
         ; Wipe the sector load buffer.
-        mov     ax,     Mem.Kernel.LoadBuffer.Segment
+        mov     ax,     Mem.Kernel.LoadBuffer >> 4
         mov     es,     ax
         xor     ax,     ax
         xor     di,     di
@@ -279,13 +261,6 @@ load:
         rep     stosb
         inc     cx
         stosb
-
-        ; Wipe the stage-1 boot loader.
-        xor     ax,     ax
-        mov     es,     ax
-        mov     di,     Mem.Loader1
-        mov     cx,     Mem.Loader1.Size
-        rep     stosb
 
         ; Wipe the temporary 32-bit protected mode stack.
         mov     ax,     Mem.Stack32.Temp.Bottom >> 4
@@ -706,6 +681,121 @@ HasCPUID:
 
 
 ;=============================================================================
+; ReadMemLayout
+;
+; Use the BIOS to read an array of memory layout zones. Each zone is tagged as
+; available or in use.
+;
+; After this procedure is complete, the memory layout will be stored as
+; follows, starting at Mem.Layout:
+;
+;    <----- 64-bits ----->
+;   +----------------------+
+;   | Zone count           |
+;   +----------------------+
+;   | Reserved             |
+;   +----------------------+
+;   | Zone #0 base address |
+;   +----------------------+
+;   | Zone #0 size         |
+;   +----------------------+
+;   | Zone #0 type         |
+;   +----------------------+
+;   | Zone #1 base address |
+;   +----------------------+
+;   | Zone #1 size         |
+;   +----------------------+
+;   | Zone #1 type         |
+;   +----------------------+
+;   |         ...          |
+;   +----------------------+
+;
+; The layout may be unsorted, and it could contain gaps. It's the
+; responsibility of the kernel to clean up this data so that it's more usable.
+;
+; Killed registers:
+;   None
+;=============================================================================
+ReadMemLayout:
+
+    push    eax
+    push    ebx
+    push    ecx
+    push    edx
+    push    esi
+    push    edi
+    push    es
+
+    .init:
+
+        ; Set the segment register for the location of the memory layout.
+        mov     ax,     Mem.Layout >> 4
+        mov     es,     ax
+        xor     esi,    esi     ; si = zone counter
+        mov     di,     0x10    ; di = target memory offset
+
+        ; Initialize the ebx and edx registers for calls to the BIOS memory
+        ; probe function.
+        xor     ebx,    ebx         ; ebx = BIOS call tracking data
+        mov     edx,    0x534d4150  ; edx = system map magic number 'SMAP'
+
+    .readZone:
+
+        ; Call the BIOS function.
+        mov     eax,    0xe820      ; eax = BIOS 15h function
+        mov     ecx,    24          ; ecx = Max size of target buffer
+        int     0x15
+
+        ; Carry flag indicates error.
+        jc      .done
+
+        ; If only 20 bytes were read (as is typical), fill the APIC3.0 dword
+        ; at offset 20 with 1.
+        cmp     ecx,    20
+        jne     .nextZone
+
+        ; Set bit 1 on the APIC3.0 dword (which means "don't ignore").
+        mov     dword [es:di + 20],   1 << 0
+
+    .nextZone:
+
+        ; Advance the zone counter and target pointer.
+        inc     si
+        add     di,     0x18
+
+        ; ebx will be zero when we're done.
+        cmp     ebx,    0
+        je      .done
+
+        ; Don't overflow the memory layout buffer.
+        cmp     si,     (Mem.Layout.Size - 0x10) / 0x18
+        jb      .readZone
+
+    .done:
+
+        ; Store the zone count at the start of the layout.
+        mov     eax,    esi
+        xor     di,     di
+        stosd
+        xor     eax,    eax
+        stosd
+        stosd
+        stosd
+
+        ; Restore registers and flags.
+        clc
+        pop     es
+        pop     edi
+        pop     esi
+        pop     edx
+        pop     ecx
+        pop     ebx
+        pop     eax
+
+        ret
+
+
+;=============================================================================
 ; FindKernel
 ;
 ; Scan the root directory of the cdrom for a file called "MONK.SYS". If found,
@@ -915,7 +1005,7 @@ LoadKernel:
     .loadChunk:
 
         ; Set target buffer for the read.
-        mov     cx,     Mem.Kernel.LoadBuffer.Segment
+        mov     cx,     Mem.Kernel.LoadBuffer >> 4
         mov     es,     cx
         xor     di,     di
 
@@ -1096,10 +1186,13 @@ LoadKernel.StackPointer         dw      0
 SetupPageTables:
 
     ; Constants for page table bits
-    .Present     equ     1 << 0
-    .ReadWrite   equ     1 << 1
-    .Guard       equ     1 << 9         ; use a bit ignored by the CPU
-    .PageBits    equ     .Present | .ReadWrite
+    .Present        equ     1 << 0
+    .ReadWrite      equ     1 << 1
+    .WriteThru      equ     1 << 3
+    .CacheDisable   equ     1 << 4
+    .AttribTable    equ     1 << 7
+    .Guard          equ     1 << 9         ; use a bit ignored by the CPU
+    .StdBits        equ     .Present | .ReadWrite
 
     ; Preserve registers
     pusha
@@ -1121,33 +1214,33 @@ SetupPageTables:
     .makeTables:
 
         ; PML4T entry 0 points to the PDPT.
-        mov     edi,                    Mem.PageTable.PML4T & 0xffff
-        mov     dword [es:edi],         Mem.PageTable.PDPT | .PageBits
+        mov     di,                     Mem.PageTable.PML4T & 0xffff
+        mov     dword [es:di],          Mem.PageTable.PDPT | .StdBits
 
         ; PDPT entry 0 points to the PDT.
-        mov     edi,                    Mem.PageTable.PDPT & 0xffff
-        mov     dword [es:edi],         Mem.PageTable.PDT | .PageBits
+        mov     di,                     Mem.PageTable.PDPT & 0xffff
+        mov     dword [es:di],          Mem.PageTable.PDT | .StdBits
 
         ; PDT entries 0 through 5 point to page tables 0 through 5.
-        mov     edi,                    Mem.PageTable.PDT & 0xffff
-        mov     dword [es:edi + 0x00],  Mem.PageTable.PT0 | .PageBits
-        mov     dword [es:edi + 0x08],  Mem.PageTable.PT1 | .PageBits
-        mov     dword [es:edi + 0x10],  Mem.PageTable.PT2 | .PageBits
-        mov     dword [es:edi + 0x18],  Mem.PageTable.PT3 | .PageBits
-        mov     dword [es:edi + 0x20],  Mem.PageTable.PT4 | .PageBits
+        mov     di,                     Mem.PageTable.PDT & 0xffff
+        mov     dword [es:di + 0x00],   Mem.PageTable.PT0 | .StdBits
+        mov     dword [es:di + 0x08],   Mem.PageTable.PT1 | .StdBits
+        mov     dword [es:di + 0x10],   Mem.PageTable.PT2 | .StdBits
+        mov     dword [es:di + 0x18],   Mem.PageTable.PT3 | .StdBits
+        mov     dword [es:di + 0x20],   Mem.PageTable.PT4 | .StdBits
 
         ; Prepare to create page table entries.
-        mov     edi,    Mem.PageTable.PT0 & 0xffff
-        mov     eax,    .PageBits
-        mov     ecx,    512 * 5         ; 5 contiguous page tables
+        mov     di,     Mem.PageTable.PT0 & 0xffff
+        mov     eax,    .StdBits
+        mov     cx,     512 * 5         ; 5 contiguous page tables
 
     .makePage:
 
         ; Loop through each page table entry, incrementing the physical
         ; address by one page each time.
-        mov     [es:edi],     eax       ; store physical address + .PageBits
+        mov     [es:di],      eax       ; store physical address + .StdBits
         add     eax,          0x1000    ; next physical address
-        add     edi,          8         ; next page table entry
+        add     di,           8         ; next page table entry
         loop    .makePage
 
     .makeStackGuardPages:
@@ -1155,17 +1248,25 @@ SetupPageTables:
         ; Create a guard page at the bottom of the kernel stack. This way, if
         ; the kernel overflows the stack, we'll get a page fault.
         mov     edi,        Mem.Kernel.Stack.Bottom
-        call    .makeGuardPage
+        call    .makeGuard
 
         ; Create a guard page at the bottom of each interrupt stack.
         mov     edi,        Mem.Kernel.Stack.Interrupt.Bottom
-        call    .makeGuardPage
+        call    .makeGuard
         mov     edi,        Mem.Kernel.Stack.NMI.Bottom
-        call    .makeGuardPage
+        call    .makeGuard
         mov     edi,        Mem.Kernel.Stack.DF.Bottom
-        call    .makeGuardPage
+        call    .makeGuard
         mov     edi,        Mem.Kernel.Stack.MC.Bottom
-        call    .makeGuardPage
+        call    .makeGuard
+
+    .markUncachedPages:
+
+        ; Mark the 32 pages covering video and ROM memory (a0000..bffff) as
+        ; uncacheable.
+        mov     edi,    Mem.Video
+        mov     cx,     32
+        call    .makeUncached
 
     .initPageRegister:
 
@@ -1186,16 +1287,34 @@ SetupPageTables:
 
         ret
 
-    .makeGuardPage:
+    .makeGuard:
 
-        ; Locate the page table entry for the address in edi. Clear its
-        ; present bit, and set its guard bit.
+        ; Locate the page table entry for the physical address in edi. Clear
+        ; its present bit, and set its guard bit.
         shr     edi,        9               ; Divide by 4096, then mul by 8.
         add     edi,        Mem.PageTable.PT0 & 0xffff
-        mov     eax,        [es:edi]
+        mov     eax,        [es:di]
         and     eax,        ~(.Present)     ; clear the present bit.
         or      eax,        .Guard          ; set the guard bit.
         mov     [es:di],    eax
+
+        ret
+
+    .makeUncached:
+
+        ; Locate the page table entry for the physical address in edi. Set its
+        ; cache-disable, write-through, and page-attribute-table bits. Repeat
+        ; this process for a total of "cx" contiguous page entries.
+        shr     edi,    9               ; Divide by 4096, then mul by 8.
+        add     edi,    Mem.PageTable.PT0 & 0xffff
+
+        .makeUncached.next:
+
+            mov     eax,        [es:di]
+            or      eax,        .CacheDisable | .WriteThru | .AttribTable
+            mov     [es:di],    eax
+            add     di,         8
+            loop    .makeUncached.next
 
         ret
 

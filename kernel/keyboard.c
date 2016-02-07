@@ -98,13 +98,7 @@ static const keylayout_t ps2_layout =
     },
 };
 
-//----------------------------------------------------------------------------
-//  @struct     kbstate
-/// @brief      Holds the current state of the keyboard.
-/// @details    The buffer's current size (buf_size) is an atomic variable
-///             to prevent race conditions between the keyboard ISR and
-///             the keyboard get functions on buffer empty/full checks.
-//----------------------------------------------------------------------------
+/// Keyboard state.
 typedef struct kbstate
 {
     keylayout_t  layout;          ///< The installed keyboard layout.
@@ -119,10 +113,6 @@ typedef struct kbstate
 static kbstate_t state;
 
 //----------------------------------------------------------------------------
-//  @function   toggle
-/// @brief      Toggle the requested meta flag.
-/// @param[in]  flag    The meta flag to toggle.
-//----------------------------------------------------------------------------
 static inline void
 toggle(uint8_t flag)
 {
@@ -132,14 +122,6 @@ toggle(uint8_t flag)
         state.meta |= flag;
 }
 
-//----------------------------------------------------------------------------
-//  @function   addkey
-/// @brief      Add a key record to the keyboard input buffer.
-/// @details    If the buffer is full, the character is discarded.
-/// @param[in]  brk     The break code (0 = key up, 1 = key down).
-/// @param[in]  meta    Metakey state.
-/// @param[in]  code    The unshifted keycode value.
-/// @param[in]  ch      Character value, if valid.
 //----------------------------------------------------------------------------
 static void
 addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
@@ -172,10 +154,6 @@ addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
     atomic_fetch_add_explicit(&state.buf_size, 1, memory_order_relaxed);
 }
 
-//----------------------------------------------------------------------------
-//  @function   isr_keyboard
-/// @brief      Interrupt service routine for keyboard IRQ 1.
-/// @param[in]  context     The CPU state at the time of the interrupt.
 //----------------------------------------------------------------------------
 static void
 isr_keyboard(const interrupt_context_t *context)
@@ -279,10 +257,6 @@ done:
 }
 
 //----------------------------------------------------------------------------
-//  @function   kb_init
-//  @brief      Initialize the keyboard so that it can provide input to the
-//              kernel.
-//----------------------------------------------------------------------------
 void
 kb_init()
 {
@@ -304,22 +278,12 @@ kb_init()
 }
 
 //----------------------------------------------------------------------------
-//  @function   kb_setlayout
-//  @brief      Install a new keyboard layout.
-//  @param[in]  layout  The keyboard layout to install.
-//----------------------------------------------------------------------------
 void
 kb_setlayout(keylayout_t *layout)
 {
     memcpy(&state.layout, layout, sizeof(state.layout));
 }
 
-//----------------------------------------------------------------------------
-//  @function   kb_getchar
-//  @brief      Return the next available character from the keyboard's
-//              input buffer.
-//  @returns    The ascii value of the next character in the input buffer,
-//              or 0 if there are no characters available.
 //----------------------------------------------------------------------------
 char
 kb_getchar()
@@ -346,12 +310,6 @@ kb_getchar()
 }
 
 //----------------------------------------------------------------------------
-//  @function   kb_getkey
-//  @brief      Return the available next key from the keyboard's input
-//              buffer.
-//  @param[out] key     The key record of the next key in the buffer.
-//  @returns    true if there is a key in the buffer, false otherwise.
-//----------------------------------------------------------------------------
 bool
 kb_getkey(key_t *key)
 {
@@ -374,10 +332,6 @@ kb_getkey(key_t *key)
     return true;
 }
 
-//----------------------------------------------------------------------------
-//  @function   kb_meta
-//  @brief      Return the current meta-key bit mask.
-//  @returns    The meta-key bitmask.
 //----------------------------------------------------------------------------
 uint8_t
 kb_meta()
