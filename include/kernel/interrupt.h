@@ -38,7 +38,7 @@
 /// @brief      A record describing the CPU state at the time of the
 ///             interrupt.
 //----------------------------------------------------------------------------
-typedef struct interrupt_context
+struct interrupt_context
 {
     registers_t regs;           ///< all general-purpose registers.
     uint64_t    error;          ///< exception error identifier.
@@ -48,7 +48,9 @@ typedef struct interrupt_context
     uint64_t    rflags;         ///< flags register.
     uint64_t    rsp;            ///< stack pointer.
     uint64_t    ss;             ///< stack segment.
-} interrupt_context_t;
+};
+
+typedef struct interrupt_context   interrupt_context_t;
 
 //----------------------------------------------------------------------------
 //  @function   interrupts_init

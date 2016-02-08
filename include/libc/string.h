@@ -12,6 +12,18 @@
 #include <core.h>
 
 //----------------------------------------------------------------------------
+//  @function   strlen
+/// @brief      Return the length of a null-terminated string.
+/// @details    Count the number of characters in the null-terminated string
+///             and return the count.
+/// @param[in]  str     Pointer to a null-terminated string.
+/// @return             The number of characters preceding the null
+///                     terminator.
+//----------------------------------------------------------------------------
+size_t
+strlen(const char *str);
+
+//----------------------------------------------------------------------------
 //  @function   memcpy
 /// @brief      Copy bytes from one memory region to another.
 /// @details    If the memory regions overlap, this function's behavior

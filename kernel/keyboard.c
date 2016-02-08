@@ -20,109 +20,117 @@
 #define MAX_BUFSIZ    32        ///< Keyboard input buffer size.
 
 // Key code abbreviations, used to set up the default scan map table below.
+#define BSP    KEY_BACKSPACE
+#define TAB    KEY_TAB
+#define ENT    KEY_ENTER
+#define ESC    KEY_ESCAPE
 #define CTL    KEY_CTRL
-#define SH     KEY_SHIFT
+#define SHF    KEY_SHIFT
 #define ALT    KEY_ALT
-#define PS     KEY_PRTSCR
-#define CL     KEY_CAPSLOCK
-#define NL     KEY_NUMLOCK
-#define SL     KEY_SCRLOCK
-#define KI     KEY_INSERT
-#define KE     KEY_END
-#define KD     KEY_DOWN
+#define PSC    KEY_PRTSCR
+#define CLK    KEY_CAPSLOCK
+#define NLK    KEY_NUMLOCK
+#define SLK    KEY_SCRLOCK
+#define KIN    KEY_INSERT
+#define KEN    KEY_END
+#define KDN    KEY_DOWN
 #define KPD    KEY_PGDN
-#define KL     KEY_LEFT
-#define KC     KEY_CENTER
-#define KR     KEY_RIGHT
-#define KH     KEY_HOME
-#define KU     KEY_UP
+#define KLT    KEY_LEFT
+#define KCT    KEY_CENTER
+#define KRT    KEY_RIGHT
+#define KHM    KEY_HOME
+#define KUP    KEY_UP
 #define KPU    KEY_PGUP
 #define KDL    KEY_DEL
-#define KM     KEY_MINUS
-#define KP     KEY_PLUS
-#define F1     KEY_F1
-#define F2     KEY_F2
-#define F3     KEY_F3
-#define F4     KEY_F4
-#define F5     KEY_F5
-#define F6     KEY_F6
-#define F7     KEY_F7
-#define F8     KEY_F8
-#define F9     KEY_F9
+#define KMI    KEY_MINUS
+#define KPL    KEY_PLUS
+#define F_1    KEY_F1
+#define F_2    KEY_F2
+#define F_3    KEY_F3
+#define F_4    KEY_F4
+#define F_5    KEY_F5
+#define F_6    KEY_F6
+#define F_7    KEY_F7
+#define F_8    KEY_F8
+#define F_9    KEY_F9
 #define F10    KEY_F10
 #define F11    KEY_F11
 #define F12    KEY_F12
-#define SE     KEY_SCANESC
+#define SES    KEY_SCANESC
 #define INV    KEY_INVALID
+#define APO    '\''
+#define BSL    '\\'
 
-/// US English PS/2 keyboard scan map (default setting)
+/// US English PSC/2 keyboard scan map (default setting)
 static const keylayout_t ps2_layout =
 {
-    .shifted   =
+    .shifted =
     {
-        INV,  27, '!', '@', '#', '$', '%', '^',
-        '&', '*', '(', ')', '_', '+',   8,   9,     // 0
+        INV, ESC, '!', '@', '#', '$', '%', '^',
+        '&', '*', '(', ')', '_', '+', BSP, TAB, // 0
         'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
-        'O', 'P', '{', '}',  13, CTL, 'A', 'S',     // 1
+        'O', 'P', '{', '}', ENT, CTL, 'A', 'S', // 1
         'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',
-        '"', '~', SH,  '|', 'Z', 'X', 'C', 'V',     // 2
-        'B', 'N', 'M', '<', '>', '?', SH,  PS,
-        ALT, ' ', CL,  F1,  F2,  F3,  F4,  F5,      // 3
-        F6,  F7,  F8,  F9,  F10, NL,  SL,  KH,
-        KU,  KPU, KM,  KL,  KC,  KR,  KP,  KE,      // 4
-        KD,  KPD, KI,  KDL, INV, INV, INV, F11,
-        F12, INV, INV, INV, INV, INV, INV, INV,     // 5
-        SE,  SE,  INV, INV, INV, INV, INV, INV,
-        INV, INV, INV, INV, INV, INV, INV, INV,     // 6
+        '"', '~', SHF, '|', 'Z', 'X', 'C', 'V', // 2
+        'B', 'N', 'M', '<', '>', '?', SHF, PSC,
+        ALT, ' ', CLK, F_1, F_2, F_3, F_4, F_5, // 3
+        F_6, F_7, F_8, F_9, F10, NLK, SLK, KHM,
+        KUP, KPU, KMI, KLT, KCT, KRT, KPL, KEN, // 4
+        KDN, KPD, KIN, KDL, INV, INV, INV, F11,
+        F12, INV, INV, INV, INV, INV, INV, INV, // 5
+        SES, SES, INV, INV, INV, INV, INV, INV,
+        INV, INV, INV, INV, INV, INV, INV, INV, // 6
         INV, INV, INV, INV, INV, INV, INV, INV,
-        INV, INV, INV, INV, INV, INV, INV, INV,     // 7
+        INV, INV, INV, INV, INV, INV, INV, INV, // 7
     },
     .unshifted =
     {
-        INV,   27, '1', '2',  '3', '4', '5', '6',
-        '7',  '8', '9', '0',  '-', '=',   8,   9,   // 0
-        'q',  'w', 'e', 'r',  't', 'y', 'u', 'i',
-        'o',  'p', '[', ']',   13, CTL, 'a', 's',   // 1
-        'd',  'f', 'g', 'h',  'j', 'k', 'l', ';',
-        '\'', '`', SH,  '\\', 'z', 'x', 'c', 'v',   // 2
-        'b',  'n', 'm', ',',  '.', '/', SH,  PS,
-        ALT,  ' ', CL,  F1,   F2,  F3,  F4,  F5,    // 3
-        F6,   F7,  F8,  F9,   F10, NL,  SL,  KH,
-        KU,   KPU, KM,  KL,   KC,  KR,  KP,  KE,    // 4
-        KD,   KPD, KI,  KDL,  INV, INV, INV, F11,
-        F12,  INV, INV, INV,  INV, INV, INV, INV,   // 5
-        SE,   SE,  INV, INV,  INV, INV, INV, INV,
-        INV,  INV, INV, INV,  INV, INV, INV, INV,   // 6
-        INV,  INV, INV, INV,  INV, INV, INV, INV,
-        INV,  INV, INV, INV,  INV, INV, INV, INV,   // 7
+        INV, ESC, '1', '2', '3', '4', '5', '6',
+        '7', '8', '9', '0', '-', '=', BSP, TAB, // 0
+        'q', 'w', 'e', 'r', 't', 'y', 'u', 'i',
+        'o', 'p', '[', ']', ENT, CTL, 'a', 's', // 1
+        'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',
+        APO, '`', SHF, BSL, 'z', 'x', 'c', 'v', // 2
+        'b', 'n', 'm', ',', '.', '/', SHF, PSC,
+        ALT, ' ', CLK, F_1, F_2, F_3, F_4, F_5, // 3
+        F_6, F_7, F_8, F_9, F10, NLK, SLK, KHM,
+        KUP, KPU, KMI, KLT, KCT, KRT, KPL, KEN, // 4
+        KDN, KPD, KIN, KDL, INV, INV, INV, F11,
+        F12, INV, INV, INV, INV, INV, INV, INV, // 5
+        SES, SES, INV, INV, INV, INV, INV, INV,
+        INV, INV, INV, INV, INV, INV, INV, INV, // 6
+        INV, INV, INV, INV, INV, INV, INV, INV,
+        INV, INV, INV, INV, INV, INV, INV, INV, // 7
     },
 };
 
 /// Keyboard state.
-typedef struct kbstate
+struct kbstate
 {
-    keylayout_t  layout;          ///< The installed keyboard layout.
-    uint8_t      meta;            ///< Mask of meta keys currently pressed.
-    uint8_t      buf_head;        ///< Index of oldest key in buf.
-    uint8_t      buf_tail;        ///< Index of next empty slot in buf.
-    atomic_uchar buf_size;        ///< Number of keys in the buf.
-    key_t        buf[MAX_BUFSIZ]; ///< Buffer holding unconsumed keys.
-} kbstate_t;
+    keylayout_t  layout;             ///< The installed keyboard layout.
+    uint8_t      meta;               ///< Mask of meta keys currently pressed.
+    uint8_t      buf_head;           ///< Index of oldest key in buf.
+    uint8_t      buf_tail;           ///< Index of next empty slot in buf.
+    atomic_uchar buf_size;           ///< Number of keys in the buf.
+    key_t        buf[MAX_BUFSIZ];    ///< Buffer holding unconsumed keys.
+};
+
+typedef struct kbstate   kbstate_t;
 
 /// Current keyboard state.
 static kbstate_t state;
 
-//----------------------------------------------------------------------------
 static inline void
 toggle(uint8_t flag)
 {
-    if (state.meta & flag)
+    if (state.meta & flag) {
         state.meta &= ~flag;
-    else
+    }
+    else {
         state.meta |= flag;
+    }
 }
 
-//----------------------------------------------------------------------------
 static void
 addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
 {
@@ -134,8 +142,9 @@ addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
     // There is no need for an atomic comparison here, because the ISR
     // function calling addkey can never be interrupted by anything that
     // touches the buffer.
-    if (state.buf_size == MAX_BUFSIZ)
+    if (state.buf_size == MAX_BUFSIZ) {
         return;
+    }
 
     key_t key =
     {
@@ -147,14 +156,14 @@ addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
 
     // Add the character to the tail of the buffer.
     state.buf[state.buf_tail++] = key;
-    if (state.buf_tail == MAX_BUFSIZ)
+    if (state.buf_tail == MAX_BUFSIZ) {
         state.buf_tail = 0;
+    }
 
     // state.buf_size++;
     atomic_fetch_add_explicit(&state.buf_size, 1, memory_order_relaxed);
 }
 
-//----------------------------------------------------------------------------
 static void
 isr_keyboard(const interrupt_context_t *context)
 {
@@ -182,8 +191,9 @@ isr_keyboard(const interrupt_context_t *context)
 
     // Alter shift state based on capslock state.
     if (state.meta & META_CAPSLOCK) {
-        if ((ukeycode >= 'a') && (ukeycode <= 'z'))
+        if ((ukeycode >= 'a') && (ukeycode <= 'z')) {
             shifted = !shifted;
+        }
     }
 
     // Convert the scan code to a properly shifted key code.
@@ -191,7 +201,8 @@ isr_keyboard(const interrupt_context_t *context)
 
     // Key up?
     if (keyup) {
-        switch (keycode) {
+        switch (keycode)
+        {
             case KEY_SHIFT:
                 state.meta &= ~META_SHIFT;
                 break;
@@ -220,7 +231,8 @@ isr_keyboard(const interrupt_context_t *context)
     }
     // Key down?
     else {
-        switch (keycode) {
+        switch (keycode)
+        {
             case KEY_SHIFT:
                 state.meta |= META_SHIFT;
                 break;
@@ -237,14 +249,16 @@ isr_keyboard(const interrupt_context_t *context)
         // Convert the key to a character.
         char ch = 0;
         if (keycode < 0x80) {
-            switch (state.meta & (META_CTRL | META_ALT)) {
+            switch (state.meta & (META_CTRL | META_ALT))
+            {
                 case 0:
                     ch = (char)keycode;
                     break;
 
                 case META_CTRL:
-                    if ((ukeycode >= 'a') && (ukeycode <= 'z'))
+                    if ((ukeycode >= 'a') && (ukeycode <= 'z')) {
                         ch = (char)(ukeycode - 'a' + 1);
+                    }
                     break;
             }
         }
@@ -256,11 +270,10 @@ done:
     io_outb(PIC_PORT_CMD_MASTER, PIC_CMD_EOI);
 }
 
-//----------------------------------------------------------------------------
 void
 kb_init()
 {
-    // Default to the PS/2 keyboard layout.
+    // Default to the PSC/2 keyboard layout.
     memcpy(&state.layout, &ps2_layout, sizeof(state.layout));
 
     // Initialize keyboard state.
@@ -277,14 +290,12 @@ kb_init()
     irq_enable(IRQ_KEYBOARD);
 }
 
-//----------------------------------------------------------------------------
 void
 kb_setlayout(keylayout_t *layout)
 {
     memcpy(&state.layout, layout, sizeof(state.layout));
 }
 
-//----------------------------------------------------------------------------
 char
 kb_getchar()
 {
@@ -292,24 +303,26 @@ kb_getchar()
         // Buffer empty? (state.buf_size == 0?) Check atomically because
         // this function could be interrupted by the keyboard ISR.
         uint8_t size = 0;
-        if (atomic_compare_exchange_strong(&state.buf_size, &size, 0))
+        if (atomic_compare_exchange_strong(&state.buf_size, &size, 0)) {
             return 0;
+        }
 
         // Pull the next character from the head of the buffer.
         char ch = state.buf[state.buf_head++].ch;
-        if (state.buf_head == MAX_BUFSIZ)
+        if (state.buf_head == MAX_BUFSIZ) {
             state.buf_head = 0;
+        }
 
         // state.buf_size--
         atomic_fetch_sub_explicit(&state.buf_size, 1, memory_order_relaxed);
 
         // Valid character?
-        if (ch != 0)
+        if (ch != 0) {
             return ch;
+        }
     }
 }
 
-//----------------------------------------------------------------------------
 bool
 kb_getkey(key_t *key)
 {
@@ -323,8 +336,9 @@ kb_getkey(key_t *key)
 
     // Pull the next character from the head of the buffer.
     *key = state.buf[state.buf_head++];
-    if (state.buf_head == MAX_BUFSIZ)
+    if (state.buf_head == MAX_BUFSIZ) {
         state.buf_head = 0;
+    }
 
     // state.buf_size--
     atomic_fetch_sub_explicit(&state.buf_size, 1, memory_order_relaxed);
@@ -332,7 +346,6 @@ kb_getkey(key_t *key)
     return true;
 }
 
-//----------------------------------------------------------------------------
 uint8_t
 kb_meta()
 {

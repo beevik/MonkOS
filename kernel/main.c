@@ -10,6 +10,7 @@
 //============================================================================
 
 #include <core.h>
+#include <libc/stdio.h>
 #include <kernel/console.h>
 #include <kernel/exception.h>
 #include <kernel/interrupt.h>
@@ -21,17 +22,17 @@
 #   error "This code must be compiled with a cross-compiler."
 #endif
 
-//----------------------------------------------------------------------------
 static inline char
 hexchar(int value)
 {
-    if ((value >= 0) && (value <= 9))
+    if ((value >= 0) && (value <= 9)) {
         return (char)(value + '0');
-    else
+    }
+    else {
         return (char)(value - 10 + 'a');
+    }
 }
 
-//----------------------------------------------------------------------------
 static void
 sysinit()
 {
@@ -53,7 +54,6 @@ sysinit()
     interrupts_enable();
 }
 
-//----------------------------------------------------------------------------
 static void
 do_test()
 {
@@ -67,25 +67,21 @@ do_test()
         bool  avail;
         while ((avail = kb_getkey(&key)) != false) {
             if (key.ch) {
-                char buf[] = "Keycode: \033[ ]  \033[-] meta=   ' '\n";
-                buf[11] = key.brk ? 'e' : '2';
-                buf[13] = hexchar(key.code >> 4);
-                buf[14] = hexchar(key.code & 0xf);
-                buf[25] = hexchar(key.meta >> 4);
-                buf[26] = hexchar(key.meta & 0xf);
-                buf[29] = key.ch;
-                console_print(console_id, buf);
-                if (key.ch == 'x')
-                    raise(EXCEPTION_BREAKPOINT);
+                console_printf(
+                    console_id,
+                    "Keycode: \033[%c]%02x\033[-] meta=%02x '%c'\n",
+                    key.brk ? 'e' : '2',
+                    key.code,
+                    key.meta,
+                    key.ch);
             }
             else {
-                char buf[] = "Keycode: \033[ ]  \033[-] meta=  \n";
-                buf[11] = key.brk ? 'e' : '2';
-                buf[13] = hexchar(key.code >> 4);
-                buf[14] = hexchar(key.code & 0xf);
-                buf[25] = hexchar(key.meta >> 4);
-                buf[26] = hexchar(key.meta & 0xf);
-                console_print(console_id, buf);
+                console_printf(
+                    console_id,
+                    "Keycode: \033[%c]%02x\033[-] meta=%02x\n",
+                    key.brk ? 'e' : '2',
+                    key.code,
+                    key.meta);
             }
 
             if ((key.brk == 0) && (key.meta & META_ALT)) {
@@ -99,7 +95,6 @@ do_test()
     }
 }
 
-//----------------------------------------------------------------------------
 void
 kmain()
 {

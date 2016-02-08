@@ -54,7 +54,7 @@ clean:
 	@rm -f $(DIR_BUILD)/monk.sys
 
 # kernel file
-$(DIR_BUILD)/monk.sys: linker.ld $(DIR_TARGET)/libkernel.a
+$(DIR_BUILD)/monk.sys: linker.ld $(LIB_FILES)
 	@echo "$(TAG) Linking $(notdir $@)"
 	@$(CC) $(LDFLAGS) -T linker.ld -o $@ $(OBJ_FILES) $(LIB_FILES)
 	@chmod a-x $@

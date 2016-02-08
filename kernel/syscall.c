@@ -19,14 +19,12 @@
 #define MSR_IA32_LSTAR    0xc0000082
 #define MSR_IA32_FMASK    0xc0000084
 
-//----------------------------------------------------------------------------
 static void
 syscall_handle()
 {
     // Do nothing for now.
 }
 
-//----------------------------------------------------------------------------
 void
 syscall_init()
 {
@@ -36,8 +34,9 @@ syscall_init()
 
     // Bit 11 of rdx tells us if the SYSCALL/SYSRET instructions are
     // available. If they're not, raise an invalid opcode exception.
-    if (!(regs.rdx & (1 << 11)))
+    if (!(regs.rdx & (1 << 11))) {
         raise(EXCEPTION_INVALID_OPCODE);
+    }
 
     // Update the IA32_STAR MSR with the segment selectors that will be used
     // by SYSCALL and SYSRET.

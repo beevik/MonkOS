@@ -14,9 +14,9 @@ DIR_TARGET := $(DIR_BUILD)/libc
 # Build targets
 #----------------------------------------------------------------------------
 
-C_FILES 	:=
-H_FILES		:= string.h
-ASM_FILES	:= string.asm
+C_FILES 	:= snprintf.c strlen.c vsnprintf.c
+H_FILES		:= stdio.h string.h
+ASM_FILES	:= mem.asm
 
 CODE_FILES	:= $(C_FILES) $(ASM_FILES)
 HDR_FILES	:= $(foreach F,$(H_FILES),$(patsubst %,$(DIR_INCLUDE)/libc/%,$(F)))
@@ -54,8 +54,22 @@ $(DIR_TARGET)/libc.a: $(OBJ_FILES)
 	@rm -f $@
 	@$(AR) cqs $@ $(OBJ_FILES)
 
+# C files
+
+$(DIR_TARGET)/snprintf.o: snprintf.c
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(DIR_TARGET)/strlen.o: strlen.c
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(DIR_TARGET)/vsnprintf.o: vsnprintf.c
+	@echo "$(TAG) Compiling $<"
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
 # Assembly files
 
-$(DIR_TARGET)/string.o: string.asm
+$(DIR_TARGET)/mem.o: mem.asm
 	@echo "$(TAG) Assembling $<"
 	@$(AS) $(ASFLAGS) $< -o $@

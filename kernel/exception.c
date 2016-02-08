@@ -12,7 +12,6 @@
 #include <kernel/interrupt.h>
 #include <kernel/console.h>
 
-//----------------------------------------------------------------------------
 static void
 isr_abort(const interrupt_context_t *context)
 {
@@ -27,7 +26,6 @@ isr_abort(const interrupt_context_t *context)
     }
 }
 
-//----------------------------------------------------------------------------
 static void
 isr_breakpoint(const interrupt_context_t *context)
 {
@@ -36,7 +34,6 @@ isr_breakpoint(const interrupt_context_t *context)
     console_print(0, "Breakpoint hit.\n");
 }
 
-//----------------------------------------------------------------------------
 void
 exceptions_init()
 {

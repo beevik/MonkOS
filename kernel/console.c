@@ -8,6 +8,7 @@
 //============================================================================
 
 #include <core.h>
+#include <libc/stdio.h>
 #include <libc/string.h>
 #include <kernel/console.h>
 #include <kernel/io.h>
@@ -29,27 +30,27 @@
 #define SCREEN_BUFFER    0x000b8000
 
 /// Virtual console state.
-typedef struct console
+struct console
 {
-    uint16_t    textcolor;          ///< Current fg/bg color (shifted left 8).
-    uint16_t    textcolor_orig;     ///< Original, non-override text color.
-    screenpos_t pos;                ///< Current screen position.
-    uint8_t     ybuf;               ///< Virtual buffer y position.
-    uint16_t   *screen;             ///< Virtual screen buffer for 50 rows.
-    uint16_t   *tlcorner;           ///< Points to char in top-left corner.
-} console_t;
+    uint16_t    textcolor;         ///< Current fg/bg color (shifted left 8).
+    uint16_t    textcolor_orig;    ///< Original, non-override text color.
+    screenpos_t pos;               ///< Current screen position.
+    uint8_t     ybuf;              ///< Virtual buffer y position.
+    uint16_t   *screen;            ///< Virtual screen buffer for 50 rows.
+    uint16_t   *tlcorner;          ///< Points to char in top-left corner.
+};
 
-static console_t  console[MAX_CONSOLES];   ///< All virtual consoles.
-static console_t *active_console;          ///< The currently visible console.
+typedef struct console   console_t;
 
-//----------------------------------------------------------------------------
+static console_t  console[MAX_CONSOLES]; ///< All virtual consoles.
+static console_t *active_console;        ///< The currently visible console.
+
 static inline uint16_t
 color(textcolor_t fg, textcolor_t bg)
 {
     return (uint16_t)bg << 12 | (uint16_t)fg << 8;
 }
 
-//----------------------------------------------------------------------------
 static void
 update_buffer_offset()
 {
@@ -67,7 +68,6 @@ update_buffer_offset()
     io_outb(CRTC_PORT_CMD, save);
 }
 
-//----------------------------------------------------------------------------
 static void
 update_cursor()
 {
@@ -85,7 +85,6 @@ update_cursor()
     io_outb(CRTC_PORT_CMD, save);
 }
 
-//----------------------------------------------------------------------------
 void
 console_init()
 {
@@ -99,83 +98,84 @@ console_init()
         console[id].ybuf           = 0;
         console[id].screen         = screenptr;
         console[id].tlcorner       = screenptr;
-        screenptr += 0x1000;    // each screen is 4K words (8K bytes).
+        screenptr                 += 0x1000; // each screen is 4K words (8K bytes).
     }
     active_console = &console[0];
 }
 
-//----------------------------------------------------------------------------
 void
 console_activate(int id)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
-    if (&console[id] == active_console)
+    }
+    if (&console[id] == active_console) {
         return;
+    }
 
     active_console = &console[id];
     update_buffer_offset();
     update_cursor();
 }
 
-//----------------------------------------------------------------------------
 void
 console_set_textcolor(int id, textcolor_t fg, textcolor_t bg)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
+    }
 
     console[id].textcolor = console[id].textcolor_orig = color(fg, bg);
 }
 
-//----------------------------------------------------------------------------
 void
 console_set_textcolor_fg(int id, textcolor_t fg)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
+    }
 
     console[id].textcolor      = color(fg, console_get_textcolor_bg(id));
     console[id].textcolor_orig = console[id].textcolor;
 }
 
-//----------------------------------------------------------------------------
 void
 console_set_textcolor_bg(int id, textcolor_t bg)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
+    }
 
     console[id].textcolor      = color(console_get_textcolor_fg(id), bg);
     console[id].textcolor_orig = console[id].textcolor;
 }
 
-//----------------------------------------------------------------------------
 textcolor_t
 console_get_textcolor_fg(int id)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
+    }
 
     return (textcolor_t)((console[id].textcolor_orig >> 8) & 0x0f);
 }
 
-//----------------------------------------------------------------------------
 textcolor_t
 console_get_textcolor_bg(int id)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
+    }
 
     return (textcolor_t)((console[id].textcolor_orig >> 12) & 0x0f);
 }
 
-//----------------------------------------------------------------------------
 void
 console_clear(int id)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
+    }
 
     memsetw(console[id].screen,
             console[id].textcolor | ' ', SCREEN_SIZE * 2);
@@ -185,48 +185,52 @@ console_clear(int id)
     console[id].tlcorner = console[id].screen;
 }
 
-//----------------------------------------------------------------------------
 void
 console_setpos(int id, screenpos_t pos)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
+    }
 
     int diff = (int)pos.y - (int)console[id].pos.y;
     console[id].pos  = pos;
     console[id].ybuf = (uint8_t)((int)console[id].ybuf + diff);
-    if (active_console == &console[id])
+    if (active_console == &console[id]) {
         update_cursor();
+    }
 }
 
-//----------------------------------------------------------------------------
 void
 console_getpos(int id, screenpos_t *pos)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
+    }
     *pos = console[id].pos;
 }
 
-//----------------------------------------------------------------------------
 static int
 colorcode(char x, int orig)
 {
     int code = x;
 
-    if ((code >= '0') && (code <= '9'))
+    if ((code >= '0') && (code <= '9')) {
         return code - '0';
-    else if ((code >= 'a') && (code <= 'f'))
+    }
+    else if ((code >= 'a') && (code <= 'f')) {
         return code - 'a' + 10;
-    else if ((code >= 'A') && (code <= 'F'))
+    }
+    else if ((code >= 'A') && (code <= 'F')) {
         return code - 'A' + 10;
-    else if (code == '-')
+    }
+    else if (code == '-') {
         return orig;
-    else
+    }
+    else {
         return -1;
+    }
 }
 
-//----------------------------------------------------------------------------
 static void
 console_printchar(console_t *cons, const char **strptr)
 {
@@ -303,8 +307,9 @@ console_printchar(console_t *cons, const char **strptr)
 
             // If we're at the end of the virtual buffer, we need to
             // wrap back a screen.
-            if (cons->ybuf == SCREEN_ROWS * 2)
+            if (cons->ybuf == SCREEN_ROWS * 2) {
                 cons->ybuf -= SCREEN_ROWS;
+            }
 
             // Clear the row at the bottom of the screen.
             memsetw(cons->screen + cons->ybuf * SCREEN_COLS,
@@ -316,24 +321,44 @@ console_printchar(console_t *cons, const char **strptr)
                              SCREEN_SIZE;
 
             // Do a hardware scroll if this console is currently active.
-            if (cons == active_console)
+            if (cons == active_console) {
                 update_buffer_offset();
+            }
         }
     }
 }
 
-//----------------------------------------------------------------------------
 void
 console_print(int id, const char *str)
 {
-    if ((id < 0) || (id >= MAX_CONSOLES))
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
         id = 0;
+    }
 
     console_t *cons = &console[id];
     for (; *str; ++str) {
         console_printchar(cons, &str);
     }
 
-    if (cons == active_console)
+    if (cons == active_console) {
         update_cursor();
+    }
+}
+
+int
+console_printf(int id, const char *format, ...)
+{
+    if ((id < 0) || (id >= MAX_CONSOLES)) {
+        id = 0;
+    }
+
+    va_list args;
+    va_start(args, format);
+    char buffer[8 * 1024];
+    int  result = vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    console_print(id, buffer);
+
+    return result;
 }

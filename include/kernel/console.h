@@ -10,6 +10,7 @@
 #pragma once
 
 #include <core.h>
+#include <stdarg.h>
 
 //----------------------------------------------------------------------------
 // Constants
@@ -22,7 +23,7 @@
 //  @enum       textcolor_t
 /// @brief      Color values used for console text.
 //----------------------------------------------------------------------------
-typedef enum textcolor
+enum textcolor
 {
     TEXTCOLOR_BLACK     = 0,
     TEXTCOLOR_BLUE      = 1,
@@ -40,17 +41,21 @@ typedef enum textcolor
     TEXTCOLOR_LTMAGENTA = 13,
     TEXTCOLOR_YELLOW    = 14,
     TEXTCOLOR_WHITE     = 15,
-} textcolor_t;
+};
+
+typedef enum textcolor   textcolor_t;
 
 //----------------------------------------------------------------------------
 //  @struct     screenpos_t
 /// @brief      Console screen text position.
 //----------------------------------------------------------------------------
-typedef struct screenpos
+struct screenpos
 {
     uint8_t x;      ///< x position in range [0:79]. 0 is left of screen.
     uint8_t y;      ///< y position in range [0:24]. 0 is top of screen.
-} screenpos_t;
+};
+
+typedef struct screenpos   screenpos_t;
 
 //----------------------------------------------------------------------------
 //  @function   console_init
@@ -176,3 +181,18 @@ console_getpos(int id, screenpos_t *pos);
 //----------------------------------------------------------------------------
 void
 console_print(int id, const char *str);
+
+//----------------------------------------------------------------------------
+//  @function   console_printf
+/// @brief      Output a printf-formatted string to the virtual console using
+///             the console's current text color and screen position.
+/// @details    See console_print for further details.
+/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  format  The null-terminated format string used to format the
+///                     text to be printed.
+/// @param[in]  ...     Variable arguments list to be initialized with
+///                     va_start.
+/// @return     The number of characters written to the console.
+//----------------------------------------------------------------------------
+int
+console_printf(int id, const char *format, ...);
