@@ -4,103 +4,90 @@
 # Makefile for the kernel.
 #----------------------------------------------------------------------------
 
-DIR_ROOT := ..
+DIR_ROOT 	:= ..
 
 include $(DIR_ROOT)/config.mk
 
-DIR_TARGET := $(DIR_BUILD)/kernel
+DIR_TARGET	:= $(DIR_BUILD)/kernel
+DIR_DEPS	:= $(DIR_DEPS)/kernel
+
 
 #----------------------------------------------------------------------------
 # Build targets
 #----------------------------------------------------------------------------
 
-C_FILES		:= main.c console.c exception.c keyboard.c timer.c syscall.c
-H_FILES		:= console.h cpu.h exception.h interrupt.h keyboard.h \
-				memlayout.h syscall.h timer.h
-ASM_FILES	:= interrupt.asm start.asm
-LIB_FILES	:= libc/libc.a kernel/libkernel.a
+ASM_FILES	:= $(wildcard *.asm)
+C_FILES		:= $(wildcard *.c)
+H_FILES		:= $(wildcard $(DIR_INCLUDE)/kernel/*.h)
 
-H_FILES		:= $(foreach F,$(H_FILES),$(patsubst %,$(DIR_INCLUDE)/kernel/%,$(F)))
-LIB_FILES	:= $(foreach F,$(LIB_FILES),$(patsubst %,$(DIR_BUILD)/%,$(F)))
+OBJ_FILES_ASM	:= $(ASM_FILES:%.asm=$(DIR_TARGET)/%_asm.o)
+OBJ_FILES_C	:= $(C_FILES:%.c=$(DIR_TARGET)/%.o)
+OBJ_FILES	:= $(OBJ_FILES_ASM) $(OBJ_FILES_C)
 
-CODE_FILES	:= $(C_FILES) $(ASM_FILES)
-HDR_FILES	:= $(H_FILES)
+DEP_FILES_ASM 	:= $(ASM_FILES:%.asm=$(DIR_DEPS)/%_asm.d)
+DEP_FILES_C	:= $(C_FILES:%.c=$(DIR_DEPS)/%.d)
+DEP_FILES 	:= $(DEP_FILES_ASM) $(DEP_FILES_C)
 
-OBJ_FILES	:= $(foreach F,$(CODE_FILES),$(F:.c=.o))
-OBJ_FILES	:= $(foreach F,$(OBJ_FILES),$(F:.asm=.o))
-OBJ_FILES	:= $(foreach F,$(OBJ_FILES),$(patsubst %,$(DIR_TARGET)/%,$(F)))
+LIB_FILE	:= $(DIR_TARGET)/libkernel.a
 
-TAG			:= $(BLUE)[kernel]$(NORMAL)
+LIB_DEPS	:= libc/libc.a
+LIB_DEPS	:= $(LIB_DEPS:%=$(DIR_BUILD)/%)
 
-all: deps kernel
+LD_FILE		:= linker.ld
+KERNEL_FILE	:= $(DIR_BUILD)/monk.sys
+
+TAG		:= $(BLUE)[kernel]$(NORMAL)
+
+all: .mkdir $(KERNEL_FILE)
 	@echo "$(TAG) $(SUCCESS)"
 
-deps:
-	@mkdir -p $(DIR_TARGET)
-
-kernel: $(DIR_BUILD)/monk.sys
+.mkdir:
+	@mkdir -p $(DIR_TARGET) $(DIR_DEPS)
 
 uncrustify:
 	@echo "$(TAG) Uncrustifying code"
 	@$(UNCRUSTIFY) \
-		-c $(UNCRUSTIFY_CONFIG) \
-		-l C \
-		--replace \
-		--no-backup \
-		$(HDR_FILES) $(C_FILES) > /dev/null 2> /dev/null
+	  -c $(UNCRUSTIFY_CFG) \
+	  -l C \
+	  --replace \
+	  --no-backup \
+	  $(C_FILES) $(H_FILES) > /dev/null 2> /dev/null
 
 clean:
-	@rm -rf $(DIR_TARGET)
-	@rm -f $(DIR_BUILD)/monk.sys
+	@rm -f $(KERNEL_FILE) $(LIB_FILE) $(OBJ_FILES)
 
-# kernel file
-$(DIR_BUILD)/monk.sys: linker.ld $(LIB_FILES)
+$(KERNEL_FILE): $(LD_FILE) $(LIB_FILE) $(LIB_DEPS)
 	@echo "$(TAG) Linking $(notdir $@)"
-	@$(CC) $(LDFLAGS) -T linker.ld -o $@ $(OBJ_FILES) $(LIB_FILES)
+	@$(CC) $(LDFLAGS) -T $(LD_FILE) -o $@ $(LIB_FILE) $(LIB_DEPS)
 	@chmod a-x $@
 
-# Library file
-$(DIR_TARGET)/libkernel.a: $(OBJ_FILES)
+$(LIB_FILE): $(OBJ_FILES) $(DEP_FILES)
 	@echo "$(TAG) Archiving $(notdir $@)"
 	@rm -f $@
 	@$(AR) cqs $@ $(OBJ_FILES)
 
-# Assembly files
-
-$(DIR_TARGET)/interrupt.o: interrupt.asm
+$(OBJ_FILES_ASM): $(DIR_TARGET)/%_asm.o: %.asm
 	@echo "$(TAG) Assembling $<"
 	@$(AS) $(ASFLAGS) $< -o $@
 
-$(DIR_TARGET)/start.o: start.asm
-	@echo "$(TAG) Assembling $<"
-	@$(AS) $(ASFLAGS) $< -o $@
-
-# C files
-
-$(DIR_TARGET)/main.o: main.c $(HDR_FILES)
+$(OBJ_FILES_C): $(DIR_TARGET)/%.o: %.c
 	@echo "$(TAG) Compiling $<"
 	@$(CC) $(CCFLAGS) -c $< -o $@
 
-$(DIR_TARGET)/console.o: console.c $(HDR_FILES)
-	@echo "$(TAG) Compiling $<"
-	@$(CC) $(CCFLAGS) -c $< -o $@
+$(DEP_FILES_ASM): $(DIR_DEPS)/%_asm.d: %.asm | .mkdir
+	@echo "$(TAG) Generating dependencies for $<"
+	@set -e; \
+	  rm -f $@; \
+	  $(AS) -M $(ASFLAGS) $< -MT $*_asm.o > $@.$$$$; \
+	  sed 's,\($*_asm\)\.o[ :]*,$(DIR_TARGET)/\1.o $@ : ,g' < $@.$$$$ > $@; \
+	  rm -f $@.$$$$
 
-$(DIR_TARGET)/cpu.o: cpu.c $(HDR_FILES)
-	@echo "$(TAG) Compiling $<"
-	@$(CC) $(CCFLAGS) -c $< -o $@
+$(DEP_FILES_C): $(DIR_DEPS)/%.d: %.c | .mkdir
+	@echo "$(TAG) Generating dependencies for $<"
+	@set -e; \
+	  rm -f $@; \
+	  $(CC) -MM $(CCFLAGS) $< > $@.$$$$; \
+	  sed 's,\($*\)\.o[ :]*,$(DIR_TARGET)/\1.o $@ : ,g' < $@.$$$$ > $@; \
+	  rm -f $@.$$$$
 
-$(DIR_TARGET)/exception.o: exception.c $(HDR_FILES)
-	@echo "$(TAG) Compiling $<"
-	@$(CC) $(CCFLAGS) -c $< -o $@
-
-$(DIR_TARGET)/keyboard.o: keyboard.c $(HDR_FILES)
-	@echo "$(TAG) Compiling $<"
-	@$(CC) $(CCFLAGS) -c $< -o $@
-
-$(DIR_TARGET)/syscall.o: syscall.c $(HDR_FILES)
-	@echo "$(TAG) Compiling $<"
-	@$(CC) $(CCFLAGS) -c $< -o $@
-
-$(DIR_TARGET)/timer.o: timer.c $(HDR_FILES)
-	@echo "$(TAG) Compiling $<"
-	@$(CC) $(CCFLAGS) -c $< -o $@
+-include $(DEP_FILES)

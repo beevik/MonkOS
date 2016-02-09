@@ -51,3 +51,6 @@ clean: .force
 	@rm -rf $(DIR_BUILD)
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_DOCS) clean
 	@echo "$(BLUE)[clean]$(NORMAL) Generated files deleted"
+
+cleandeps: .force
+	@rm -rf $(DIR_DEPS)

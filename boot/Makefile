@@ -4,35 +4,44 @@
 # Makefile for the boot loader.
 #----------------------------------------------------------------------------
 
-DIR_ROOT := ..
+DIR_ROOT	:= ..
 
 include $(DIR_ROOT)/config.mk
 
-DIR_TARGET := $(DIR_BUILD)/boot
+DIR_TARGET	:= $(DIR_BUILD)/boot
+DIR_DEPS 	:= $(DIR_DEPS)/boot
 
 #----------------------------------------------------------------------------
 # Build targets
 #----------------------------------------------------------------------------
 
-FILES 		:= boot.asm loader.asm
+ASFLAGS 	:= -f bin
 
-SYS_FILES 	:= $(foreach F,$(FILES),$(patsubst %.asm,$(DIR_BUILD)/%.sys,$(F)))
+ASM_FILES	:= $(wildcard *.asm)
+SYS_FILES	:= $(ASM_FILES:%.asm=$(DIR_BUILD)/%.sys)
+DEP_FILES 	:= $(ASM_FILES:%.asm=$(DIR_DEPS)/%.d)
 
 TAG 		:= $(BLUE)[boot]$(NORMAL)
 
-all: deps $(SYS_FILES)
+all: .mkdir $(SYS_FILES)
 	@echo "$(TAG) $(SUCCESS)"
 
-deps:
-	@mkdir -p $(DIR_TARGET)
+.mkdir:
+	@mkdir -p $(DIR_TARGET) $(DIR_DEPS)
 
 clean:
-	@rm -rf $(DIR_TARGET) $(SYS_FILES)
+	@rm -f $(SYS_FILES)
 
-$(DIR_BUILD)/boot.sys: boot.asm
+$(SYS_FILES): $(DIR_BUILD)/%.sys: %.asm
 	@echo "$(TAG) Assembling $<"
-	@$(AS) -f bin $< -o $@
+	@$(AS) $(ASFLAGS) $< -o $@
 
-$(DIR_BUILD)/loader.sys: loader.asm
-	@echo "$(TAG) Assembling $<"
-	@$(AS) -f bin $< -o $@
+$(DEP_FILES): $(DIR_DEPS)/%.d: %.asm | .mkdir
+	@echo "$(TAG) Generating dependencies for $<"
+	@set -e; \
+	  rm -f $@; \
+	  $(AS) -M $(ASFLAGS) $< -MT $*.sys > $@.$$$$; \
+	  sed 's,\($*\)\.sys[ :]*,$(DIR_BUILD)/\1.sys $@ : ,g' < $@.$$$$ > $@; \
+	  rm -f $@.$$$$
+
+-include $(DEP_FILES)

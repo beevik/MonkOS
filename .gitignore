@@ -1,5 +1,6 @@
 .gdbinit
 .p4ignore
 build
+deps
 docs/monk
 TODO

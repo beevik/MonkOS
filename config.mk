@@ -7,52 +7,55 @@
 #----------------------------------------------------------------------------
 # Project directories
 #----------------------------------------------------------------------------
-DIR_BOOT    :=  $(DIR_ROOT)/boot
-DIR_BUILD   :=  $(DIR_ROOT)/build
-DIR_DOCS    :=  $(DIR_ROOT)/docs
-DIR_INCLUDE :=  $(DIR_ROOT)/include
-DIR_KERNEL  :=  $(DIR_ROOT)/kernel
-DIR_LIBC    :=  $(DIR_ROOT)/libc
-DIR_SCRIPTS :=  $(DIR_ROOT)/scripts
+DIR_BOOT	:= $(DIR_ROOT)/boot
+DIR_BUILD	:= $(DIR_ROOT)/build
+DIR_DEPS	:= $(DIR_ROOT)/deps
+DIR_DOCS	:= $(DIR_ROOT)/docs
+DIR_INCLUDE	:= $(DIR_ROOT)/include
+DIR_KERNEL	:= $(DIR_ROOT)/kernel
+DIR_LIBC	:= $(DIR_ROOT)/libc
+DIR_SCRIPTS	:= $(DIR_ROOT)/scripts
 
 
 #----------------------------------------------------------------------------
 # Tool configuration
 #----------------------------------------------------------------------------
-TARGET      :=  x86_64-elf
+TARGET		:= x86_64-elf
 
-CC          :=  $(TARGET)-gcc
+CC		:= $(TARGET)-gcc
 
-CCFLAGS     :=  -Og -std=gnu11 -m64 -mno-red-zone -mno-mmx -mfpmath=sse \
-				-masm=intel -ffreestanding -fno-asynchronous-unwind-tables \
-				-I$(DIR_INCLUDE) -g -Wall -Wextra -Qn
+CCFLAGS		:= -Og -std=gnu11 -m64 -mno-red-zone -mno-mmx -mfpmath=sse \
+		   -ffreestanding -fno-asynchronous-unwind-tables \
+		   -masm=intel -I$(DIR_INCLUDE) -g -Wall -Wextra -Qn
 
-AS          :=  nasm
+AS		:= nasm
 
-ASFLAGS     :=  -f elf64
+ASFLAGS		:= -f elf64
 
-LDFLAGS     :=  -m64 -ffreestanding -g -nostdlib -z max-page-size=0x1000 \
-				-lgcc -mno-red-zone
+AR		:= $(TARGET)-ar
 
-DOXYGEN     :=  doxygen
+LDFLAGS		:= -m64 -ffreestanding -g -nostdlib -z max-page-size=0x1000 \
+		   -lgcc -mno-red-zone
 
-MAKE_FLAGS  := --quiet
+DOXYGEN		:= doxygen
 
-QEMU        :=  qemu-system-x86_64
+MAKE_FLAGS	:= --quiet --no-print-directory
 
-UNCRUSTIFY  :=  uncrustify
+QEMU		:= qemu-system-x86_64
 
-UNCRUSTIFY_CONFIG := $(DIR_SCRIPTS)/uncrustify.cfg
+UNCRUSTIFY	:= uncrustify
+
+UNCRUSTIFY_CFG	:= $(DIR_SCRIPTS)/uncrustify.cfg
 
 
 #----------------------------------------------------------------------------
 # Display color macros
 #----------------------------------------------------------------------------
-BLUE    := \033[1;34m
-YELLOW  := \033[1;33m
-NORMAL  := \033[0m
+BLUE		:= \033[1;34m
+YELLOW		:= \033[1;33m
+NORMAL		:= \033[0m
 
-SUCCESS := $(YELLOW)SUCCESS$(NORMAL)
+SUCCESS		:= $(YELLOW)SUCCESS$(NORMAL)
 
 
 #----------------------------------------------------------------------------

@@ -11,6 +11,7 @@
 
 #include <core.h>
 #include <libc/stdio.h>
+#include <libc/string.h>
 #include <kernel/console.h>
 #include <kernel/exception.h>
 #include <kernel/interrupt.h>
@@ -21,17 +22,6 @@
 #if defined(__linux__)
 #   error "This code must be compiled with a cross-compiler."
 #endif
-
-static inline char
-hexchar(int value)
-{
-    if ((value >= 0) && (value <= 9)) {
-        return (char)(value + '0');
-    }
-    else {
-        return (char)(value - 10 + 'a');
-    }
-}
 
 static void
 sysinit()

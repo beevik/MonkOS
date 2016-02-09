@@ -13,9 +13,9 @@ include $(DIR_ROOT)/config.mk
 # Build targets
 #----------------------------------------------------------------------------
 
-CONFIG 		:= $(DIR_DOCS)/monk.doxy
+CONFIG	:= $(DIR_DOCS)/monk.doxy
 
-TAG 		:= $(BLUE)[docs]$(NORMAL)
+TAG	:= $(BLUE)[docs]$(NORMAL)
 
 docs: .force $(CONFIG)
 	@echo "$(TAG) Running doxygen"

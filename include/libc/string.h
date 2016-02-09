@@ -24,6 +24,36 @@ size_t
 strlen(const char *str);
 
 //----------------------------------------------------------------------------
+//  @function   strlcpy
+/// @brief      Copy the source string to the destination buffer.
+/// @details    Appends string src to the end of dst. It will copy at most
+///             dstsize - 1 characters. A null terminator is added to the end
+///             of the destination string unless dstsize was 0.
+/// @param[in]  dst     Pointer to the destination buffer.
+/// @param[in]  src     Pointer to the source string.
+/// @param[in]  n       Maximum number of characters in the dst buffer after
+///                     copying, including the null terminator.
+/// @return     The length of the copied string after truncation.
+//----------------------------------------------------------------------------
+size_t
+strlcpy(char *dst, const char *src, size_t dstsize);
+
+//----------------------------------------------------------------------------
+//  @function   strlcat
+/// @brief      Append the source string to the end of the destination string.
+/// @details    The function will append at most dstsize - strlen(dst) - 1
+///             characters. A null terminator is added to the end of the
+///             concatenated string unless dstsize was 0.
+/// @param[in]  dst     Pointer to the destination string.
+/// @param[in]  src     Pointer to the source string.
+/// @param[in]  n       Maximum number of characters in the dst buffer after
+///                     concatenation, including the null terminator.
+/// @return     The length of the concatenated string after truncation.
+//----------------------------------------------------------------------------
+size_t
+strlcat(char *dst, const char *src, size_t dstsize);
+
+//----------------------------------------------------------------------------
 //  @function   memcpy
 /// @brief      Copy bytes from one memory region to another.
 /// @details    If the memory regions overlap, this function's behavior
