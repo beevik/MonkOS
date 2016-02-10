@@ -63,7 +63,7 @@ Exception.MC        equ     0x12
 ;-----------------------------------------------------------------------------
 ; IDT descriptor
 ;
-; Each 64-bit IDT descriptor is a 16-byte structure organized as follows:
+; Each IDT descriptor is a 16-byte structure organized as follows:
 ;
 ;     31                   16 15                    0
 ;    +-----------------------+-----------------------+
@@ -293,8 +293,8 @@ interrupts_init:
     .setupThunks:
 
         ; Duplicate the ISR thunk template 256 times into the ISR thunk table.
-        ; As the entry is duplicated, modify the interrupt number it pushes on
-        ; the stack.
+        ; As the entry is duplicated, modify (1) the interrupt number it
+        ; pushes on the stack, and (2) the jmp address for the dispatcher.
 
         ; Certain CPU exceptions push an error code onto the stack before
         ; calling the interrupt trap. We need to use a special dispatcher for
@@ -324,8 +324,7 @@ interrupts_init:
             ; By default, all thunks jump to ISR.Dispatcher.
             mov     r8,     ISR.Dispatcher
 
-            ; Do we need to replace the dispatcher with the special
-            ; dispatcher?
+            ; Replace ISR.Dispatcher with ISR.Dispatcher.Special?
 
             ; If the current thunk is for an interrupt greater than 14, it
             ; will not use the special dispatcher, so jump ahead.
@@ -374,21 +373,20 @@ interrupts_init:
         .installDescriptor:
 
             ; Copy thunk table offset into r8 so we can modify it.
-            mov     r8,     rsi
+            lea     r8,     [rsi + 1]   ; +1 to skip the nop
 
-            ; Write the ISR thunk address bits [0:15].
-            inc     r8      ; skip the nop
+            ; Store the ISR thunk address bits [0:15].
             mov     word [rdi + IDT.Descriptor.OffsetLo],   r8w
 
-            ; Write the ISR thunk address bits [16:31].
+            ; Store the ISR thunk address bits [16:31].
             shr     r8,     16
             mov     word [rdi + IDT.Descriptor.OffsetMid],  r8w
 
-            ; Write the ISR thunk address bits [32:63].
+            ; Store the ISR thunk address bits [32:63].
             shr     r8,     16
             mov     dword [rdi + IDT.Descriptor.OffsetHi],  r8d
 
-            ; Write the kernel code segment selector.
+            ; Store the kernel code segment selector.
             mov     r8w,    Segment.Kernel.Code
             mov     word [rdi + IDT.Descriptor.Segment],    r8w
 
@@ -400,13 +398,13 @@ interrupts_init:
 
         .useInterrupt:
 
-            ; Write the flags (IST=0, Type=interrupt, DPL=0, P=1)
+            ; Store the flags (IST=0, Type=interrupt, DPL=0, P=1)
             mov     word [rdi + IDT.Descriptor.Flags], 1000111000000000b
             jmp     .nextDescriptor
 
         .useTrap:
 
-            ; Write the flags (IST=0, Type=trap, DPL=0, P=1)
+            ; Store the flags (IST=0, Type=trap, DPL=0, P=1)
             mov     word [rdi + IDT.Descriptor.Flags], 1000111100000000b
 
         .nextDescriptor:

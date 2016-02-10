@@ -64,6 +64,9 @@ do_test()
                     key.code,
                     key.meta,
                     key.ch);
+                if (key.code == KEY_ESCAPE) {
+                    RAISE_INTERRUPT(EXCEPTION_NMI);
+                }
             }
             else {
                 console_printf(

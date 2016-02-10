@@ -56,7 +56,7 @@ qsort(void *base, size_t num, size_t size, sortcmp cmp)
         qsort(b, part + 1, size, cmp);
 
         // For the right side of the partition, do tail recursion.
-        b += (part + 1) * size;
+        b   += (part + 1) * size;
         num -= part + 1;
     }
 }

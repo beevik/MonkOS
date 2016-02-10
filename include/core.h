@@ -19,4 +19,8 @@
 // Macros
 //----------------------------------------------------------------------------
 
+/// Force a function to be inline, even in debug mode.
 #define __forceinline   inline __attribute__((always_inline))
+
+/// Return the number of elements in the C array.
+#define arrsize(x)      ((int)(sizeof(x) / sizeof(x[0])))

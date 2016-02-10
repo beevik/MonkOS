@@ -12,7 +12,7 @@
 #include <core.h>
 
 //----------------------------------------------------------------------------
-//  @typedef    qsort_cmp
+//  @typedef    sortcmp
 /// @brief      Comparison function pointer type for use with the qsort
 ///             function.
 /// @param[in]  a       Pointer to first element to be compared.
