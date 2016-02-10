@@ -105,7 +105,7 @@ rdmsr(uint32_t id)
 /// @param[in]  id      The register id to write.
 /// @param[in]  value   The value to write.
 //----------------------------------------------------------------------------
-inline void
+__forceinline void
 wrmsr(uint32_t id, uint64_t value)
 {
     asm volatile ("wrmsr" : : "c" (id), "A" (value));

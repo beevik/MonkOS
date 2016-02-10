@@ -35,7 +35,7 @@ syscall_init()
     // Bit 11 of rdx tells us if the SYSCALL/SYSRET instructions are
     // available. If they're not, raise an invalid opcode exception.
     if (!(regs.rdx & (1 << 11))) {
-        raise(EXCEPTION_INVALID_OPCODE);
+        RAISE_INTERRUPT(EXCEPTION_INVALID_OPCODE);
     }
 
     // Update the IA32_STAR MSR with the segment selectors that will be used

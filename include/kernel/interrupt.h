@@ -132,12 +132,15 @@ halt()
 }
 
 //----------------------------------------------------------------------------
-//  @function   raise
-/// @brief      Raise a software interrupt.
-/// @param[in]  vector  The interrupt vector number.
+//  @function   RAISE_INTERRUPT
+/// @brief      Issue a software interrupt to the CPU.
+/// @param[in]  x       The interrupt to raise. Must be an integer constant
+///                     less than 256.
 //----------------------------------------------------------------------------
-__forceinline void
-raise(uint8_t vector)
-{
-    asm volatile ("int %[v]" : : [v] "Nq" (vector));
-}
+#define RAISE_INTERRUPT(x)    { asm volatile ("int %[n]" ::[n] "N" (x)); }
+
+//----------------------------------------------------------------------------
+//  @function   RAISE_BREAKPOINT
+/// @brief      Issue a software breakpoint interrupt to the CPU.
+//----------------------------------------------------------------------------
+#define RAISE_BREAKPOINT()    { asm volatile ("int 3"); }

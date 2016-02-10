@@ -24,9 +24,10 @@ TARGET		:= x86_64-elf
 
 CC		:= $(TARGET)-gcc
 
-CCFLAGS		:= -Og -std=gnu11 -m64 -mno-red-zone -mno-mmx -mfpmath=sse \
+CCFLAGS		:= -std=gnu11 -I$(DIR_INCLUDE) -Qn -g -Og \
+		   -m64 -mno-red-zone -mno-mmx -mfpmath=sse -masm=intel \
 		   -ffreestanding -fno-asynchronous-unwind-tables \
-		   -masm=intel -I$(DIR_INCLUDE) -g -Wall -Wextra -Qn
+		   -Wall -Wextra -Wpedantic
 
 AS		:= nasm
 
@@ -34,8 +35,8 @@ ASFLAGS		:= -f elf64
 
 AR		:= $(TARGET)-ar
 
-LDFLAGS		:= -m64 -ffreestanding -g -nostdlib -z max-page-size=0x1000 \
-		   -lgcc -mno-red-zone
+LDFLAGS		:= -g -nostdlib -m64 -mno-red-zone -ffreestanding -lgcc \
+		   -z max-page-size=0x1000
 
 DOXYGEN		:= doxygen
 
