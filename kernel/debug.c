@@ -13,7 +13,7 @@
 static const char digit[] = "0123456789abcdef";
 
 int
-debug_dump_registers(char *buf, size_t bufsize, const registers_t *regs)
+dump_registers(char *buf, size_t bufsize, const registers_t *regs)
 {
     return snprintf(
         buf, bufsize,
@@ -30,7 +30,7 @@ debug_dump_registers(char *buf, size_t bufsize, const registers_t *regs)
 }
 
 int
-debug_dump_cpuflags(char *buf, size_t bufsize, uint64_t rflags)
+dump_cpuflags(char *buf, size_t bufsize, uint64_t rflags)
 {
 #define B(F)    ((rflags & F) ? 1 : 0)
 
@@ -47,7 +47,8 @@ debug_dump_cpuflags(char *buf, size_t bufsize, uint64_t rflags)
 }
 
 int
-debug_dump_memory(char *buf, size_t bufsize, const void *mem, size_t memsize)
+dump_memory(char *buf, size_t bufsize, const void *mem, size_t memsize,
+            enum dumpstyle style)
 {
     char          *b  = buf;
     char          *bt = buf + bufsize;
@@ -56,20 +57,52 @@ debug_dump_memory(char *buf, size_t bufsize, const void *mem, size_t memsize)
 
     while (b < bt && m < mt) {
 
-        // Dump up to 16 hexadecimal byte values separated by spaces.
+        // Dump memory offset if requested.
+        if (style == DUMPSTYLE_OFFSET) {
+            if (b + 11 < bt) {
+                uint64_t o = (uint64_t)(m - (const uint8_t *)mem);
+                for (int i = 7; i >= 0; i--) {
+                    b[i] = digit[o & 0xf];
+                    o  >>= 4;
+                }
+                b[8] = ':';
+                b[9] = b[10] = ' ';
+            }
+            b += 11;
+        }
+
+        // Dump memory address if requested.
+        else if (style == DUMPSTYLE_ADDR) {
+            if (b + 20 < bt) {
+                uint64_t a = (uint64_t)m;
+                for (int i = 16; i > 8; i--) {
+                    b[i] = digit[a & 0xf];
+                    a  >>= 4;
+                }
+                b[8] = '`';     // tick separator for readability
+                for (int i = 7; i >= 0; i--) {
+                    b[i] = digit[a & 0xf];
+                    a  >>= 4;
+                }
+                b[17] = ':';
+                b[18] = b[19] = ' ';
+            }
+            b += 20;
+        }
+
+        // Dump up to 16 hexadecimal byte values.
         for (int j = 0; j < 16; j++) {
-            if (m + j < mt) {
-                if (b + 3 < bt) {
+            if (b + 2 < bt) {
+                if (m + j < mt) {
                     uint8_t v = m[j];
                     b[0] = digit[v >> 4];
                     b[1] = digit[v & 0xf];
-                    b[2] = ' ';
+                }
+                else {
+                    b[0] = b[1] = ' ';
                 }
             }
-            else if (b + 3 < bt) {
-                b[0] = b[1] = b[2] = ' ';
-            }
-            b += 3;
+            b += 2;
 
             // Add a 1-space gutter between each group of 4 bytes.
             if (((j + 1) & 3) == 0) {
@@ -80,24 +113,32 @@ debug_dump_memory(char *buf, size_t bufsize, const void *mem, size_t memsize)
             }
         }
 
-        // Dump a 3-space gutter.
-        if (b + 3 < bt) {
-            b[0] = b[1] = b[2] = ' ';
+        // Add a gutter between hex and ascii displays.
+        if (b + 1 < bt) {
+            *b = ' ';
         }
-        b += 3;
+        b++;
 
         // Dump up to 16 ASCII bytes.
         for (int j = 0; j < 16; j++) {
-            if (m + j < mt) {
-                if (b < bt) {
+            if (b + 1 < bt) {
+                if (m + j < mt) {
                     uint8_t v = m[j];
                     *b = (v < 32 || v > 126) ? '.' : (char)v;
                 }
-            }
-            else if (b + 1 < bt) {
-                *b = ' ';
+                else {
+                    *b = ' ';
+                }
             }
             b++;
+
+            // Add a gutter between each group of 8 ascii characters.
+            if (j == 7) {
+                if (b + 1 < bt) {
+                    *b = ' ';
+                }
+                b++;
+            }
         }
 
         // Dump a carriage return.
@@ -117,5 +158,7 @@ debug_dump_memory(char *buf, size_t bufsize, const void *mem, size_t memsize)
         b[bufsize - 1] = 0;
     }
 
-    return (int)(bt - b);
+    // Return the number of bytes (that would have been) added to the buffer,
+    // even if the buffer was too small.
+    return (int)(b - buf);
 }

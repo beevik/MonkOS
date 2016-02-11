@@ -53,17 +53,17 @@ dump_context(int id, const interrupt_context_t *context)
 
     char buf[640];
 
-    debug_dump_registers(buf, sizeof(buf), &context->regs);
+    dump_registers(buf, sizeof(buf), &context->regs);
     console_print(id, buf);
     console_print(id, "\n");
 
-    debug_dump_cpuflags(buf, sizeof(buf), context->rflags);
+    dump_cpuflags(buf, sizeof(buf), context->rflags);
     console_print(id, buf);
     console_print(id, "\n");
 
-    void *mem = (void *)context->rsp;
-    debug_dump_memory(buf, sizeof(buf), mem, 8 * 16);
     console_print(id, "Stack:\n");
+    void *stack = (void *)context->rsp;
+    dump_memory(buf, sizeof(buf), stack, 8 * 16, DUMPSTYLE_ADDR);
     console_print(id, buf);
 }
 

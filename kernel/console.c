@@ -98,7 +98,7 @@ console_init()
         console[id].ybuf           = 0;
         console[id].screen         = screenptr;
         console[id].tlcorner       = screenptr;
-        screenptr                 += 0x1000; // each screen is 4K words (8K bytes).
+        screenptr                 += 0x1000; // each screen is 4K words.
     }
     active_console = &console[0];
 }
@@ -183,6 +183,11 @@ console_clear(int id)
     console[id].pos.y    = 0;
     console[id].ybuf     = 0;
     console[id].tlcorner = console[id].screen;
+
+    if (active_console == &console[id]) {
+        update_buffer_offset();
+        update_cursor();
+    }
 }
 
 void
