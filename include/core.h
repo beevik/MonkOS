@@ -24,3 +24,7 @@
 
 /// Return the number of elements in the C array.
 #define arrsize(x)      ((int)(sizeof(x) / sizeof(x[0])))
+
+/// Generic min/max routines
+#define min(a, b)    ((a) < (b) ? (a) : (b))
+#define max(a, b)    ((a) > (b) ? (a) : (b))

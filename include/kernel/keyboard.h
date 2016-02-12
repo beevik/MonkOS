@@ -1,5 +1,5 @@
 //============================================================================
-/// @file       kernel/keyboard.h
+/// @file       keyboard.h
 /// @brief      Keyboard input routines.
 //
 //  Copyright 2016 Brett Vickers.

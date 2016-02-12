@@ -47,7 +47,7 @@ syscall_init()
     wrmsr(MSR_IA32_STAR, star);
 
     // Write the address of the system call handler used by SYSCALL.
-    wrmsr(MSR_IA32_LSTAR, (uintptr_t)syscall_handle);
+    wrmsr(MSR_IA32_LSTAR, (uint64_t)syscall_handle);
 
     // Write the CPU flag mask used during SYSCALL.
     wrmsr(MSR_IA32_FMASK, 0);

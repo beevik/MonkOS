@@ -1,6 +1,6 @@
 //============================================================================
-/// @file   memlayout.h
-/// @brief  Kernel memory layout
+/// @file       memlayout.h
+/// @brief      Kernel memory layout
 //
 // Copyright 2016 Brett Vickers.
 // Use of this source code is governed by a BSD-style license that can
@@ -20,18 +20,20 @@
 // 00000300 - 000004ff          512 bytes   Free
 // 00000500 - 000006ff          512 bytes   Global variables
 // 00000700 - 0000ffff       63,744 bytes   Free
-// 00010000 - 00017fff       32,768 bytes   Page tables for first 10MiB
-// 00018000 - 0001bfff       16,384 bytes   Memory layout (from BIOS)
+// 00010000 - 00013fff       16,384 bytes   Page tables for first 10MiB
+// 00018000 - 0001bfff       32,768 bytes   Memory map (from BIOS)
 // 0001c000 - 00089fff      450,560 bytes   Free
-// 0008a000 - 0008bfff        8,192 bytes   Exception stack (NMI)
-// 0008c000 - 0008cfff        8,192 bytes   Exception stack (DF)
-// 0008d000 - 0008ffff        8,192 bytes   Exception stack (MC)
+// 0008a000 - 0008bfff        8,192 bytes   Exception stack (NMI) & guard page
+// 0008c000 - 0008cfff        8,192 bytes   Exception stack (DF) & guard page
+// 0008d000 - 0008ffff        8,192 bytes   Exception stack (MC) & guard page
 // 00090000 - 0009dbff       57,344 bytes   Reserved
 // 0009e000 - 0009ffff        8,192 bytes   Extended BIOS data area (EBDA)
 // 000a0000 - 000bffff      131,072 bytes   Video memory
 // 000c0000 - 000fffff      262,144 bytes   ROM
-// 00100000 - 001fffff    1,048,576 bytes   Kernel stack
-// 00200000 - 002fffff    1,048,576 bytes   Kernel interrupt stack
+// 00100000 - 00100fff        4,096 bytes   Kernel interrupt stack guard page
+// 00101000 - 001fefff    1,040,384 bytes   Kernel interrupt stack
+// 001ff000 - 001fffff        4,096 bytes   Kernel stack guard page
+// 00200000 - 002fffff    1,048,576 bytes   Kernel stack
 // 00300000 - (krnize)                      Kernel image
 //----------------------------------------------------------------------------
 
@@ -53,11 +55,7 @@
 #define MEM_PAGETABLE_PML4T           0x00010000
 #define MEM_PAGETABLE_PDPT            0x00011000
 #define MEM_PAGETABLE_PDT             0x00012000
-#define MEM_PAGETABLE_PT0             0x00013000
-#define MEM_PAGETABLE_PT1             0x00014000
-#define MEM_PAGETABLE_PT2             0x00015000
-#define MEM_PAGETABLE_PT3             0x00016000
-#define MEM_PAGETABLE_PT4             0x00017000
+#define MEM_PAGETABLE_PT              0x00013000
 #define MEM_LAYOUT_BIOS               0x00018000
 #define MEM_STACK_NMI_BOTTOM          0x0008a000
 #define MEM_STACK_NMI_TOP             0x0008c000
@@ -65,9 +63,14 @@
 #define MEM_STACK_DF_TOP              0x0008e000
 #define MEM_STACK_MC_BOTTOM           0x0008e000
 #define MEM_STACK_MC_TOP              0x00090000
+#define MEM_VIDEO                     0x000a0000
+#define MEM_SYSTEM_ROM                0x000c0000
 #define MEM_STACK_INTERRUPT_BOTTOM    0x00100000
 #define MEM_STACK_INTERRUPT_TOP       0x00200000
 #define MEM_STACK_KERNEL_BOTTOM       0x00200000
 #define MEM_STACK_KERNEL_TOP          0x00300000
 #define MEM_KERNEL_IMAGE              0x00300000
 #define MEM_KERNEL_ENTRYPOINT         0x00301000
+
+// Layout region sizes
+#define MEM_KERNEL_IMAGE_SIZE         0x00700000

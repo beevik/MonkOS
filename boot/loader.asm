@@ -71,8 +71,9 @@ org 0x8000
 ;   00018000 - 0001bfff       16,384 bytes     Memory map (from BIOS)
 ;   0006f000 - 0006ffff        4,096 bytes     32-bit protected mode stack
 ;   00070000 - 0007ffff       65,536 bytes     Kernel load buffer
-;   00100000 - 001fffff    1,048,576 bytes     Kernel stack
-;   00200000 - 002fffff    1,048,576 bytes     Kernel interrupt stack
+;   0008a000 - 0008ffff       24,576 bytes     Kernel special interrupt stacks
+;   00100000 - 001fefff    1,044,480 bytes     Kernel interrupt stack
+;   00200000 - 002fffff    1,048,576 bytes     Kernel stack
 ;   00300000 - (krnize)                        Kernel image
 ;
 ;=============================================================================
@@ -749,13 +750,12 @@ ReadMemLayout:
         ; Carry flag indicates error.
         jc      .done
 
-        ; If only 20 bytes were read (as is typical), fill the APIC3.0 dword
-        ; at offset 20 with 1.
+        ; If only 20 bytes were read (as is typical), pad up to 24 bytes.
         cmp     ecx,    20
         jne     .nextZone
 
-        ; Set bit 1 on the APIC3.0 dword (which means "don't ignore").
-        mov     dword [es:di + 20],   1 << 0
+        ; Pad with zero.
+        mov     dword [es:di + 20],   0
 
     .nextZone:
 
@@ -1190,8 +1190,9 @@ SetupPageTables:
     .ReadWrite      equ     1 << 1
     .WriteThru      equ     1 << 3
     .CacheDisable   equ     1 << 4
-    .AttribTable    equ     1 << 7
-    .Guard          equ     1 << 9         ; use a bit ignored by the CPU
+    .AttribTable    equ     1 << 7      ; valid only on PT entries
+    .LargePage      equ     1 << 7      ; valid only on PDT entries
+    .Guard          equ     1 << 9      ; use a bit ignored by the CPU
     .StdBits        equ     .Present | .ReadWrite
 
     ; Preserve registers
@@ -1221,18 +1222,21 @@ SetupPageTables:
         mov     di,                     Mem.PageTable.PDPT & 0xffff
         mov     dword [es:di],          Mem.PageTable.PDT | .StdBits
 
-        ; PDT entries 0 through 5 point to page tables 0 through 5.
+        ; PDT entry 0 maps the first 2MiB using 4KiB pages.
         mov     di,                     Mem.PageTable.PDT & 0xffff
-        mov     dword [es:di + 0x00],   Mem.PageTable.PT0 | .StdBits
-        mov     dword [es:di + 0x08],   Mem.PageTable.PT1 | .StdBits
-        mov     dword [es:di + 0x10],   Mem.PageTable.PT2 | .StdBits
-        mov     dword [es:di + 0x18],   Mem.PageTable.PT3 | .StdBits
-        mov     dword [es:di + 0x20],   Mem.PageTable.PT4 | .StdBits
+        mov     dword [es:di + 0x00],   Mem.PageTable.PT | .StdBits
 
-        ; Prepare to create page table entries.
-        mov     di,     Mem.PageTable.PT0 & 0xffff
+        ; PDT entries 1 through 5 map the next 8MiB using 2MiB pages.
+        ; This memory holds the kernel image and its stack.
+        mov     dword [es:di + 0x08],   0x00200000 | .StdBits | .LargePage
+        mov     dword [es:di + 0x10],   0x00400000 | .StdBits | .LargePage
+        mov     dword [es:di + 0x18],   0x00600000 | .StdBits | .LargePage
+        mov     dword [es:di + 0x20],   0x00800000 | .StdBits | .LargePage
+
+        ; Prepare to create 4K-page table entries for the first 2MiB.
+        mov     di,     Mem.PageTable.PT & 0xffff
         mov     eax,    .StdBits
-        mov     cx,     512 * 5         ; 5 contiguous page tables
+        mov     cx,     512     ; 512 entries in first page covering 2MiB
 
     .makePage:
 
@@ -1245,9 +1249,11 @@ SetupPageTables:
 
     .makeStackGuardPages:
 
-        ; Create a guard page at the bottom of the kernel stack. This way, if
-        ; the kernel overflows the stack, we'll get a page fault.
-        mov     edi,        Mem.Kernel.Stack.Bottom
+        ; Create a 4KiB guard page just below the bottom of the kernel stack.
+        ; This way, if the kernel overflows its stack, we'll get a page fault.
+        ; (Note that this guard page resides within the first 2MiB of memory,
+        ; which is necessary because we use 2MiB pages above 2MiB.)
+        mov     edi,        Mem.Kernel.Stack.Bottom - 4096
         call    .makeGuard
 
         ; Create a guard page at the bottom of each interrupt stack.
@@ -1292,7 +1298,7 @@ SetupPageTables:
         ; Locate the page table entry for the physical address in edi. Clear
         ; its present bit, and set its guard bit.
         shr     edi,        9               ; Divide by 4096, then mul by 8.
-        add     edi,        Mem.PageTable.PT0 & 0xffff
+        add     edi,        Mem.PageTable.PT & 0xffff
         mov     eax,        [es:di]
         and     eax,        ~(.Present)     ; clear the present bit.
         or      eax,        .Guard          ; set the guard bit.
@@ -1306,7 +1312,7 @@ SetupPageTables:
         ; cache-disable, write-through, and page-attribute-table bits. Repeat
         ; this process for a total of "cx" contiguous page entries.
         shr     edi,    9               ; Divide by 4096, then mul by 8.
-        add     edi,    Mem.PageTable.PT0 & 0xffff
+        add     edi,    Mem.PageTable.PT & 0xffff
 
         .makeUncached.next:
 

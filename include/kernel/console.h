@@ -1,5 +1,5 @@
 //============================================================================
-/// @file       kernel/console.h
+/// @file       console.h
 /// @brief      Console screen text manipulation routines.
 //
 // Copyright 2016 Brett Vickers.

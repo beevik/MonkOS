@@ -28,13 +28,9 @@ Mem.Loader2                         equ     0x00008000
 Mem.PageTable                       equ     0x00010000
 Mem.PageTable.PML4T                 equ     0x00010000
 Mem.PageTable.PDPT                  equ     0x00011000
-Mem.PageTable.PDT                   equ     0x00012000
-Mem.PageTable.PT0                   equ     0x00013000  ; maps [0:1] MiB
-Mem.PageTable.PT1                   equ     0x00014000  ; maps [2:3] MiB
-Mem.PageTable.PT2                   equ     0x00015000  ; maps [4:5] MiB
-Mem.PageTable.PT3                   equ     0x00016000  ; maps [6:7] MiB
-Mem.PageTable.PT4                   equ     0x00017000  ; maps [8:9] MiB
-Mem.PageTable.End                   equ     0x00018000
+Mem.PageTable.PDT                   equ     0x00012000  ; maps first 10MiB
+Mem.PageTable.PT                    equ     0x00013000  ; maps first 2MiB
+Mem.PageTable.End                   equ     0x00014000
 Mem.Layout                          equ     0x00018000  ; BIOS-derived layout
 Mem.Stack32.Temp.Bottom             equ     0x0006f000
 Mem.Stack32.Temp.Top                equ     0x00070000
@@ -48,7 +44,7 @@ Mem.Kernel.Stack.MC.Top             equ     0x00090000
 Mem.BIOS.EBDA                       equ     0x0009e000
 Mem.Video                           equ     0x000a0000
 Mem.Kernel.Stack.Interrupt.Bottom   equ     0x00100000  ; PL-change intr stack
-Mem.Kernel.Stack.Interrupt.Top      equ     0x00200000
+Mem.Kernel.Stack.Interrupt.Top      equ     0x001ff000
 Mem.Kernel.Stack.Bottom             equ     0x00200000  ; main kernel stack
 Mem.Kernel.Stack.Top                equ     0x00300000
 Mem.Kernel.Image                    equ     0x00300000

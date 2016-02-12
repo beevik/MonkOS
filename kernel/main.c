@@ -16,6 +16,7 @@
 #include <kernel/exception.h>
 #include <kernel/interrupt.h>
 #include <kernel/keyboard.h>
+#include <kernel/paging.h>
 #include <kernel/syscall.h>
 #include <kernel/timer.h>
 
@@ -36,6 +37,7 @@ sysinit()
 
     // Initialize various system modules.
     exceptions_init();
+    page_init();
     syscall_init();
     kb_init();
     timer_init(20);         // 20Hz
