@@ -9,9 +9,9 @@
 
 #include <core.h>
 #include <libc/string.h>
-#include <kernel/interrupt.h>
-#include <kernel/io.h>
-#include <kernel/keyboard.h>
+#include <kernel/cpu.h>
+#include <kernel/device/keyboard.h>
+#include <kernel/interrupt/interrupt.h>
 
 // Keyboard I/O ports
 #define KB_PORT_DATA    0x60    ///< Keyboard I/O data port.

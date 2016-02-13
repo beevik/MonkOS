@@ -9,10 +9,10 @@
 
 #include <core.h>
 #include <kernel/cpu.h>
-#include <kernel/exception.h>
-#include <kernel/interrupt.h>
-#include <kernel/memlayout.h>
-#include <kernel/syscall.h>
+#include <kernel/interrupt/exception.h>
+#include <kernel/interrupt/interrupt.h>
+#include <kernel/mem/segments.h>
+#include <kernel/syscall/syscall.h>
 
 // Model-specific registers used to set up system calls.
 #define MSR_IA32_STAR     0xc0000081

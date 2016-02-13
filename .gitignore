@@ -1,7 +1,9 @@
+.gdb
 .gdbinit
 .p4ignore
 build
 deps
+docs/intel
 docs/monk
 notes
 TODO

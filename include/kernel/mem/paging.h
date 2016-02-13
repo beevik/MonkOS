@@ -11,14 +11,17 @@
 
 #include <core.h>
 
+// Paging constants
 #define PAGE_SIZE    4096
 
 //----------------------------------------------------------------------------
-//  @function   page_init
-/// @brief      Initialize the internal paged memory data structures.
+//  @function   pagedb_init
+/// @brief      Initialize the page frame database.
+/// @details    The page frame database manages the physical memory used by
+///             all memory pages known to the kernel.
 //----------------------------------------------------------------------------
 void
-page_init();
+pagedb_init();
 
 //----------------------------------------------------------------------------
 //  @function   page_alloc

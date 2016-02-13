@@ -1,6 +1,6 @@
 //============================================================================
-/// @file       console.h
-/// @brief      Console screen text manipulation routines.
+/// @file       tty.h
+/// @brief      Teletype (console) screen text manipulation routines.
 //
 // Copyright 2016 Brett Vickers.
 // Use of this source code is governed by a BSD-style license that can
@@ -17,11 +17,11 @@
 //----------------------------------------------------------------------------
 
 /// The number of available virtual consoles.
-#define MAX_CONSOLES    4
+#define MAX_TTYS    4
 
 //----------------------------------------------------------------------------
 //  @enum       textcolor_t
-/// @brief      Color values used for console text.
+/// @brief      Color values used for tty text.
 //----------------------------------------------------------------------------
 enum textcolor
 {
@@ -47,7 +47,7 @@ typedef enum textcolor   textcolor_t;
 
 //----------------------------------------------------------------------------
 //  @struct     screenpos_t
-/// @brief      Console screen text position.
+/// @brief      tty screen text position.
 //----------------------------------------------------------------------------
 struct screenpos
 {
@@ -58,106 +58,106 @@ struct screenpos
 typedef struct screenpos   screenpos_t;
 
 //----------------------------------------------------------------------------
-//  @function   console_init
+//  @function   tty_init
 /// @brief      Initialize all virtual consoles.
 /// @details    This function must be called before any other console
 ///             functions can be used.
 //----------------------------------------------------------------------------
 void
-console_init();
+tty_init();
 
 //----------------------------------------------------------------------------
-//  @function   console_activate
+//  @function   tty_activate
 /// @brief      Activate the requested virtual console.
 /// @details    The virtual console's buffer is immediately displayed on the
 ///             screen.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 //----------------------------------------------------------------------------
 void
-console_activate(int id);
+tty_activate(int id);
 
 //----------------------------------------------------------------------------
-//  @function   console_set_textcolor
+//  @function   tty_set_textcolor
 /// @brief      Set the foreground and background colors used to display
 ///             text on the virtual console.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 /// @param[in]  fg      Foreground color.
 /// @param[in]  bg      Background color.
 //----------------------------------------------------------------------------
 void
-console_set_textcolor(int id, textcolor_t fg, textcolor_t bg);
+tty_set_textcolor(int id, textcolor_t fg, textcolor_t bg);
 
 //----------------------------------------------------------------------------
-//  @function   console_set_textcolor_fg
+//  @function   tty_set_textcolor_fg
 /// @brief      Set the foreground color used to display text on the virtual
 ///             console.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 /// @param[in]  fg      Foreground color.
 //----------------------------------------------------------------------------
 void
-console_set_textcolor_fg(int id, textcolor_t fg);
+tty_set_textcolor_fg(int id, textcolor_t fg);
 
 //----------------------------------------------------------------------------
-//  @function   console_set_textcolor_bg
+//  @function   tty_set_textcolor_bg
 /// @brief      Set the background color used to display text on the virtual
 ///             console.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 /// @param[in]  bg      Background color.
 //----------------------------------------------------------------------------
 void
-console_set_textcolor_bg(int id, textcolor_t bg);
+tty_set_textcolor_bg(int id, textcolor_t bg);
 
 //----------------------------------------------------------------------------
-//  @function   console_get_textcolor_fg
+//  @function   tty_get_textcolor_fg
 /// @brief      Get the foreground color used to display text on the virtual
 ///             console.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 /// @returns    Foreground color.
 //----------------------------------------------------------------------------
 textcolor_t
-console_get_textcolor_fg(int id);
+tty_get_textcolor_fg(int id);
 
 //----------------------------------------------------------------------------
-//  @function   console_get_textcolor_bg
+//  @function   tty_get_textcolor_bg
 /// @brief      Get the background color used to display text on the virtual
 ///             console.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 /// @returns    Background color.
 //----------------------------------------------------------------------------
 textcolor_t
-console_get_textcolor_bg(int id);
+tty_get_textcolor_bg(int id);
 
 //----------------------------------------------------------------------------
-//  @function   console_clear
+//  @function   tty_clear
 /// @brief      Clear the virtual console screen's contents using the current
 ///             text background color.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 //----------------------------------------------------------------------------
 void
-console_clear(int id);
+tty_clear(int id);
 
 //----------------------------------------------------------------------------
-//  @function   console_setpos
+//  @function   tty_setpos
 /// @brief      Set the position of the cursor on the virtual console.
 /// @details    Text written to the console after this function will be
 ///             located at the requested screen position.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 /// @param[in]  pos     The screen position of the cursor.
 //----------------------------------------------------------------------------
 void
-console_setpos(int id, screenpos_t pos);
+tty_setpos(int id, screenpos_t pos);
 
 //----------------------------------------------------------------------------
-//  @function   console_getpos
+//  @function   tty_getpos
 /// @brief      Get the current position of the cursor on the virtual console.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 /// @param[out] pos     A pointer to a screenpos_t to receive the position.
 //----------------------------------------------------------------------------
 void
-console_getpos(int id, screenpos_t *pos);
+tty_getpos(int id, screenpos_t *pos);
 
 //----------------------------------------------------------------------------
-//  @function   console_print
+//  @function   tty_print
 /// @brief      Output a null-terminated string to the virtual console using
 ///             the console's current text color and screen position.
 ///
@@ -176,18 +176,18 @@ console_getpos(int id, screenpos_t *pos);
 ///             To change the background color on the fly, use the escape
 ///             sequence \033{x}. The meaning of x is the same as with
 ///             the foreground color escape sequence.
-/// @param[in]  id      Virtual console id (0-3).
+/// @param[in]  id      Virtual tty id (0-3).
 /// @param[in]  str     The null-terminated string to be printed.
 //----------------------------------------------------------------------------
 void
-console_print(int id, const char *str);
+tty_print(int id, const char *str);
 
 //----------------------------------------------------------------------------
-//  @function   console_printf
+//  @function   tty_printf
 /// @brief      Output a printf-formatted string to the virtual console using
 ///             the console's current text color and screen position.
-/// @details    See console_print for further details.
-/// @param[in]  id      Virtual console id (0-3).
+/// @details    See tty_print for further details.
+/// @param[in]  id      Virtual tty id (0-3).
 /// @param[in]  format  The null-terminated format string used to format the
 ///                     text to be printed.
 /// @param[in]  ...     Variable arguments list to be initialized with
@@ -195,4 +195,4 @@ console_print(int id, const char *str);
 /// @return     The number of characters written to the console.
 //----------------------------------------------------------------------------
 int
-console_printf(int id, const char *format, ...);
+tty_printf(int id, const char *format, ...);

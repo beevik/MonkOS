@@ -1,6 +1,6 @@
 //============================================================================
-/// @file       debug.c
-/// @brief      Debugging helpers.
+/// @file       dump.c
+/// @brief      Debugging memory and CPU state dump routines.
 //
 //  Copyright 2016 Brett Vickers.
 //  Use of this source code is governed by a BSD-style license
@@ -8,7 +8,7 @@
 //============================================================================
 
 #include <libc/stdio.h>
-#include <kernel/debug.h>
+#include <kernel/debug/dump.h>
 
 static const char digit[] = "0123456789abcdef";
 

@@ -9,10 +9,10 @@
 
 #include <core.h>
 #include <libc/stdio.h>
-#include <kernel/debug.h>
-#include <kernel/exception.h>
-#include <kernel/interrupt.h>
-#include <kernel/console.h>
+#include <kernel/debug/dump.h>
+#include <kernel/device/tty.h>
+#include <kernel/interrupt/exception.h>
+#include <kernel/interrupt/interrupt.h>
 
 static const char *exceptionstr[] =
 {
@@ -42,11 +42,11 @@ static const char *exceptionstr[] =
 static void
 dump_context(int id, const interrupt_context_t *context)
 {
-    console_printf(
+    tty_printf(
         id,
         "INT: %02x   Error: %08x\n\n",
         context->interrupt, context->error);
-    console_printf(
+    tty_printf(
         id,
         "CS:RIP: %04x:%016lx             SS:RSP: %04x:%016lx\n\n",
         context->cs, context->retaddr, context->ss, context->rsp);
@@ -54,17 +54,17 @@ dump_context(int id, const interrupt_context_t *context)
     char buf[640];
 
     dump_registers(buf, sizeof(buf), &context->regs);
-    console_print(id, buf);
-    console_print(id, "\n");
+    tty_print(id, buf);
+    tty_print(id, "\n");
 
     dump_cpuflags(buf, sizeof(buf), context->rflags);
-    console_print(id, buf);
-    console_print(id, "\n");
+    tty_print(id, buf);
+    tty_print(id, "\n");
 
-    console_print(id, "Stack:\n");
+    tty_print(id, "Stack:\n");
     void *stack = (void *)context->rsp;
     dump_memory(buf, sizeof(buf), stack, 8 * 16, DUMPSTYLE_ADDR);
-    console_print(id, buf);
+    tty_print(id, buf);
 }
 
 static void
@@ -84,10 +84,10 @@ isr_exception(const interrupt_context_t *context)
     const char *exstr = i < arrsize(exceptionstr)
                         ? exceptionstr[i] : "Unknown exception.";
 
-    console_activate(0);
-    console_set_textcolor(0, TEXTCOLOR_WHITE, TEXTCOLOR_RED);
-    console_clear(0);
-    console_printf(0, "%s\n\n", exstr);
+    tty_activate(0);
+    tty_set_textcolor(0, TEXTCOLOR_WHITE, TEXTCOLOR_RED);
+    tty_clear(0);
+    tty_printf(0, "%s\n\n", exstr);
 
     dump_context(0, context);
 
@@ -99,7 +99,7 @@ isr_breakpoint(const interrupt_context_t *context)
 {
     (void)context;
 
-    console_print(0, "Breakpoint hit.\n");
+    tty_print(0, "Breakpoint hit.\n");
 }
 
 void

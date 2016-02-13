@@ -28,7 +28,7 @@ SECTIONS
     {
         *(.start)       /* from start.asm. Must be first. */
         *(.text)
-        *(.rodata)
+        *(.rodata*)
     }
 
     /*************************************************************************

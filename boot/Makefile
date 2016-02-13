@@ -6,15 +6,10 @@
 
 DIR_ROOT	:= ..
 
-include $(DIR_ROOT)/config.mk
+include $(DIR_ROOT)/scripts/config.mk
 
 DIR_TARGET	:= $(DIR_BUILD)/boot
 DIR_DEPS 	:= $(DIR_DEPS)/boot
-
-#----------------------------------------------------------------------------
-# Build targets
-#----------------------------------------------------------------------------
-
 ASFLAGS 	:= -f bin
 
 ASM_FILES	:= $(wildcard *.asm)
@@ -23,10 +18,10 @@ DEP_FILES 	:= $(ASM_FILES:%.asm=$(DIR_DEPS)/%.d)
 
 TAG 		:= $(BLUE)[boot]$(NORMAL)
 
-all: .mkdir $(SYS_FILES)
+all: mkdir $(SYS_FILES)
 	@echo "$(TAG) $(SUCCESS)"
 
-.mkdir:
+mkdir:
 	@mkdir -p $(DIR_TARGET) $(DIR_DEPS)
 
 clean:
@@ -36,12 +31,14 @@ $(SYS_FILES): $(DIR_BUILD)/%.sys: %.asm
 	@echo "$(TAG) Assembling $<"
 	@$(AS) $(ASFLAGS) $< -o $@
 
-$(DEP_FILES): $(DIR_DEPS)/%.d: %.asm | .mkdir
+$(DEP_FILES): $(DIR_DEPS)/%.d: %.asm | mkdir
 	@echo "$(TAG) Generating dependencies for $<"
 	@set -e; \
 	  rm -f $@; \
-	  $(AS) -M $(ASFLAGS) $< -MT $*.sys > $@.$$$$; \
-	  sed 's,\($*\)\.sys[ :]*,$(DIR_BUILD)/\1.sys $@ : ,g' < $@.$$$$ > $@; \
+	  $(AS) -M $(ASFLAGS) $< -MT @@@ > $@.$$$$; \
+	  sed 's,@@@[ :]*,$(DIR_BUILD)/$*.sys $@ : ,g' < $@.$$$$ > $@; \
 	  rm -f $@.$$$$
+
+.force:
 
 -include $(DEP_FILES)

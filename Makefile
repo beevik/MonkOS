@@ -6,7 +6,7 @@
 
 DIR_ROOT := .
 
-include $(DIR_ROOT)/config.mk
+include $(DIR_ROOT)/scripts/config.mk
 
 
 #----------------------------------------------------------------------------
@@ -54,3 +54,6 @@ clean: .force
 
 cleandeps: .force
 	@rm -rf $(DIR_DEPS)
+	@echo "$(BLUE)[clean]$(NORMAL) Dependency files deleted"
+
+.force:

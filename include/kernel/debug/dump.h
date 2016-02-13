@@ -1,6 +1,6 @@
 //============================================================================
-/// @file       debug.h
-/// @brief      Debug helpers.
+/// @file       dump.h
+/// @brief      Debugging memory and CPU state dump routines.
 //
 //  Copyright 2016 Brett Vickers.
 //  Use of this source code is governed by a BSD-style license

@@ -1,12 +1,16 @@
 #----------------------------------------------------------------------------
-# MonkOS makefile shared configuration
+# config.mk
+# MonkOS makefile shared configuration settings
 #
-# Contains tool, directory, and rule settings shared by all subprojects.
+# The following variables should be set before including this file:
+#
+#   DIR_ROOT	The root directory of the project.
+#
 #----------------------------------------------------------------------------
 
-#----------------------------------------------------------------------------
+#--------------------
 # Project directories
-#----------------------------------------------------------------------------
+#--------------------
 DIR_BOOT	:= $(DIR_ROOT)/boot
 DIR_BUILD	:= $(DIR_ROOT)/build
 DIR_DEPS	:= $(DIR_ROOT)/deps
@@ -17,9 +21,9 @@ DIR_LIBC	:= $(DIR_ROOT)/libc
 DIR_SCRIPTS	:= $(DIR_ROOT)/scripts
 
 
-#----------------------------------------------------------------------------
+#-------------------
 # Tool configuration
-#----------------------------------------------------------------------------
+#-------------------
 TARGET		:= x86_64-elf
 
 CC		:= $(TARGET)-gcc
@@ -49,17 +53,11 @@ UNCRUSTIFY	:= uncrustify
 UNCRUSTIFY_CFG	:= $(DIR_SCRIPTS)/uncrustify.cfg
 
 
-#----------------------------------------------------------------------------
+#---------------------
 # Display color macros
-#----------------------------------------------------------------------------
+#---------------------
 BLUE		:= \033[1;34m
 YELLOW		:= \033[1;33m
 NORMAL		:= \033[0m
 
 SUCCESS		:= $(YELLOW)SUCCESS$(NORMAL)
-
-
-#----------------------------------------------------------------------------
-# Shared rules
-#----------------------------------------------------------------------------
-.force:

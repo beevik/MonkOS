@@ -8,9 +8,9 @@
 //============================================================================
 
 #include <core.h>
-#include <kernel/interrupt.h>
-#include <kernel/io.h>
-#include <kernel/timer.h>
+#include <kernel/cpu.h>
+#include <kernel/device/timer.h>
+#include <kernel/interrupt/interrupt.h>
 
 // 8253 timer ports
 #define TIMER_PORT_DATA_CH0    0x40    ///< Channel 0 data port.

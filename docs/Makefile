@@ -6,7 +6,7 @@
 
 DIR_ROOT := ..
 
-include $(DIR_ROOT)/config.mk
+include $(DIR_ROOT)/scripts/config.mk
 
 
 #----------------------------------------------------------------------------
@@ -24,3 +24,5 @@ docs: .force $(CONFIG)
 
 clean:
 	@rm -rf $(DIR_DOCS)/monk
+
+.force:
