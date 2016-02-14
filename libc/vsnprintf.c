@@ -41,11 +41,11 @@
 enum state
 {
     STATE_CHARS,
-    STATE_FLAGS,        // '-', '+', ' ', '#', '0'
-    STATE_WIDTH,        // #
-    STATE_PRECISION,    // .#
-    STATE_DATALEN,      // 'h', 'hh', 'l', 'll', 'j', 'z', 't'
-    STATE_DATATYPE,     // 'd', 'i', 'u', 'o', 'x', 'X', 'c', 's', 'p', 'n'
+    STATE_FLAGS,                 // -,+, ,#,0
+    STATE_WIDTH,                 // #
+    STATE_PRECISION,             // .#
+    STATE_DATALEN,               // h,hh,l,ll,j,z,t
+    STATE_DATATYPE,              // d,i,u,o,x,X,c,s,p,n
 };
 
 // Parse flags
@@ -76,7 +76,7 @@ struct parse
     char        *bufptr;
     const char  *bufterm;
     enum state   state;
-    uint32_t     flags;      // FLAG_*
+    uint32_t     flags;          // FLAG_*
     int          width;
     int          precision;
     enum datalen datalen;
@@ -308,7 +308,7 @@ vsnprintf(char *buf, size_t n, const char *format, va_list args)
 
                 default:
                     parse.state = STATE_WIDTH;
-                    --fptr;   // back up and try again
+                    --fptr;      // back up and try again
                     break;
             }
         }
@@ -331,7 +331,7 @@ vsnprintf(char *buf, size_t n, const char *format, va_list args)
             }
             else {
                 parse.state = STATE_DATALEN;
-                --fptr;   // back up and try again
+                --fptr;          // back up and try again
             }
         }
 
@@ -348,7 +348,7 @@ vsnprintf(char *buf, size_t n, const char *format, va_list args)
             }
             else {
                 parse.state = STATE_DATALEN;
-                --fptr;   // back up and try again
+                --fptr;          // back up and try again
             }
         }
 
@@ -385,7 +385,7 @@ vsnprintf(char *buf, size_t n, const char *format, va_list args)
                     break;
 
                 default:
-                    --fptr;   // back up and try again
+                    --fptr;      // back up and try again
                     break;
             }
             parse.state = STATE_DATATYPE;

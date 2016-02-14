@@ -43,7 +43,7 @@ enum textcolor
     TEXTCOLOR_WHITE     = 15,
 };
 
-typedef enum textcolor   textcolor_t;
+typedef enum textcolor textcolor_t;
 
 //----------------------------------------------------------------------------
 //  @struct     screenpos_t
@@ -51,11 +51,11 @@ typedef enum textcolor   textcolor_t;
 //----------------------------------------------------------------------------
 struct screenpos
 {
-    uint8_t x;      ///< x position in range [0:79]. 0 is left of screen.
-    uint8_t y;      ///< y position in range [0:24]. 0 is top of screen.
+    uint8_t x;                   ///< x position in range [0:79].
+    uint8_t y;                   ///< y position in range [0:24].
 };
 
-typedef struct screenpos   screenpos_t;
+typedef struct screenpos screenpos_t;
 
 //----------------------------------------------------------------------------
 //  @function   tty_init

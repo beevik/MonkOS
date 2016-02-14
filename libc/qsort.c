@@ -13,7 +13,7 @@
 void
 qsort(void *base, size_t num, size_t size, sortcmp cmp)
 {
-    uint8_t pivot[size], tmp[size];     // use C99 VLAs instead of alloca.
+    uint8_t pivot[size], tmp[size]; // use C99 VLAs instead of alloca.
 
     uint8_t *b = (uint8_t *)base;
     for (;;) {

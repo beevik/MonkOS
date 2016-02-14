@@ -142,6 +142,7 @@ collapse_overlaps()
         // Handle the 5 alignment cases:
         //   xxx   xxx   xxxx  xxx   xxxxx
         //   yyy   yyyy   yyy   yyy   yyy
+        // The remaining cases are impossible due to sorting.
 
         if (cl == nl) {
             if (cr == nr) {
@@ -156,7 +157,7 @@ collapse_overlaps()
                     collapse(next, term--);
                 }
             }
-            else { /* cr != nr */
+            else {               /* cr != nr */
                 if (next->type > curr->type) {
                     // 111  ->  2222
                     // 2222
@@ -172,7 +173,7 @@ collapse_overlaps()
             }
         }
 
-        else { /* if cl != nl */
+        else {                   /* if cl != nl */
             if (cr == nr) {
                 if (next->type > curr->type) {
                     // 1111  ->  1
@@ -199,7 +200,7 @@ collapse_overlaps()
                     resort(next, term);
                 }
             }
-            else { /* if cr > nr */
+            else {               /* if cr > nr */
                 if (next->type > curr->type) {
                     // 11111  -> 1
                     //  222   ->  222
@@ -218,9 +219,9 @@ collapse_overlaps()
                     collapse(next, term--);
                 }
             }
-        } // cl != nl
+        }
 
-    } // while (curr + 1 < term)
+    }
 }
 
 /// Find missing memory regions in the table table, and fill them with

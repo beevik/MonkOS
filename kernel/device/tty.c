@@ -14,14 +14,14 @@
 #include <kernel/device/tty.h>
 
 // CRTC ports
-#define CRTC_PORT_CMD     0x03d4        ///< Command port for CRT controller.
-#define CRTC_PORT_DATA    0x03d5        ///< Data port for CRT controller.
+#define CRTC_PORT_CMD     0x03d4 ///< Command port for CRT controller.
+#define CRTC_PORT_DATA    0x03d5 ///< Data port for CRT controller.
 
 // CRTC commands
-#define CRTC_CMD_STARTADDR_HI     0x0c  ///< Hi-byte of buffer start address.
-#define CRTC_CMD_STARTADDR_LO     0x0d  ///< Lo-byte of buffer start address.
-#define CRTC_CMD_CURSORADDR_HI    0x0e  ///< Hi-byte of cursor start address.
-#define CRTC_CMD_CURSORADDR_LO    0x0f  ///< Lo-byte of cursor start address.
+#define CRTC_CMD_STARTADDR_HI     0x0c ///< Hi-byte of buffer start address.
+#define CRTC_CMD_STARTADDR_LO     0x0d ///< Lo-byte of buffer start address.
+#define CRTC_CMD_CURSORADDR_HI    0x0e ///< Hi-byte of cursor start address.
+#define CRTC_CMD_CURSORADDR_LO    0x0f ///< Lo-byte of cursor start address.
 
 // Visible screen geometry
 #define SCREEN_ROWS      25
@@ -32,18 +32,18 @@
 /// Virtual console state.
 struct tty
 {
-    uint16_t    textcolor;         ///< Current fg/bg color (shifted left 8).
-    uint16_t    textcolor_orig;    ///< Original, non-override text color.
-    screenpos_t pos;               ///< Current screen position.
-    uint8_t     ybuf;              ///< Virtual buffer y position.
-    uint16_t   *screen;            ///< Virtual screen buffer for 50 rows.
-    uint16_t   *tlcorner;          ///< Points to char in top-left corner.
+    uint16_t    textcolor;       ///< Current fg/bg color (shifted).
+    uint16_t    textcolor_orig;  ///< Original, non-override text color.
+    screenpos_t pos;             ///< Current screen position.
+    uint8_t     ybuf;            ///< Virtual buffer y position.
+    uint16_t   *screen;          ///< Virtual screen buffer for 50 rows.
+    uint16_t   *tlcorner;        ///< Points to char in top-left corner.
 };
 
-typedef struct tty   tty_t;
+typedef struct tty tty_t;
 
-static tty_t  tty[MAX_TTYS];    ///< All virtual consoles.
-static tty_t *active_tty;       ///< The currently visible console.
+static tty_t  tty[MAX_TTYS];     ///< All virtual consoles.
+static tty_t *active_tty;        ///< The currently visible console.
 
 static inline uint16_t
 color(textcolor_t fg, textcolor_t bg)

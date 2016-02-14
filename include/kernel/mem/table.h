@@ -34,12 +34,12 @@ enum memtype
 //----------------------------------------------------------------------------
 struct memregion
 {
-    uint64_t addr;      ///< base address
-    uint64_t size;      ///< size of memory region
-    int32_t  type;      ///< Memory type (see memtype enum)
-    uint32_t flags;     ///< flags (currently unused)
+    uint64_t addr;               ///< base address
+    uint64_t size;               ///< size of memory region
+    int32_t  type;               ///< Memory type (see memtype enum)
+    uint32_t flags;              ///< flags (currently unused)
 };
-typedef struct memregion   memregion_t;
+typedef struct memregion memregion_t;
 
 //----------------------------------------------------------------------------
 //  @struct     memtable_t
@@ -49,11 +49,11 @@ typedef struct memregion   memregion_t;
 //----------------------------------------------------------------------------
 struct memtable
 {
-    uint64_t    count;        ///< The number of memory regions in the table
+    uint64_t    count;           ///< Memory regions in the table
     uint64_t    reserved;
-    memregion_t region[1];    ///< An array of 'count' memory regions
+    memregion_t region[1];       ///< An array of 'count' memory regions
 };
-typedef struct memtable   memtable_t;
+typedef struct memtable memtable_t;
 
 //----------------------------------------------------------------------------
 //  @function   memtable_init

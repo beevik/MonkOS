@@ -25,13 +25,13 @@
 #define TRAP_IRQ_KEYBOARD    0x21
 
 // PIC port constants
-#define PIC_PORT_CMD_MASTER     0x20    ///< Command port for master PIC
-#define PIC_PORT_CMD_SLAVE      0xa0    ///< Command port for slave PIC
-#define PIC_PORT_DATA_MASTER    0x21    ///< Data port for master PIC
-#define PIC_PORT_DATA_SLAVE     0xa1    ///< Data port for slave PIC
+#define PIC_PORT_CMD_MASTER     0x20 ///< Command port for master PIC
+#define PIC_PORT_CMD_SLAVE      0xa0 ///< Command port for slave PIC
+#define PIC_PORT_DATA_MASTER    0x21 ///< Data port for master PIC
+#define PIC_PORT_DATA_SLAVE     0xa1 ///< Data port for slave PIC
 
 // PIC commands
-#define PIC_CMD_EOI    0x20             ///< End of interrupt
+#define PIC_CMD_EOI    0x20      ///< End of interrupt
 
 //----------------------------------------------------------------------------
 //  @struct interrupt_context
@@ -40,17 +40,17 @@
 //----------------------------------------------------------------------------
 struct interrupt_context
 {
-    registers_t regs;           ///< all general-purpose registers.
-    uint64_t    error;          ///< exception error identifier.
-    uint64_t    interrupt;      ///< interrupt vector number.
-    uint64_t    retaddr;        ///< interrupt return address.
-    uint64_t    cs;             ///< code segment.
-    uint64_t    rflags;         ///< flags register.
-    uint64_t    rsp;            ///< stack pointer.
-    uint64_t    ss;             ///< stack segment.
+    registers_t regs;            ///< all general-purpose registers.
+    uint64_t    error;           ///< exception error identifier.
+    uint64_t    interrupt;       ///< interrupt vector number.
+    uint64_t    retaddr;         ///< interrupt return address.
+    uint64_t    cs;              ///< code segment.
+    uint64_t    rflags;          ///< flags register.
+    uint64_t    rsp;             ///< stack pointer.
+    uint64_t    ss;              ///< stack segment.
 };
 
-typedef struct interrupt_context   interrupt_context_t;
+typedef struct interrupt_context interrupt_context_t;
 
 //----------------------------------------------------------------------------
 //  @function   interrupts_init

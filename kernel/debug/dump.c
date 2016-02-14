@@ -79,7 +79,7 @@ dump_memory(char *buf, size_t bufsize, const void *mem, size_t memsize,
                     b[i] = digit[a & 0xf];
                     a  >>= 4;
                 }
-                b[8] = '`';     // tick separator for readability
+                b[8] = '`';      // tick separator for readability
                 for (int i = 7; i >= 0; i--) {
                     b[i] = digit[a & 0xf];
                     a  >>= 4;

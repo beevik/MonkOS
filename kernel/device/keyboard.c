@@ -14,10 +14,10 @@
 #include <kernel/interrupt/interrupt.h>
 
 // Keyboard I/O ports
-#define KB_PORT_DATA    0x60    ///< Keyboard I/O data port.
+#define KB_PORT_DATA    0x60     ///< Keyboard I/O data port.
 
 // Other constants
-#define MAX_BUFSIZ    32        ///< Keyboard input buffer size.
+#define MAX_BUFSIZ    32         ///< Keyboard input buffer size.
 
 // Key code abbreviations, used to set up the default scan map table below.
 #define BSP    KEY_BACKSPACE
@@ -107,15 +107,15 @@ static const keylayout_t ps2_layout =
 /// Keyboard state.
 struct kbstate
 {
-    keylayout_t  layout;             ///< The installed keyboard layout.
-    uint8_t      meta;               ///< Mask of meta keys currently pressed.
-    uint8_t      buf_head;           ///< Index of oldest key in buf.
-    uint8_t      buf_tail;           ///< Index of next empty slot in buf.
-    atomic_uchar buf_size;           ///< Number of keys in the buf.
-    key_t        buf[MAX_BUFSIZ];    ///< Buffer holding unconsumed keys.
+    keylayout_t  layout;         ///< The installed keyboard layout.
+    uint8_t      meta;           ///< Mask of meta keys currently pressed.
+    uint8_t      buf_head;       ///< Index of oldest key in buf.
+    uint8_t      buf_tail;       ///< Index of next empty slot in buf.
+    atomic_uchar buf_size;       ///< Number of keys in the buf.
+    key_t        buf[MAX_BUFSIZ]; ///< Buffer holding unconsumed keys.
 };
 
-typedef struct kbstate   kbstate_t;
+typedef struct kbstate kbstate_t;
 
 /// Current keyboard state.
 static kbstate_t state;

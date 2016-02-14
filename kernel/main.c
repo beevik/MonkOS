@@ -42,7 +42,7 @@ sysinit()
     pagedb_init();
     syscall_init();
     kb_init();
-    timer_init(20);         // 20Hz
+    timer_init(20);              // 20Hz
 
     // Enable interrupts.
     interrupts_enable();

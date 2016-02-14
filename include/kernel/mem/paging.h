@@ -35,10 +35,10 @@ void *
 page_alloc(int count, uint32_t flags);
 
 // Page flags used with page_alloc.
-#define PAGEFLAG_USER        (1 << 0)   ///< User level privileges.
-#define PAGEFLAG_READONLY    (1 << 1)   ///< Read-only memory.
-#define PAGEFLAG_EXEC        (1 << 2)   ///< Executable-only memory.
-#define PAGEFLAG_NOSWAP      (1 << 3)   ///< Memory is never swapped to disk.
+#define PAGEFLAG_USER        (1 << 0) ///< User level privileges.
+#define PAGEFLAG_READONLY    (1 << 1) ///< Read-only memory.
+#define PAGEFLAG_EXEC        (1 << 2) ///< Executable-only memory.
+#define PAGEFLAG_NOSWAP      (1 << 3) ///< Memory is never swapped to disk.
 
 //----------------------------------------------------------------------------
 //  @function   page_free

@@ -26,23 +26,30 @@ typedef struct pf
     uint64_t reserved;
 } pf_t;
 
-uint64_t pfdbs;
+struct state
+{
+    const memtable_t *memtable;  ///< Pointer to memory table.
+    uint64_t          pfdbsize;  ///< Number of entries in pfdb.
+    pf_t             *pfdb;      ///< Page frame database
+    uint64_t          pfavail;   ///< Total available physical pages
+};
+typedef struct state state_t;
+
+static state_t state;
 
 void
 pagedb_init()
 {
     // Calculate total available memory
-    const memtable_t *table = memtable();
-    uint64_t          mem   = 0;
-    for (unsigned i = 0; i < table->count; i++) {
-        if (table->region[i].type == MEMTYPE_USABLE)
-            mem += table->region[i].size;
+    state.memtable = memtable();
+    for (unsigned i = 0; i < state.memtable->count; i++) {
+        if (state.memtable->region[i].type == MEMTYPE_USABLE)
+            state.pfavail += state.memtable->region[i].size / PAGE_SIZE;
     }
 
     // Find a contiguous region of memory large enough for the pagedb
-    uint64_t pagesNeeded = (mem / PAGE_SIZE);
-    uint64_t pfdb_size   = pagesNeeded * sizeof(pf_t);
-    pfdbs = pfdb_size;
+    state.pfdbsize = state.memtable->region[state.memtable->count - 1].size /
+                     PAGE_SIZE;
 
     // Build a kernel page table (rebuilding boot-loader-installed table)
 
