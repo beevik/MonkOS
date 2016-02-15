@@ -79,4 +79,3 @@ memtable_reserve(uint64_t addr, uint64_t size);
 //----------------------------------------------------------------------------
 const memtable_t *
 memtable();
-

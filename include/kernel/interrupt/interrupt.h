@@ -17,12 +17,12 @@
 //----------------------------------------------------------------------------
 
 // Hardware IRQ values
-#define IRQ_TIMER       0
-#define IRQ_KEYBOARD    1
+#define IRQ_TIMER               0
+#define IRQ_KEYBOARD            1
 
 // Interrupt vector numbers: hardware IRQ traps
-#define TRAP_IRQ_TIMER       0x20
-#define TRAP_IRQ_KEYBOARD    0x21
+#define TRAP_IRQ_TIMER          0x20
+#define TRAP_IRQ_KEYBOARD       0x21
 
 // PIC port constants
 #define PIC_PORT_CMD_MASTER     0x20 ///< Command port for master PIC
@@ -31,7 +31,7 @@
 #define PIC_PORT_DATA_SLAVE     0xa1 ///< Data port for slave PIC
 
 // PIC commands
-#define PIC_CMD_EOI    0x20      ///< End of interrupt
+#define PIC_CMD_EOI             0x20 ///< End of interrupt
 
 //----------------------------------------------------------------------------
 //  @struct interrupt_context

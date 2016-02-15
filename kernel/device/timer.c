@@ -19,8 +19,8 @@
 #define TIMER_PORT_CMD         0x43 ///< Timer command port.
 
 // Frequency bounds
-#define MIN_FREQUENCY    19
-#define MAX_FREQUENCY    1193181
+#define MIN_FREQUENCY          19
+#define MAX_FREQUENCY          1193181
 
 static void
 isr_timer(const interrupt_context_t *context)

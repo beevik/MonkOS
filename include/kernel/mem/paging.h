@@ -48,7 +48,8 @@ pagetable_destroy(pagetable_handle pt);
 ///             operations are performed relative to the page table.
 /// @param[in]  A handle to the activated page table.
 //----------------------------------------------------------------------------
-void pagetable_activate(pagetable_handle pt);
+void
+pagetable_activate(pagetable_handle pt);
 
 //----------------------------------------------------------------------------
 //  @function   page_alloc
