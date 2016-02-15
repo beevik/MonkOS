@@ -64,9 +64,19 @@ void
 memtable_init();
 
 //----------------------------------------------------------------------------
+//  @function   memtable_reserve
+/// @brief      Reserve a region of memory.
+/// @details    This function should not be called after the page table has
+///             been initialized.
+//----------------------------------------------------------------------------
+void
+memtable_reserve(uint64_t addr, uint64_t size);
+
+//----------------------------------------------------------------------------
 //  @function   memtable
 /// @brief      Return a pointer to the current memory table.
 /// @return     A pointer to the memory table.
 //----------------------------------------------------------------------------
 const memtable_t *
 memtable();
+

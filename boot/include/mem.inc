@@ -30,10 +30,10 @@ Mem.PageTable.PML4T                 equ     0x00010000
 Mem.PageTable.PDPT                  equ     0x00011000
 Mem.PageTable.PDT                   equ     0x00012000  ; maps first 10MiB
 Mem.PageTable.PT                    equ     0x00013000  ; maps first 2MiB
-Mem.PageTable.End                   equ     0x00014000
-Mem.Layout                          equ     0x00018000  ; BIOS-derived layout
+Mem.PageTable.End                   equ     0x00020000
 Mem.Stack32.Temp.Bottom             equ     0x0006f000
 Mem.Stack32.Temp.Top                equ     0x00070000
+Mem.Table                           equ     0x00070000  ; BIOS-derived layout
 Mem.Kernel.LoadBuffer               equ     0x00070000
 Mem.Kernel.Stack.NMI.Bottom         equ     0x0008a000  ; NMI stack
 Mem.Kernel.Stack.NMI.Top            equ     0x0008c000
@@ -56,7 +56,7 @@ Mem.BIOS.Data.Size                  equ     0x00000100
 Mem.Loader1.Size                    equ     0x00000200
 Mem.Loader2.Size                    equ     0x00008000
 Mem.Sector.Buffer.Size              equ     0x00000800
-Mem.Layout.Size                     equ     0x00004000
+Mem.Table.Size                      equ     0x00006000  ; Up to 1023 regions
 Mem.Kernel.LoadBuffer.Size          equ     0x00010000
 
 ; Real mode segment addresses

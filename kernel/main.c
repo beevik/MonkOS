@@ -69,7 +69,7 @@ do_test()
                     key.meta,
                     key.ch);
                 if (key.code == KEY_ESCAPE) {
-                    pagedb_init();
+                    // pagedb_init();
                     // RAISE_INTERRUPT(EXCEPTION_NMI);
                 }
             }

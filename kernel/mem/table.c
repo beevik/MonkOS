@@ -12,35 +12,7 @@
 #include <libc/stdlib.h>
 #include <libc/string.h>
 #include <kernel/mem/table.h>
-
-// Physical memory layout supplied by the boot loader
-#define MEM_GDT                       0x00000100
-#define MEM_TSS                       0x00000200
-#define MEM_GLOBALS                   0x00000500
-#define MEM_IDT                       0x00001000
-#define MEM_ISR_TABLE                 0x00002000
-#define MEM_ISR_THUNKS                0x00002800
-#define MEM_PAGETABLE                 0x00010000
-#define MEM_PAGETABLE_PML4T           0x00010000
-#define MEM_PAGETABLE_PDPT            0x00011000
-#define MEM_PAGETABLE_PDT             0x00012000
-#define MEM_PAGETABLE_PT              0x00013000
-#define MEM_TABLE_BIOS                0x00018000
-#define MEM_STACK_NMI_BOTTOM          0x0008a000
-#define MEM_STACK_NMI_TOP             0x0008c000
-#define MEM_STACK_DF_BOTTOM           0x0008c000
-#define MEM_STACK_DF_TOP              0x0008e000
-#define MEM_STACK_MC_BOTTOM           0x0008e000
-#define MEM_STACK_MC_TOP              0x00090000
-#define MEM_VIDEO                     0x000a0000
-#define MEM_SYSTEM_ROM                0x000c0000
-#define MEM_STACK_INTERRUPT_BOTTOM    0x00100000
-#define MEM_STACK_INTERRUPT_TOP       0x00200000
-#define MEM_STACK_KERNEL_BOTTOM       0x00200000
-#define MEM_STACK_KERNEL_TOP          0x00300000
-#define MEM_KERNEL_IMAGE              0x00300000
-#define MEM_KERNEL_ENTRYPOINT         0x00301000
-#define MEM_KERNEL_IMAGE_END          0x00a00000
+#include "memmap.h"
 
 // Pointer to the BIOS-generated memory table table.
 static memtable_t *table = (memtable_t *)MEM_TABLE_BIOS;
@@ -296,28 +268,44 @@ remove_trailing(int32_t type)
     }
 }
 
+static void
+normalize()
+{
+    // Sort the memory table by address.
+    qsort(table->region, table->count, sizeof(memregion_t),
+          cmp_region);
+
+    // Remove overlapping regions.
+    collapse_overlaps();
+
+    // Fill gaps between regions with "reserved" memory.
+    fill_gaps(MEMTYPE_RESERVED);
+
+    // Squash adjacent memory regions of the same type.
+    consolidate_neighbors();
+
+    // Remove trailing regions of "reserved" memory.
+    remove_trailing(MEMTYPE_RESERVED);
+}
+
 void
 memtable_init()
 {
     // Reserve the first 10MiB of memory for the kernel and its global
     // data structures.
     add_region(0, MEM_KERNEL_IMAGE_END, MEMTYPE_RESERVED);
-
-    // Sort the memory table by address.
-    qsort(table->region, table->count, sizeof(memregion_t),
-          cmp_region);
-
-    // Get rid of overlapping entries, fill gaps between entries with
-    // "reserved" entries, consolidate adjacent entries of the same
-    // type, and remove trailing reserved entries.
-    collapse_overlaps();
-    fill_gaps(MEMTYPE_RESERVED);
-    consolidate_neighbors();
-    remove_trailing(MEMTYPE_RESERVED);
+    normalize();
 }
 
 const memtable_t *
 memtable()
 {
     return table;
+}
+
+void
+memtable_reserve(uint64_t addr, uint64_t size)
+{
+    add_region(addr, size, MEMTYPE_RESERVED);
+    normalize();
 }

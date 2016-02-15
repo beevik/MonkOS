@@ -68,9 +68,9 @@ org 0x8000
 ;   00000800 - 00000fff        2,048 bytes     Cdrom sector read buffer
 ;   00001000 - 00007bff       27,648 bytes     Real mode stack
 ;   00010000 - 00017fff       32,768 bytes     Page tables
-;   00018000 - 0001bfff       16,384 bytes     Memory map (from BIOS)
 ;   0006f000 - 0006ffff        4,096 bytes     32-bit protected mode stack
 ;   00070000 - 0007ffff       65,536 bytes     Kernel load buffer
+;   00070000 - 00075fff       24,576 bytes     Memory table (from BIOS)
 ;   0008a000 - 0008ffff       24,576 bytes     Kernel special interrupt stacks
 ;   00100000 - 001fefff    1,044,480 bytes     Kernel interrupt stack
 ;   00200000 - 002fffff    1,048,576 bytes     Kernel stack
@@ -186,15 +186,6 @@ load:
         call    DisplayStatusString
 
     ;-------------------------------------------------------------------------
-    ; Retrieve memory layout from the BIOS
-    ;-------------------------------------------------------------------------
-    .readLayout:
-
-        ; Use the BIOS to collect an array of memory ranges available and in
-        ; use.
-        call    ReadMemLayout
-
-    ;-------------------------------------------------------------------------
     ; Load the kernel image into upper memory
     ;-------------------------------------------------------------------------
     .loadKernel:
@@ -229,6 +220,15 @@ load:
         cli
 
     ;-------------------------------------------------------------------------
+    ; Retrieve memory layout from the BIOS
+    ;-------------------------------------------------------------------------
+    .readLayout:
+
+        ; Use the BIOS to collect an array of memory ranges available and in
+        ; use.
+        call    ReadMemLayout
+
+    ;-------------------------------------------------------------------------
     ; Wipe memory zones that the loaders used
     ;-------------------------------------------------------------------------
     .wipeMemory:
@@ -252,16 +252,6 @@ load:
         mov     di,     Mem.Loader1
         mov     cx,     Mem.Loader1.Size
         rep     stosb
-
-        ; Wipe the sector load buffer.
-        mov     ax,     Mem.Kernel.LoadBuffer >> 4
-        mov     es,     ax
-        xor     ax,     ax
-        xor     di,     di
-        mov     cx,     Mem.Kernel.LoadBuffer.Size - 1
-        rep     stosb
-        inc     cx
-        stosb
 
         ; Wipe the temporary 32-bit protected mode stack.
         mov     ax,     Mem.Stack32.Temp.Bottom >> 4
@@ -684,11 +674,11 @@ HasCPUID:
 ;=============================================================================
 ; ReadMemLayout
 ;
-; Use the BIOS to read an array of memory layout zones. Each zone is tagged as
+; Use the BIOS to read an array of memory regions. Each region is tagged as
 ; available or in use.
 ;
 ; After this procedure is complete, the memory layout will be stored as
-; follows, starting at Mem.Layout:
+; follows, starting at Mem.Table:
 ;
 ;    <----- 64-bits ----->
 ;   +----------------------+
@@ -711,7 +701,7 @@ HasCPUID:
 ;   |         ...          |
 ;   +----------------------+
 ;
-; The layout may be unsorted, and it could contain gaps. It's the
+; The table may be unsorted, and it could contain gaps. It's the
 ; responsibility of the kernel to clean up this data so that it's more usable.
 ;
 ; Killed registers:
@@ -730,7 +720,7 @@ ReadMemLayout:
     .init:
 
         ; Set the segment register for the location of the memory layout.
-        mov     ax,     Mem.Layout >> 4
+        mov     ax,     Mem.Table >> 4
         mov     es,     ax
         xor     esi,    esi     ; si = zone counter
         mov     di,     0x10    ; di = target memory offset
@@ -768,7 +758,7 @@ ReadMemLayout:
         je      .done
 
         ; Don't overflow the memory layout buffer.
-        cmp     si,     (Mem.Layout.Size - 0x10) / 0x18
+        cmp     si,     (Mem.Table.Size - 0x10) / 0x18
         jb      .readZone
 
     .done:
@@ -981,6 +971,7 @@ ReadSectors:
 LoadKernel:
 
     ; Preserve registers.
+    push    es
     pusha
 
     ; Preserve the real mode stack pointer.
@@ -1150,6 +1141,16 @@ bits 16
 
     .done:
 
+        ; Wipe the sector load buffer.
+        mov     ax,     Mem.Kernel.LoadBuffer >> 4
+        mov     es,     ax
+        xor     ax,     ax
+        xor     di,     di
+        mov     cx,     Mem.Kernel.LoadBuffer.Size - 1
+        rep     stosb
+        inc     cx
+        stosb
+
         ; Clear upper word of 32-bit registers we used.
         xor     eax,    eax
         xor     ecx,    ecx
@@ -1158,6 +1159,7 @@ bits 16
 
         ; Restore registers.
         popa
+        pop     es
 
         ret
 
