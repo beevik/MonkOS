@@ -11,8 +11,9 @@
 
 #include <core.h>
 
-// Paging constants
-#define PAGE_SIZE    4096
+// Pag size constants
+#define PAGE_SIZE             0x1000
+#define PAGE_SIZE_LARGE       0x200000
 
 typedef uint64_t pagetable_handle;
 
