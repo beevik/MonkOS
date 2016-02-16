@@ -1,6 +1,6 @@
 //============================================================================
 /// @file       paging.h
-/// @brief      Virtual memory paging.
+/// @brief      Paged memory management.
 //
 // Copyright 2016 Brett Vickers.
 // Use of this source code is governed by a BSD-style license that can
@@ -14,17 +14,18 @@
 // Pag size constants
 #define PAGE_SIZE             0x1000
 #define PAGE_SIZE_LARGE       0x200000
+#define PAGE_SIZE_HUGE        0x40000000
 
 typedef uint64_t pagetable_handle;
 
 //----------------------------------------------------------------------------
-//  @function   pagedb_init
+//  @function   page_init
 /// @brief      Initialize the page frame database.
 /// @details    The page frame database manages the physical memory used by
 ///             all memory pages known to the kernel.
 //----------------------------------------------------------------------------
 void
-pagedb_init();
+page_init();
 
 //----------------------------------------------------------------------------
 //  @function   pagetable_create
@@ -38,7 +39,7 @@ pagetable_create();
 //----------------------------------------------------------------------------
 //  @function   pagetable_destroy
 /// @brief      Destroy a page table.
-/// @param[in]  A handle to the page table to destroy.
+/// @param[in]  pt      A handle to the page table to destroy.
 //----------------------------------------------------------------------------
 void
 pagetable_destroy(pagetable_handle pt);
@@ -47,7 +48,7 @@ pagetable_destroy(pagetable_handle pt);
 //  @function   pagetable_activate
 /// @brief      Activate a page table on the CPU, so all virtual memory
 ///             operations are performed relative to the page table.
-/// @param[in]  A handle to the activated page table.
+/// @param[in]  pt      A handle to the activated page table.
 //----------------------------------------------------------------------------
 void
 pagetable_activate(pagetable_handle pt);

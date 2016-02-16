@@ -42,6 +42,8 @@ AR		:= $(TARGET)-ar
 LDFLAGS		:= -g -nostdlib -m64 -mno-red-zone -ffreestanding -lgcc \
 		   -z max-page-size=0x1000
 
+CTAGS		:= ctags
+
 DOXYGEN		:= doxygen
 
 MAKE_FLAGS	:= --quiet --no-print-directory

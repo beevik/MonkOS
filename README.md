@@ -15,6 +15,7 @@ tools installed:
 * gnu binutils (I used version 2.26)
 * NASM assembler
 * genisoimage
+* exuberant-ctags (for help with editing)
 * gdb (for debugging)
 * qemu (optional, for testing)
 * doxygen (optional)

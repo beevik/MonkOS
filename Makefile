@@ -15,7 +15,7 @@ include $(DIR_ROOT)/scripts/config.mk
 
 default: boot kernel iso
 
-all: boot kernel iso docs
+all: boot kernel iso tags docs
 
 boot: .force
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_BOOT)
@@ -33,6 +33,11 @@ iso: .force boot kernel
 
 docs: .force
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_DOCS)
+
+tags: .force
+	@echo "$(BLUE)[tags]$(NORMAL) Running exuberant-ctags"
+	@$(CTAGS) -R -f .tags
+	@echo "$(BLUE)[tags] $(SUCCESS)"
 
 uncrustify: .force
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_LIBC) uncrustify

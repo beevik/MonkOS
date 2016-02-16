@@ -25,6 +25,7 @@ enum memtype
     MEMTYPE_ACPI     = 3,
     MEMTYPE_ACPI_NVS = 4,
     MEMTYPE_BAD      = 5,
+    MEMTYPE_UNCACHED = 6,
 };
 
 //----------------------------------------------------------------------------

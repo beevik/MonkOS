@@ -2,6 +2,8 @@
 /// @file       table.c
 /// @brief      Physical memory table describing usable and reserved regions
 ///             of physical memory.
+/// @details    Most of the table is derived from data provided by the system
+///             BIOS at boot time.
 //
 // Copyright 2016 Brett Vickers.
 // Use of this source code is governed by a BSD-style license that can
@@ -12,7 +14,7 @@
 #include <libc/stdlib.h>
 #include <libc/string.h>
 #include <kernel/mem/table.h>
-#include "memmap.h"
+#include "map.h"
 
 // Pointer to the BIOS-generated memory table table.
 static memtable_t *table = (memtable_t *)MEM_TABLE_BIOS;
@@ -291,9 +293,14 @@ normalize()
 void
 memtable_init()
 {
+    // Mark VGA video memory as uncached.
+    add_region(MEM_VIDEO, MEM_VIDEO_SIZE, MEMTYPE_UNCACHED);
+
     // Reserve the first 10MiB of memory for the kernel and its global
     // data structures.
     add_region(0, MEM_KERNEL_IMAGE_END, MEMTYPE_RESERVED);
+
+    // Fix up memory table.
     normalize();
 }
 

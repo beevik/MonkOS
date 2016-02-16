@@ -28,3 +28,6 @@
 /// Generic min/max routines
 #define min(a, b)    ((a) < (b) ? (a) : (b))
 #define max(a, b)    ((a) > (b) ? (a) : (b))
+
+/// Compile-time static assertion
+#define STATIC_ASSERT(a, b)     _Static_assert(a, b)

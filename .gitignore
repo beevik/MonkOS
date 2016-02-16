@@ -1,6 +1,7 @@
 .gdb
 .gdbinit
 .p4ignore
+.tags
 build
 deps
 docs/intel

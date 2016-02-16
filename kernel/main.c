@@ -39,7 +39,7 @@ sysinit()
     // Initialize various system modules.
     exceptions_init();
     memtable_init();
-    pagedb_init();
+    page_init();
     syscall_init();
     kb_init();
     timer_init(20);              // 20Hz
@@ -69,8 +69,7 @@ do_test()
                     key.meta,
                     key.ch);
                 if (key.code == KEY_ESCAPE) {
-                    // pagedb_init();
-                    // RAISE_INTERRUPT(EXCEPTION_NMI);
+                    RAISE_INTERRUPT(EXCEPTION_NMI);
                 }
             }
             else {
