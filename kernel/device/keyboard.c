@@ -107,11 +107,11 @@ static const keylayout_t ps2_layout =
 /// Keyboard state.
 struct kbstate
 {
-    keylayout_t  layout;         ///< The installed keyboard layout.
-    uint8_t      meta;           ///< Mask of meta keys currently pressed.
-    uint8_t      buf_head;       ///< Index of oldest key in buf.
-    uint8_t      buf_tail;       ///< Index of next empty slot in buf.
-    atomic_uchar buf_size;       ///< Number of keys in the buf.
+    keylayout_t  layout;          ///< The installed keyboard layout.
+    uint8_t      meta;            ///< Mask of meta keys currently pressed.
+    uint8_t      buf_head;        ///< Index of oldest key in buf.
+    uint8_t      buf_tail;        ///< Index of next empty slot in buf.
+    atomic_uchar buf_size;        ///< Number of keys in the buf.
     key_t        buf[MAX_BUFSIZ]; ///< Buffer holding unconsumed keys.
 };
 

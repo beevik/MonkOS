@@ -142,3 +142,20 @@ io_outb(uint16_t port, uint8_t value)
                   : [p] "Nd" (port), [v] "a" (value)
                   );
 }
+
+//----------------------------------------------------------------------------
+//  @function   set_pagetable
+/// @brief      Update the CPU's page table register.
+/// @param[in]  paddr   The physical address containing the new pagetable
+///                     address.
+//----------------------------------------------------------------------------
+__forceinline void
+set_pagetable(uint64_t paddr)
+{
+    asm volatile (
+        "mov    rdi,    %[paddr]\n"
+        "mov    cr3,    rdi\n"
+        :
+        : [paddr] "m" (paddr)
+        : "rdi");
+}
