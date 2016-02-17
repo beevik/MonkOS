@@ -16,13 +16,13 @@
 //----------------------------------------------------------------------------
 
 // Meta-key bit masks
-#define META_SHIFT       (1 << 0) ///< Set while the shift key is pressed.
-#define META_CTRL        (1 << 1) ///< Set while the ctrl key is pressed.
-#define META_ALT         (1 << 2) ///< Set while the alt key is pressed.
-#define META_ESCAPED     (1 << 3) ///< Set if key's scan code is escaped.
-#define META_CAPSLOCK    (1 << 4) ///< Set while caps lock is on.
-#define META_NUMLOCK     (1 << 5) ///< Set while num lock is on.
-#define META_SCRLOCK     (1 << 6) ///< Set while scroll lock is on.
+#define META_SHIFT     (1 << 0)   ///< Set while the shift key is pressed.
+#define META_CTRL      (1 << 1)   ///< Set while the ctrl key is pressed.
+#define META_ALT       (1 << 2)   ///< Set while the alt key is pressed.
+#define META_ESCAPED   (1 << 3)   ///< Set if key's scan code is escaped.
+#define META_CAPSLOCK  (1 << 4)   ///< Set while caps lock is on.
+#define META_NUMLOCK   (1 << 5)   ///< Set while num lock is on.
+#define META_SCRLOCK   (1 << 6)   ///< Set while scroll lock is on.
 
 //----------------------------------------------------------------------------
 //  @enum       keycode_t

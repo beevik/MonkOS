@@ -14,52 +14,52 @@
 #include <kernel/interrupt/interrupt.h>
 
 // Keyboard I/O ports
-#define KB_PORT_DATA    0x60     ///< Keyboard I/O data port.
+#define KB_PORT_DATA  0x60       ///< Keyboard I/O data port.
 
 // Other constants
-#define MAX_BUFSIZ      32       ///< Keyboard input buffer size.
+#define MAX_BUFSIZ    32         ///< Keyboard input buffer size.
 
 // Key code abbreviations, used to set up the default scan map table below.
-#define BSP             KEY_BACKSPACE
-#define TAB             KEY_TAB
-#define ENT             KEY_ENTER
-#define ESC             KEY_ESCAPE
-#define CTL             KEY_CTRL
-#define SHF             KEY_SHIFT
-#define ALT             KEY_ALT
-#define PSC             KEY_PRTSCR
-#define CLK             KEY_CAPSLOCK
-#define NLK             KEY_NUMLOCK
-#define SLK             KEY_SCRLOCK
-#define KIN             KEY_INSERT
-#define KEN             KEY_END
-#define KDN             KEY_DOWN
-#define KPD             KEY_PGDN
-#define KLT             KEY_LEFT
-#define KCT             KEY_CENTER
-#define KRT             KEY_RIGHT
-#define KHM             KEY_HOME
-#define KUP             KEY_UP
-#define KPU             KEY_PGUP
-#define KDL             KEY_DEL
-#define KMI             KEY_MINUS
-#define KPL             KEY_PLUS
-#define F_1             KEY_F1
-#define F_2             KEY_F2
-#define F_3             KEY_F3
-#define F_4             KEY_F4
-#define F_5             KEY_F5
-#define F_6             KEY_F6
-#define F_7             KEY_F7
-#define F_8             KEY_F8
-#define F_9             KEY_F9
-#define F10             KEY_F10
-#define F11             KEY_F11
-#define F12             KEY_F12
-#define SES             KEY_SCANESC
-#define INV             KEY_INVALID
-#define APO             '\''
-#define BSL             '\\'
+#define BSP           KEY_BACKSPACE
+#define TAB           KEY_TAB
+#define ENT           KEY_ENTER
+#define ESC           KEY_ESCAPE
+#define CTL           KEY_CTRL
+#define SHF           KEY_SHIFT
+#define ALT           KEY_ALT
+#define PSC           KEY_PRTSCR
+#define CLK           KEY_CAPSLOCK
+#define NLK           KEY_NUMLOCK
+#define SLK           KEY_SCRLOCK
+#define KIN           KEY_INSERT
+#define KEN           KEY_END
+#define KDN           KEY_DOWN
+#define KPD           KEY_PGDN
+#define KLT           KEY_LEFT
+#define KCT           KEY_CENTER
+#define KRT           KEY_RIGHT
+#define KHM           KEY_HOME
+#define KUP           KEY_UP
+#define KPU           KEY_PGUP
+#define KDL           KEY_DEL
+#define KMI           KEY_MINUS
+#define KPL           KEY_PLUS
+#define F_1           KEY_F1
+#define F_2           KEY_F2
+#define F_3           KEY_F3
+#define F_4           KEY_F4
+#define F_5           KEY_F5
+#define F_6           KEY_F6
+#define F_7           KEY_F7
+#define F_8           KEY_F8
+#define F_9           KEY_F9
+#define F10           KEY_F10
+#define F11           KEY_F11
+#define F12           KEY_F12
+#define SES           KEY_SCANESC
+#define INV           KEY_INVALID
+#define APO           '\''
+#define BSL           '\\'
 
 /// US English PSC/2 keyboard scan map (default setting)
 static const keylayout_t ps2_layout =

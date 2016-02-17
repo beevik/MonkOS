@@ -13,14 +13,14 @@
 #include <kernel/interrupt/interrupt.h>
 
 // 8253 timer ports
-#define TIMER_PORT_DATA_CH0    0x40 ///< Channel 0 data port.
-#define TIMER_PORT_DATA_CH1    0x41 ///< Channel 1 data port.
-#define TIMER_PORT_DATA_CH2    0x42 ///< Channel 2 data port.
-#define TIMER_PORT_CMD         0x43 ///< Timer command port.
+#define TIMER_PORT_DATA_CH0  0x40   ///< Channel 0 data port.
+#define TIMER_PORT_DATA_CH1  0x41   ///< Channel 1 data port.
+#define TIMER_PORT_DATA_CH2  0x42   ///< Channel 2 data port.
+#define TIMER_PORT_CMD       0x43   ///< Timer command port.
 
 // Frequency bounds
-#define MIN_FREQUENCY          19
-#define MAX_FREQUENCY          1193181
+#define MIN_FREQUENCY        19
+#define MAX_FREQUENCY        1193181
 
 static void
 isr_timer(const interrupt_context_t *context)

@@ -22,7 +22,7 @@
 #include <kernel/syscall/syscall.h>
 
 #if defined(__linux__)
-#   error "This code must be compiled with a cross-compiler."
+#    error "This code must be compiled with a cross-compiler."
 #endif
 
 static void

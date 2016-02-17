@@ -12,37 +12,37 @@
 #include <core.h>
 
 // Pag size constants
-#define PAGE_SIZE          0x1000
-#define PAGE_SIZE_LARGE    0x200000
-#define PAGE_SIZE_HUGE     0x40000000
+#define PAGE_SIZE        0x1000
+#define PAGE_SIZE_LARGE  0x200000
+#define PAGE_SIZE_HUGE   0x40000000
 
 // Page table entry flags
-#define PF_PRESENT         (1 << 0)
-#define PF_RW              (1 << 1)
-#define PF_USER            (1 << 2)
-#define PF_PWT             (1 << 3) // Page write-thru
-#define PF_PCD             (1 << 4) // Cache disable
-#define PF_ACCESS          (1 << 5)
-#define PF_DIRTY           (1 << 6)
-#define PF_PS              (1 << 7) // Page size (valid for PD and PDPT only)
-#define PF_GLOBAL          (1 << 8)
+#define PF_PRESENT       (1 << 0)
+#define PF_RW            (1 << 1)
+#define PF_USER          (1 << 2)
+#define PF_PWT           (1 << 3)   // Page write-thru
+#define PF_PCD           (1 << 4)   // Cache disable
+#define PF_ACCESS        (1 << 5)
+#define PF_DIRTY         (1 << 6)
+#define PF_PS            (1 << 7)   // Page size (valid for PD and PDPT only)
+#define PF_GLOBAL        (1 << 8)
 
 // Virtual address bitmasks and shifts
-#define PGSHIFT_PML4E      39
-#define PGSHIFT_PDPTE      30
-#define PGSHIFT_PDE        21
-#define PGSHIFT_PTE        12
-#define PGMASK_ENTRY       0x1ff
-#define PGMASK_OFFSET      0x3ff
+#define PGSHIFT_PML4E    39
+#define PGSHIFT_PDPTE    30
+#define PGSHIFT_PDE      21
+#define PGSHIFT_PTE      12
+#define PGMASK_ENTRY     0x1ff
+#define PGMASK_OFFSET    0x3ff
 
 // Virtual address subfield accessors
-#define PML4E(a)      (((a) >> PGSHIFT_PML4E) & PGMASK_ENTRY)
-#define PDPTE(a)      (((a) >> PGSHIFT_PDPTE) & PGMASK_ENTRY)
-#define PDE(a)        (((a) >> PGSHIFT_PDE) & PGMASK_ENTRY)
-#define PTE(a)        (((a) >> PGSHIFT_PTE) & PGMASK_ENTRY)
+#define PML4E(a)         (((a) >> PGSHIFT_PML4E) & PGMASK_ENTRY)
+#define PDPTE(a)         (((a) >> PGSHIFT_PDPTE) & PGMASK_ENTRY)
+#define PDE(a)           (((a) >> PGSHIFT_PDE) & PGMASK_ENTRY)
+#define PTE(a)           (((a) >> PGSHIFT_PTE) & PGMASK_ENTRY)
 
 // Page table entry helpers
-#define PGPTR(pte)    ((page_t *)((pte) & ~PGMASK_OFFSET))
+#define PGPTR(pte)       ((page_t *)((pte) & ~PGMASK_OFFSET))
 
 //----------------------------------------------------------------------------
 //  @union      page_t

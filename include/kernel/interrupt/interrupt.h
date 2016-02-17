@@ -17,21 +17,21 @@
 //----------------------------------------------------------------------------
 
 // Hardware IRQ values
-#define IRQ_TIMER               0
-#define IRQ_KEYBOARD            1
+#define IRQ_TIMER             0
+#define IRQ_KEYBOARD          1
 
 // Interrupt vector numbers: hardware IRQ traps
-#define TRAP_IRQ_TIMER          0x20
-#define TRAP_IRQ_KEYBOARD       0x21
+#define TRAP_IRQ_TIMER        0x20
+#define TRAP_IRQ_KEYBOARD     0x21
 
 // PIC port constants
-#define PIC_PORT_CMD_MASTER     0x20 ///< Command port for master PIC
-#define PIC_PORT_CMD_SLAVE      0xa0 ///< Command port for slave PIC
-#define PIC_PORT_DATA_MASTER    0x21 ///< Data port for master PIC
-#define PIC_PORT_DATA_SLAVE     0xa1 ///< Data port for slave PIC
+#define PIC_PORT_CMD_MASTER   0x20   ///< Command port for master PIC
+#define PIC_PORT_CMD_SLAVE    0xa0   ///< Command port for slave PIC
+#define PIC_PORT_DATA_MASTER  0x21   ///< Data port for master PIC
+#define PIC_PORT_DATA_SLAVE   0xa1   ///< Data port for slave PIC
 
 // PIC commands
-#define PIC_CMD_EOI             0x20 ///< End of interrupt
+#define PIC_CMD_EOI           0x20   ///< End of interrupt
 
 //----------------------------------------------------------------------------
 //  @struct interrupt_context
@@ -144,10 +144,10 @@ halt()
 /// @param[in]  x       The interrupt to raise. Must be an integer constant
 ///                     less than 256.
 //----------------------------------------------------------------------------
-#define RAISE_INTERRUPT(x)    { asm volatile ("int %[n]" ::[n] "N" (x)); }
+#define RAISE_INTERRUPT(x)  { asm volatile ("int %[n]" ::[n] "N" (x)); }
 
 //----------------------------------------------------------------------------
 //  @function   RAISE_BREAKPOINT
 /// @brief      Issue a software breakpoint interrupt to the CPU.
 //----------------------------------------------------------------------------
-#define RAISE_BREAKPOINT()    { asm volatile ("int 3"); }
+#define RAISE_BREAKPOINT()  { asm volatile ("int 3"); }

@@ -32,7 +32,7 @@ dump_registers(char *buf, size_t bufsize, const registers_t *regs)
 int
 dump_cpuflags(char *buf, size_t bufsize, uint64_t rflags)
 {
-#define B(F)    ((rflags & F) ? 1 : 0)
+#define B(F)  ((rflags & F) ? 1 : 0)
 
     return snprintf(
         buf, bufsize,

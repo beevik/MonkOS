@@ -15,8 +15,8 @@ tools installed:
 * gnu binutils (I used version 2.26)
 * NASM assembler
 * genisoimage
-* exuberant-ctags (for help with editing)
-* gdb (for debugging)
+* exuberant-ctags (optional, for help with editing)
+* gdb (optional, for debugging)
 * qemu (optional, for testing)
 * doxygen (optional)
 
@@ -38,7 +38,7 @@ understand the numerous and various aspects of bootloader and OS development:
 * [The OsDev wiki](http://wiki.osdev.org/Main_Page)
   * [Bare Bones guide](http://wiki.osdev.org/Bare_Bones)
   * [Setting up long mode](http://wiki.osdev.org/Setting_Up_Long_Mode)
-  * [IOS 9660](http://wiki.osdev.org/ISO_9660)
+  * [ISO 9660](http://wiki.osdev.org/ISO_9660)
   * [PS/2 Keyboard](http://wiki.osdev.org/PS2_Keyboard)
 * [The System V ABI](http://www.sco.com/developers/gabi/latest/contents.html)
   * [AMD64 supplement](http://www.x86-64.org/documentation/abi.pdf)

@@ -36,7 +36,7 @@ docs: .force
 
 tags: .force
 	@echo "$(BLUE)[tags]$(NORMAL) Running exuberant-ctags"
-	@$(CTAGS) -R -f .tags
+	@$(CTAGS) -R --exclude="docs/*" -f .tags
 	@echo "$(BLUE)[tags] $(SUCCESS)"
 
 uncrustify: .force

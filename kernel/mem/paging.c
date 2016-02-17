@@ -17,15 +17,18 @@
 #include "map.h"
 
 // Page shift constants
-#define PAGE_SHIFT          12      // 1<<12 = 4KiB
-#define PAGE_SHIFT_LARGE    21      // 1<<21 = 2MiB
+#define PAGE_SHIFT         12       // 1<<12 = 4KiB
+#define PAGE_SHIFT_LARGE   21       // 1<<21 = 2MiB
 
 // Page frame number constants
-#define PFN_INVALID         ((uint32_t)-1)
+#define PFN_INVALID        ((uint32_t)-1)
 
 // Helper macros
-#define PADDR_TO_PF(a)    ((pf_t *)(pgcontext.pfdb + ((a) >> PAGE_SHIFT)))
-#define PF_TO_PFN(pf)     ((uint64_t)(pf - pgcontext.pfdb))
+#define PADDR_TO_PF(a)     ((pf_t *)(pgcontext.pfdb + ((a) >> PAGE_SHIFT)))
+#define PF_TO_PADDR(pf)    ((uint64_t)((pf) - pgcontext.pfdb) << PAGE_SHIFT)
+#define PFN_TO_PF(pfn)     ((pf_t *)((pfn) + pgcontext.pfdb))
+#define PF_TO_PFN(pf)      ((uint32_t)((pf) - pgcontext.pfdb))
+#define PTE_TO_PADDR(pte)  ((pte) & ~PGMASK_OFFSET)
 
 // Page frame types
 enum
@@ -80,17 +83,17 @@ reserve_region(const memtable_t *table, uint64_t size, uint32_t alignshift)
             continue;
 
         // Find address of first properly aligned byte in the region.
-        uint64_t addr = r->addr + (1 << alignshift) - 1;
-        addr >>= alignshift;
-        addr <<= alignshift;
+        uint64_t paddr = r->addr + (1 << alignshift) - 1;
+        paddr >>= alignshift;
+        paddr <<= alignshift;
 
         // If the region is too small after alignment, skip it.
-        if (addr + size > r->addr + r->size)
+        if (paddr + size > r->addr + r->size)
             continue;
 
         // Reserve the aligned memory region and return its address.
-        memtable_reserve(addr, size);
-        return (void *)addr;
+        memtable_reserve(paddr, size);
+        return (void *)paddr;
     }
     return NULL;
 }
@@ -104,8 +107,8 @@ page_init()
     const memregion_t *lastregion = &table->region[table->count - 1];
     uint64_t           lastaddr   = (lastregion->addr + lastregion->size);
 
-    // The page frame database needs to describe each page up to and including
-    // the last physical address.
+    // Calculate the size of the page frame database. It needs to describe
+    // each page up to and including the last physical address.
     pgcontext.pfcount = lastaddr / PAGE_SIZE;
     uint64_t pfdbsize = pgcontext.pfcount * sizeof(pf_t);
 
@@ -149,7 +152,7 @@ page_init()
         uint64_t pfn0 = region->addr >> PAGE_SHIFT;
         uint64_t pfnN = (region->addr + region->size) >> PAGE_SHIFT;
         for (uint64_t pfn = pfn0; pfn < pfnN; pfn++) {
-            pf_t *pf = pgcontext.pfdb + pfn;
+            pf_t *pf = PFN_TO_PF(pfn);
             pf->prev = pfn - 1;
             pf->next = pfn + 1;
             pf->type = PFTYPE_AVAILABLE;
@@ -180,7 +183,7 @@ pfalloc()
 
     // Grab the first available page frame from the database.
     pf_t *pfdb = pgcontext.pfdb;
-    pf_t *pf   = pfdb + pgcontext.pfnhead;
+    pf_t *pf   = PFN_TO_PF(pgcontext.pfnhead);
 
     // Update the available frame list.
     pgcontext.pfnhead = pfdb[pgcontext.pfnhead].next;
@@ -208,7 +211,7 @@ pffree(pf_t *pf)
     pf->next = pgcontext.pfnhead;
     pf->type = PFTYPE_AVAILABLE;
 
-    // Update the database's available list.
+    // Update the database's available frame list.
     uint32_t pfn = PF_TO_PFN(pf);
     pfdb[pgcontext.pfnhead].prev = pfn;
     pgcontext.pfnhead            = pfn;
@@ -221,8 +224,7 @@ pgalloc()
 {
     // Allocate a page frame from the db and compute its physical address.
     pf_t    *pf    = pfalloc();
-    uint64_t pfn   = PF_TO_PFN(pf);
-    uint64_t paddr = pfn << PAGE_SHIFT;
+    uint64_t paddr = PF_TO_PADDR(pf);
 
     // Always zero the contents of newly allocated pages.
     memzero((void *)paddr, PAGE_SIZE);
@@ -246,13 +248,13 @@ pgfree_recurse(page_t *page, int level)
     // database.
     if (level == 1) {
         for (uint64_t e = 0; e < 512; e++) {
-            page_t *leaf = PGPTR(page->entry[e]);
-            if (leaf == NULL)
+            uint64_t paddr = PTE_TO_PADDR(page->entry[e]);
+            if (paddr == 0)
                 continue;
 
-            pf_t *pf = PADDR_TO_PF((uint64_t)leaf);
+            pf_t *pf = PADDR_TO_PF(paddr);
             if (pf->type == PFTYPE_ALLOCATED)
-                pgfree((uint64_t)leaf);
+                pgfree(paddr);
         }
     }
 
@@ -283,6 +285,9 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags)
     uint32_t pde   = PDE(vaddr);
     uint32_t pte   = PTE(vaddr);
 
+    // Follow the page table hierarchy down to the lowest level, creating
+    // new pages for tables as needed.
+
     page_t *pml4t = pt->pml4t;
     if (pml4t->entry[pml4e] == 0) {
         uint64_t pgaddr = pgalloc();
@@ -304,11 +309,12 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags)
         pdt->entry[pde] = pgaddr | PF_PRESENT | PF_RW;
     }
 
+    // Add the page table entry.
     page_t *ptt = PGPTR(pdt->entry[pde]);
     ptt->entry[pte] = paddr | pflags;
 
     // If adding the new entry required the page table to grow, make sure to
-    // add the page table's pages as well.
+    // add the page table's new pages as well.
     for (int i = 0; i < count; i++)
         add_pte(pt, (uint64_t)pt->next++, added[i], PF_PRESENT | PF_RW);
 }
@@ -322,7 +328,7 @@ remove_pte(pagetable_t *pt, uint64_t vaddr)
     uint32_t pde   = PDE(vaddr);
     uint32_t pte   = PTE(vaddr);
 
-    // Traverse the hierarchy, looking for the leaf page.
+    // Traverse the hierarchy, looking for the page.
     page_t *pml4t = pt->pml4t;
     page_t *pdpt  = PGPTR(pml4t->entry[pml4e]);
     page_t *pdt   = PGPTR(pdpt->entry[pdpte]);
@@ -332,6 +338,7 @@ remove_pte(pagetable_t *pt, uint64_t vaddr)
     // Clear the page table entry for the virtual address.
     ptt->entry[pte] = 0;
 
+    // Return the physical address of the page table entry that was removed.
     return (uint64_t)pg;
 }
 
@@ -364,25 +371,25 @@ pagetable_activate(pagetable_t *pt)
     if (pt->pml4t == NULL)
         fatal();
 
-    uint64_t addr = (uint64_t)pt->pml4t;
-    set_pagetable(addr);
+    uint64_t paddr = (uint64_t)pt->pml4t;
+    set_pagetable(paddr);
 }
 
 void *
-page_alloc(pagetable_t *pt, void *vaddr, int count)
+page_alloc(pagetable_t *pt, void *vaddr_in, int count)
 {
-    for (uint64_t v = (uint64_t)vaddr; count--; v += PAGE_SIZE) {
+    for (uint64_t vaddr = (uint64_t)vaddr_in; count--; vaddr += PAGE_SIZE) {
         uint64_t paddr = pgalloc();
-        add_pte(pt, v, paddr, PF_PRESENT | PF_RW);
+        add_pte(pt, vaddr, paddr, PF_PRESENT | PF_RW);
     }
-    return vaddr;
+    return vaddr_in;
 }
 
 void
-page_free(pagetable_t *pt, void *vaddr, int count)
+page_free(pagetable_t *pt, void *vaddr_in, int count)
 {
-    for (uint64_t v = (uint64_t)vaddr; count--; v += PAGE_SIZE) {
-        uint64_t paddr = remove_pte(pt, v);
+    for (uint64_t vaddr = (uint64_t)vaddr_in; count--; vaddr += PAGE_SIZE) {
+        uint64_t paddr = remove_pte(pt, vaddr);
         pgfree(paddr);
     }
 }

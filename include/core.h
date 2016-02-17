@@ -20,14 +20,14 @@
 //----------------------------------------------------------------------------
 
 /// Force a function to be inline, even in debug mode.
-#define __forceinline   inline __attribute__((always_inline))
+#define __forceinline        inline __attribute__((always_inline))
 
 /// Return the number of elements in the C array.
-#define arrsize(x)      ((int)(sizeof(x) / sizeof(x[0])))
+#define arrsize(x)           ((int)(sizeof(x) / sizeof(x[0])))
 
 /// Generic min/max routines
-#define min(a, b)    ((a) < (b) ? (a) : (b))
-#define max(a, b)    ((a) > (b) ? (a) : (b))
+#define min(a, b)            ((a) < (b) ? (a) : (b))
+#define max(a, b)            ((a) > (b) ? (a) : (b))
 
 /// Compile-time static assertion
-#define STATIC_ASSERT(a, b)     _Static_assert(a, b)
+#define STATIC_ASSERT(a, b)  _Static_assert(a, b)

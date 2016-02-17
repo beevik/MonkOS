@@ -16,7 +16,7 @@
 #include <kernel/mem/table.h>
 #include "map.h"
 
-// Pointer to the BIOS-generated memory table table.
+// Pointer to the BIOS-generated memory table.
 static memtable_t *table = (memtable_t *)MEM_TABLE_BIOS;
 
 /// Add a memory region to the end of the memory table.
@@ -40,14 +40,13 @@ cmp_region(const void *a, const void *b)
     const memregion_t *r2 = (const memregion_t *)b;
     if (r1->addr > r2->addr)
         return +1;
-    else if (r1->addr < r2->addr)
+    if (r1->addr < r2->addr)
         return -1;
-    else if (r1->size > r2->size)
+    if (r1->size > r2->size)
         return +1;
-    else if (r1->size < r2->size)
+    if (r1->size < r2->size)
         return -1;
-    else
-        return 0;
+    return 0;
 }
 
 /// Remove a region from the memory table and shift all subsequent regions
@@ -114,8 +113,8 @@ collapse_overlaps()
         }
 
         // Handle the 5 alignment cases:
-        //   xxx   xxx   xxxx  xxx   xxxxx
-        //   yyy   yyyy   yyy   yyy   yyy
+        //   xxx    xxx    xxxx   xxx    xxxxx
+        //   yyy    yyyy    yyy    yyy    yyy
         // The remaining cases are impossible due to sorting.
 
         if (cl == nl) {
@@ -131,7 +130,7 @@ collapse_overlaps()
                     collapse(next, term--);
                 }
             }
-            else {               /* cr != nr */
+            else { /* if cr != nr */
                 if (next->type > curr->type) {
                     // 111  ->  2222
                     // 2222
@@ -147,7 +146,7 @@ collapse_overlaps()
             }
         }
 
-        else {                   /* if cl != nl */
+        else { /* if cl != nl */
             if (cr == nr) {
                 if (next->type > curr->type) {
                     // 1111  ->  1
@@ -174,7 +173,7 @@ collapse_overlaps()
                     resort(next, term);
                 }
             }
-            else {               /* if cr > nr */
+            else { /* if cr > nr */
                 if (next->type > curr->type) {
                     // 11111  -> 1
                     //  222   ->  222
@@ -198,8 +197,8 @@ collapse_overlaps()
     }
 }
 
-/// Find missing memory regions in the table table, and fill them with
-/// entries of the requested type.
+/// Find missing memory regions in the table, and fill them with entries of
+/// the requested type.
 static void
 fill_gaps(int32_t type)
 {
@@ -258,7 +257,7 @@ consolidate_neighbors()
     }
 }
 
-/// Remove entries from the end of the memory table table if they are of the
+/// Remove entries from the end of the memory table if they are of the
 /// requested type.
 static void
 remove_trailing(int32_t type)

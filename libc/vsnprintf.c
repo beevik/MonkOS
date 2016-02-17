@@ -49,13 +49,13 @@ enum state
 };
 
 // Parse flags
-#define FLAG_ZERO      (1 << 0)
-#define FLAG_MINUS     (1 << 1)
-#define FLAG_PLUS      (1 << 2)
-#define FLAG_SIGNED    (1 << 3)
-#define FLAG_UPPER     (1 << 4)
-#define FLAG_SPACE     (1 << 5)
-#define FLAG_HASH      (1 << 6)
+#define FLAG_ZERO    (1 << 0)
+#define FLAG_MINUS   (1 << 1)
+#define FLAG_PLUS    (1 << 2)
+#define FLAG_SIGNED  (1 << 3)
+#define FLAG_UPPER   (1 << 4)
+#define FLAG_SPACE   (1 << 5)
+#define FLAG_HASH    (1 << 6)
 
 // Data length modifiers
 enum datalen

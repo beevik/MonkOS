@@ -14,20 +14,20 @@
 #include <kernel/device/tty.h>
 
 // CRTC ports
-#define CRTC_PORT_CMD             0x03d4 ///< Command port for CRT controller.
-#define CRTC_PORT_DATA            0x03d5 ///< Data port for CRT controller.
+#define CRTC_PORT_CMD           0x03d4   ///< Command port for CRT controller.
+#define CRTC_PORT_DATA          0x03d5   ///< Data port for CRT controller.
 
 // CRTC commands
-#define CRTC_CMD_STARTADDR_HI     0x0c ///< Hi-byte of buffer start address.
-#define CRTC_CMD_STARTADDR_LO     0x0d ///< Lo-byte of buffer start address.
-#define CRTC_CMD_CURSORADDR_HI    0x0e ///< Hi-byte of cursor start address.
-#define CRTC_CMD_CURSORADDR_LO    0x0f ///< Lo-byte of cursor start address.
+#define CRTC_CMD_STARTADDR_HI   0x0c   ///< Hi-byte of buffer start address.
+#define CRTC_CMD_STARTADDR_LO   0x0d   ///< Lo-byte of buffer start address.
+#define CRTC_CMD_CURSORADDR_HI  0x0e   ///< Hi-byte of cursor start address.
+#define CRTC_CMD_CURSORADDR_LO  0x0f   ///< Lo-byte of cursor start address.
 
 // Visible screen geometry
-#define SCREEN_ROWS               25
-#define SCREEN_COLS               80
-#define SCREEN_SIZE               (SCREEN_ROWS * SCREEN_COLS)
-#define SCREEN_BUFFER             0x000b8000
+#define SCREEN_ROWS             25
+#define SCREEN_COLS             80
+#define SCREEN_SIZE             (SCREEN_ROWS * SCREEN_COLS)
+#define SCREEN_BUFFER           0x000b8000
 
 /// Virtual console state.
 struct tty
