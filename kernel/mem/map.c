@@ -9,6 +9,7 @@
 
 #include <core.h>
 #include <libc/string.h>
+#include <kernel/x86/cpu.h>
 #include <kernel/interrupt/interrupt.h>
 #include <kernel/mem/paging.h>
 #include <kernel/mem/table.h>

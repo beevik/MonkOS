@@ -8,7 +8,7 @@
 //============================================================================
 
 #include <core.h>
-#include <kernel/cpu.h>
+#include <kernel/x86/cpu.h>
 #include <kernel/device/timer.h>
 #include <kernel/interrupt/interrupt.h>
 

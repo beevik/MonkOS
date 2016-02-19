@@ -12,6 +12,8 @@
 #include <core.h>
 #include <libc/stdio.h>
 #include <libc/string.h>
+#include <kernel/x86/cpu.h>
+#include <kernel/debug/log.h>
 #include <kernel/device/keyboard.h>
 #include <kernel/device/timer.h>
 #include <kernel/device/tty.h>
@@ -44,8 +46,7 @@ sysinit()
     kb_init();
     timer_init(20);              // 20Hz
 
-    // Enable interrupts.
-    interrupts_enable();
+    enable_interrupts();
 }
 
 static void
@@ -69,7 +70,8 @@ do_test()
                     key.meta,
                     key.ch);
                 if (key.code == KEY_ESCAPE) {
-                    RAISE_INTERRUPT(EXCEPTION_NMI);
+                    logf(LOG_ERR, "ERROR! This is a test.");
+                    // RAISE_INTERRUPT(EXCEPTION_NMI);
                 }
             }
             else {

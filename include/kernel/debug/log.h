@@ -53,7 +53,7 @@ logf(loglevel_t level, const char *format, ...);
 /// @param[in]  level   The importance level of the logged message.
 /// @param[in]  format  The null-terminated format string used to format the
 ///                     text to be printed.
-/// @param[in]  arg     Variable arguments list to be initialized with
+/// @param[in]  args    Variable arguments list to be initialized with
 ///                     va_start.
 //----------------------------------------------------------------------------
 void

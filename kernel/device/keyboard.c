@@ -9,7 +9,7 @@
 
 #include <core.h>
 #include <libc/string.h>
-#include <kernel/cpu.h>
+#include <kernel/x86/cpu.h>
 #include <kernel/device/keyboard.h>
 #include <kernel/interrupt/interrupt.h>
 

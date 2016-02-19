@@ -1,6 +1,6 @@
 //============================================================================
 /// @file       cpu.h
-/// @brief      CPU data structures and functions.
+/// @brief      x86 CPU-specific function implementations.
 //
 //  Copyright 2016 Brett Vickers.
 //  Use of this source code is governed by a BSD-style license
@@ -10,10 +10,6 @@
 #pragma once
 
 #include <core.h>
-
-//----------------------------------------------------------------------------
-// Constants
-//----------------------------------------------------------------------------
 
 // CPU EFLAGS register values
 #define CPU_EFLAGS_CARRY       (1 << 0)
@@ -70,20 +66,17 @@ typedef struct registers4
     uint64_t rdx;
 } registers4_t;
 
+
+#ifdef __NO_INLINE__
+
 //----------------------------------------------------------------------------
 //  @function   cpuid
 /// @brief      Return the results of the CPUID instruction.
 /// @param[in]  code    The cpuid group code.
 /// @param[out] regs    The contents of registers rax, rbx, rcx, and rdx.
 //----------------------------------------------------------------------------
-__forceinline void
-cpuid(uint32_t code, registers4_t *regs)
-{
-    asm volatile ("cpuid"
-                  : "=a" (regs->rax), "=b" (regs->rbx),
-                  "=c" (regs->rcx), "=d" (regs->rdx)
-                  : "0" (code));
-}
+void
+cpuid(uint32_t code, registers4_t *regs);
 
 //----------------------------------------------------------------------------
 //  @function   rdmsr
@@ -91,13 +84,8 @@ cpuid(uint32_t code, registers4_t *regs)
 /// @param[in]  id      The register id to read.
 /// @returns    The contents of the requested MSR.
 //----------------------------------------------------------------------------
-__forceinline uint64_t
-rdmsr(uint32_t id)
-{
-    uint64_t value;
-    asm volatile ("rdmsr" : "=A" (value) : "c" (id));
-    return value;
-}
+uint64_t
+rdmsr(uint32_t id);
 
 //----------------------------------------------------------------------------
 //  @function   wrmsr
@@ -105,11 +93,8 @@ rdmsr(uint32_t id)
 /// @param[in]  id      The register id to write.
 /// @param[in]  value   The value to write.
 //----------------------------------------------------------------------------
-__forceinline void
-wrmsr(uint32_t id, uint64_t value)
-{
-    asm volatile ("wrmsr" : : "c" (id), "A" (value));
-}
+void
+wrmsr(uint32_t id, uint64_t value);
 
 //----------------------------------------------------------------------------
 //  @function   io_inb
@@ -117,16 +102,8 @@ wrmsr(uint32_t id, uint64_t value)
 /// @param[in]  port    Port number (0-65535).
 /// @returns    value   Byte value read from the port.
 //----------------------------------------------------------------------------
-__forceinline uint8_t
-io_inb(uint16_t port)
-{
-    uint8_t value;
-    asm volatile ("inb  %[v],   %[p]"
-                  : [v] "=a" (value)
-                  : [p] "Nd" (port)
-                  );
-    return value;
-}
+uint8_t
+io_inb(uint16_t port);
 
 //----------------------------------------------------------------------------
 //  @function   io_outb
@@ -134,28 +111,53 @@ io_inb(uint16_t port)
 /// @param[in]  port    Port number (0-65535).
 /// @param[in]  value   Byte value to write to the port.
 //----------------------------------------------------------------------------
-__forceinline void
-io_outb(uint16_t port, uint8_t value)
-{
-    asm volatile ("outb  %[p],  %[v]"
-                  :
-                  : [p] "Nd" (port), [v] "a" (value)
-                  );
-}
+void
+io_outb(uint16_t port, uint8_t value);
 
 //----------------------------------------------------------------------------
 //  @function   set_pagetable
 /// @brief      Update the CPU's page table register.
-/// @param[in]  paddr   The physical address containing the new pagetable
-///                     address.
+/// @param[in]  paddr   The physical address containing the new pagetable.
 //----------------------------------------------------------------------------
-__forceinline void
-set_pagetable(uint64_t paddr)
-{
-    asm volatile (
-        "mov    rdi,    %[paddr]\n"
-        "mov    cr3,    rdi\n"
-        :
-        : [paddr] "m" (paddr)
-        : "rdi");
-}
+void
+set_pagetable(uint64_t paddr);
+
+//----------------------------------------------------------------------------
+//  @function   enable_interrupts
+/// @brief      Enable interrupts.
+//----------------------------------------------------------------------------
+void
+enable_interrupts();
+
+//----------------------------------------------------------------------------
+//  @function   disable_interrupts
+/// @brief      Disable interrupts.
+//----------------------------------------------------------------------------
+void
+disable_interrupts();
+
+//----------------------------------------------------------------------------
+//  @function   halt
+/// @brief      Halt the CPU until an interrupt occurs.
+//----------------------------------------------------------------------------
+void
+halt();
+
+//----------------------------------------------------------------------------
+//  @function   invalid_opcode
+/// @brief      Raise an invalid opcode exception.
+//----------------------------------------------------------------------------
+void
+invalid_opcode();
+
+//----------------------------------------------------------------------------
+//  @function   fatal
+/// @brief      Raise a fatal interrupt that hangs the system.
+//----------------------------------------------------------------------------
+void
+fatal();
+
+// Use inline assembly versions if __NO_INLINE__ is not defined
+#else
+#    include "cpu_inl.h"
+#endif

@@ -10,7 +10,7 @@
 #pragma once
 
 #include <core.h>
-#include <kernel/cpu.h>
+#include <kernel/x86/cpu.h>
 
 //----------------------------------------------------------------------------
 // Constants
@@ -100,54 +100,3 @@ irq_enable(uint8_t irq);
 //----------------------------------------------------------------------------
 void
 irq_disable(uint8_t irq);
-
-//----------------------------------------------------------------------------
-//  @function   fatal
-/// @brief      Raise a fatal interrupt that hangs the system.
-//----------------------------------------------------------------------------
-void
-fatal();
-
-//----------------------------------------------------------------------------
-//  @function   interrupts_enable
-/// @brief      Enable interrupts.
-//----------------------------------------------------------------------------
-__forceinline void
-interrupts_enable()
-{
-    asm volatile ("sti");
-}
-
-//----------------------------------------------------------------------------
-//  @function   interrupts_disable
-/// @brief      Disable interrupts.
-//----------------------------------------------------------------------------
-__forceinline void
-interrupts_disable()
-{
-    asm volatile ("cli");
-}
-
-//----------------------------------------------------------------------------
-//  @function   halt
-/// @brief      Halt the CPU until an interrupt occurs.
-//----------------------------------------------------------------------------
-__forceinline void
-halt()
-{
-    asm volatile ("hlt");
-}
-
-//----------------------------------------------------------------------------
-//  @function   RAISE_INTERRUPT
-/// @brief      Issue a software interrupt to the CPU.
-/// @param[in]  x       The interrupt to raise. Must be an integer constant
-///                     less than 256.
-//----------------------------------------------------------------------------
-#define RAISE_INTERRUPT(x)  { asm volatile ("int %[n]" ::[n] "N" (x)); }
-
-//----------------------------------------------------------------------------
-//  @function   RAISE_BREAKPOINT
-/// @brief      Issue a software breakpoint interrupt to the CPU.
-//----------------------------------------------------------------------------
-#define RAISE_BREAKPOINT()  { asm volatile ("int 3"); }

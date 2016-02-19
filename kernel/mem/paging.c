@@ -10,10 +10,10 @@
 #include <core.h>
 #include <libc/stdlib.h>
 #include <libc/string.h>
+#include <kernel/x86/cpu.h>
 #include <kernel/interrupt/interrupt.h>
 #include <kernel/mem/table.h>
 #include <kernel/mem/paging.h>
-#include <kernel/cpu.h>
 #include "map.h"
 
 // Page shift constants

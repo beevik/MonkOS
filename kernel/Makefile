@@ -7,7 +7,7 @@
 DIR_ROOT	:= ..
 LIB_NAME	:= kernel
 LIB_DEPS	:= libc
-LIB_RULE	:= kernel
+POST_LIB_RULE	:= kernel
 LD_FILE		:= kernel.ld
 
 include $(DIR_ROOT)/scripts/lib.mk

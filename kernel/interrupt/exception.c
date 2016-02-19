@@ -9,6 +9,7 @@
 
 #include <core.h>
 #include <libc/stdio.h>
+#include <kernel/x86/cpu.h>
 #include <kernel/debug/dump.h>
 #include <kernel/device/tty.h>
 #include <kernel/interrupt/exception.h>
@@ -71,7 +72,7 @@ static void
 hang()
 {
     for (;;) {
-        interrupts_disable();
+        disable_interrupts();
         halt();
     }
 }

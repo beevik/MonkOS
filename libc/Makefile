@@ -7,8 +7,6 @@
 DIR_ROOT	:= ..
 LIB_NAME	:= libc
 LIB_DEPS	:=
-LIB_RULE	:= libc
+POST_LIB_RULE	:=
 
 include $(DIR_ROOT)/scripts/lib.mk
-
-libc: $(LIB_FILE)

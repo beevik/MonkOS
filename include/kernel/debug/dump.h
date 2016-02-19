@@ -10,7 +10,7 @@
 #pragma once
 
 #include <core.h>
-#include <kernel/cpu.h>
+#include <kernel/x86/cpu.h>
 
 //----------------------------------------------------------------------------
 //  @function   dump_registers

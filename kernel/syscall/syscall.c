@@ -8,7 +8,7 @@
 //============================================================================
 
 #include <core.h>
-#include <kernel/cpu.h>
+#include <kernel/x86/cpu.h>
 #include <kernel/interrupt/exception.h>
 #include <kernel/interrupt/interrupt.h>
 #include <kernel/mem/segments.h>
@@ -35,7 +35,7 @@ syscall_init()
     // Bit 11 of rdx tells us if the SYSCALL/SYSRET instructions are
     // available. If they're not, raise an invalid opcode exception.
     if (!(regs.rdx & (1 << 11))) {
-        RAISE_INTERRUPT(EXCEPTION_INVALID_OPCODE);
+        invalid_opcode();
     }
 
     // Update the IA32_STAR MSR with the segment selectors that will be used

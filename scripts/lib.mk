@@ -4,10 +4,10 @@
 #
 # The following variables should be set before including this file:
 #
-#    DIR_ROOT	The root directory of the project
-#    LIB_NAME	Name of the library produced by this makefile
-#    LIB_DEPS	The list of libraries this lib is dependent on
-#    LIB_RULE	The rule that runs after the library is built
+#    DIR_ROOT        The root directory of the project
+#    LIB_NAME        The name of the library produced by this makefile
+#    LIB_DEPS        The optional list of libraries the lib depends on
+#    POST_LIB_RULE   The optional rule that runs after the lib is built
 #
 #----------------------------------------------------------------------------
 
@@ -62,7 +62,7 @@ TAG		:= $(BLUE)[$(LIB_NAME)]$(NORMAL)
 # Build rules
 # -----------
 
-all: mkdir $(LIB_FILE) $(LIB_RULE)
+all: mkdir $(LIB_FILE) $(POST_LIB_RULE)
 	@echo "$(TAG) $(SUCCESS)"
 
 mkdir: .force

@@ -10,7 +10,7 @@
 #include <core.h>
 #include <libc/stdio.h>
 #include <libc/string.h>
-#include <kernel/cpu.h>
+#include <kernel/x86/cpu.h>
 #include <kernel/device/tty.h>
 
 // CRTC ports
