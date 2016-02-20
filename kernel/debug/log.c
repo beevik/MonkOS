@@ -12,14 +12,17 @@
 #include <kernel/debug/log.h>
 
 // Record buffer constants
-#define RBUFSHIFT  10
-#define RBUFSIZE   (1 << RBUFSHIFT)     // 1024
-#define RBUFMASK   (RBUFSIZE - 1)
+#define RBUFSHIFT      10
+#define RBUFSIZE       (1 << RBUFSHIFT) // 1024
+#define RBUFMASK       (RBUFSIZE - 1)
 
 // Message buffer constants
-#define MBUFSHIFT  7
-#define MBUFSIZE   (1 << MBUFSHIFT)     // 64KiB
-#define MBUFMASK   (MBUFSIZE - 1)
+#define MBUFSHIFT      16
+#define MBUFSIZE       (1 << MBUFSHIFT) // 64KiB
+#define MBUFMASK       (MBUFSIZE - 1)
+
+// Callback registrations
+#define MAX_CALLBACKS  8
 
 /// A log record represents a single logged event.
 typedef struct record
@@ -28,6 +31,13 @@ typedef struct record
     int        moffset;      ///< Offset of message in context::mbuf
 } record_t;
 
+/// Used for registering logging callback functions.
+typedef struct callback
+{
+    loglevel_t   maxlevel;
+    log_callback cb;
+} callback_t;
+
 /// The log context describes the state of the log buffers. There are two
 /// buffers: the record buffer and the message buffer. The record buffer is a
 /// circular queue that contains records describing the most recent 1024 log
@@ -35,15 +45,21 @@ typedef struct record
 /// each of the records in the log buffer.
 struct context
 {
-    record_t rbuf[RBUFSIZE]; ///< Circular record buffer
-    int      rhead;          ///< index of oldest record in rbuf
-    int      rtail;          ///< rbuf index where next record will be written
-    int      rbufsz;         ///< number of records in rbuf
+    // Record buffer
+    record_t   rbuf[RBUFSIZE]; ///< Circular record buffer
+    int        rhead;          ///< index of oldest record in rbuf
+    int        rtail;          ///< rbuf index of next record to write
+    int        rbufsz;         ///< number of records in rbuf
 
-    char     mbuf[MBUFSIZE]; ///< Circular message text buffer
-    int      mhead;          ///< index of oldest char in mbuf
-    int      mtail;          ///< mbuf index where next char will be written
-    int      mbufsz;         ///< the number of characters in mbuf
+    // Message buffer
+    char       mbuf[MBUFSIZE]; ///< Circular message text buffer
+    int        mhead;          ///< index of oldest char in mbuf
+    int        mtail;          ///< mbuf index of next char to write
+    int        mbufsz;         ///< the number of characters in mbuf
+
+    // Callback registrations
+    callback_t callbacks[MAX_CALLBACKS];
+    int        callbacks_size; ///< number of registrations
 };
 
 static struct context lc;
@@ -81,7 +97,7 @@ evict_msg(int chars)
 }
 
 static void
-evict_oldestmsg()
+evict_oldest_msg()
 {
     while (lc.mbufsz > 0) {
         char ch = lc.mbuf[lc.mhead];
@@ -93,7 +109,7 @@ evict_oldestmsg()
 }
 
 static int
-add_string(const char *str)
+add_msg(const char *str)
 {
     int offset = lc.mtail;
 
@@ -120,13 +136,13 @@ add_string(const char *str)
 }
 
 static void
-add_record(int offset, loglevel_t level)
+add_record(int offset, loglevel_t level, const char *str)
 {
     // If the record buffer is full, evict the oldest record and its
     // associated message text.
     if (lc.rbufsz == RBUFSIZE) {
         evict_record();
-        evict_oldestmsg();
+        evict_oldest_msg();
     }
 
     // Add a new record on the tail of the circular record queue.
@@ -136,13 +152,43 @@ add_record(int offset, loglevel_t level)
 
     lc.rtail = (lc.rtail + 1) & RBUFMASK;
     lc.rbufsz++;
+
+    // Issue registered log callbacks.
+    for (int i = 0; i < lc.callbacks_size; i++) {
+        const callback_t *callback = &lc.callbacks[i];
+        if (level <= callback->maxlevel)
+            callback->cb(level, str);
+    }
+}
+
+void
+log_addcallback(loglevel_t maxlevel, log_callback cb)
+{
+    if (lc.callbacks_size == MAX_CALLBACKS)
+        return;
+
+    callback_t *record = &lc.callbacks[lc.callbacks_size++];
+    record->maxlevel = maxlevel;
+    record->cb       = cb;
+}
+
+void
+log_removecallback(log_callback cb)
+{
+    for (int i = 0; i < lc.callbacks_size; i++) {
+        if (lc.callbacks[i].cb == cb) {
+            memmove(lc.callbacks + i, lc.callbacks + i + 1,
+                    sizeof(callback_t) * (lc.callbacks_size - (i + 1)));
+            return;
+        }
+    }
 }
 
 void
 log(loglevel_t level, const char *str)
 {
-    int offset = add_string(str);
-    add_record(offset, level);
+    int offset = add_msg(str);
+    add_record(offset, level, str);
 }
 
 void
@@ -159,6 +205,6 @@ logvf(loglevel_t level, const char *format, va_list args)
 {
     char str[1024];
     vsnprintf(str, arrsize(str), format, args);
-    int offset = add_string(str);
-    add_record(offset, level);
+    int offset = add_msg(str);
+    add_record(offset, level, str);
 }

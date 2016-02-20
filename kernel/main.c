@@ -27,6 +27,9 @@
 #    error "This code must be compiled with a cross-compiler."
 #endif
 
+#define TTY_KB   2
+#define TTY_LOG  3
+
 static void
 sysinit()
 {
@@ -50,10 +53,19 @@ sysinit()
 }
 
 static void
+on_log(loglevel_t level, const char *msg)
+{
+    (void)level;
+    tty_print(TTY_LOG, msg);
+    tty_print(TTY_LOG, "\n");
+}
+
+static void
 do_test()
 {
+    log_addcallback(LOG_DEFAULT, on_log);
+
     // Test code below...
-    int tty_id = 0;
     for (;;) {
         halt();
 
@@ -63,20 +75,18 @@ do_test()
         while ((avail = kb_getkey(&key)) != false) {
             if (key.ch) {
                 tty_printf(
-                    tty_id,
+                    TTY_KB,
                     "Keycode: \033[%c]%02x\033[-] meta=%02x '%c'\n",
                     key.brk ? 'e' : '2',
                     key.code,
                     key.meta,
                     key.ch);
-                if (key.code == KEY_ESCAPE) {
-                    logf(LOG_ERR, "ERROR! This is a test.");
-                    // RAISE_INTERRUPT(EXCEPTION_NMI);
-                }
+                if (key.code == KEY_ESCAPE)
+                    logf(LOG_INFO, "Escape hit.");
             }
             else {
                 tty_printf(
-                    tty_id,
+                    TTY_KB,
                     "Keycode: \033[%c]%02x\033[-] meta=%02x\n",
                     key.brk ? 'e' : '2',
                     key.code,
@@ -84,10 +94,9 @@ do_test()
             }
 
             if ((key.brk == 0) && (key.meta & META_ALT)) {
-                if ((key.code >= '1') && (key.code <= '4')) {
-                    tty_id = key.code - '1';
-                    tty_activate(tty_id);
-                    tty_print(tty_id, "Console activated.\n");
+                if ((key.code >= '0') && (key.code <= '3')) {
+                    int ttyid = key.code - '0';
+                    tty_activate(ttyid);
                 }
             }
         }
@@ -102,6 +111,7 @@ kmain()
     // Display a welcome message on each virtual console.
     for (int id = 0; id < MAX_TTYS; id++) {
         tty_print(id, "Welcome to \033[e]MonkOS\033[-] (v0.1).\n");
+        tty_printf(id, "[tty=%d]\n", id);
         tty_set_textcolor_fg(id, TEXTCOLOR_LTGRAY);
     }
 

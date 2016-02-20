@@ -27,6 +27,33 @@ typedef enum loglevel
 } loglevel_t;
 
 //----------------------------------------------------------------------------
+//  @typedef    log_callback
+/// @brief      Callback handler called when a message is logged.
+/// @param[in]  level   The log level of the message.
+/// @param[in]  msg     The null-terminated string containing the logged
+///                     message.
+//----------------------------------------------------------------------------
+typedef void (*log_callback)(loglevel_t level, const char *msg);
+
+//----------------------------------------------------------------------------
+//  @function   log_addcallback
+/// @brief      Add a callback handler for log messages.
+/// @param[in]  maxlevel    Issue callback for log calls up to and including
+///                         this log level.
+/// @param[in]  cb          The callback function
+//----------------------------------------------------------------------------
+void
+log_addcallback(loglevel_t maxlevel, log_callback cb);
+
+//----------------------------------------------------------------------------
+//  @function   log_removecallback
+/// @brief      Remove a callback handler for log messages.
+/// @param[in]  cb          The callback function
+//----------------------------------------------------------------------------
+void
+log_removecallback(log_callback cb);
+
+//----------------------------------------------------------------------------
 //  @function   log
 /// @brief      Log a message to the kernel log buffer.
 /// @param[in]  level   The importance level of the logged message.
