@@ -13,8 +13,8 @@
 #include <core.h>
 #include <libc/stdlib.h>
 #include <libc/string.h>
+#include <kernel/mem/map.h>
 #include <kernel/mem/table.h>
-#include "map.h"
 
 // Pointer to the BIOS-generated memory table.
 static memtable_t *table = (memtable_t *)MEM_TABLE_BIOS;

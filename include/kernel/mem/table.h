@@ -76,7 +76,7 @@ memtable_reserve(uint64_t addr, uint64_t size);
 //----------------------------------------------------------------------------
 //  @function   memtable
 /// @brief      Return a pointer to the current memory table.
-/// @return     A pointer to the memory table.
+/// @returns    A pointer to the memory table.
 //----------------------------------------------------------------------------
 const memtable_t *
 memtable();

@@ -12,9 +12,9 @@
 #include <libc/string.h>
 #include <kernel/x86/cpu.h>
 #include <kernel/interrupt/interrupt.h>
+#include <kernel/mem/map.h>
 #include <kernel/mem/table.h>
 #include <kernel/mem/paging.h>
-#include "map.h"
 
 // Page shift constants
 #define PAGE_SHIFT         12       // 1<<12 = 4KiB

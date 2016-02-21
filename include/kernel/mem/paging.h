@@ -85,7 +85,7 @@ page_init();
 ///                     the page table.
 /// @param[in]  vaddr   The virtual address within the new page table where
 ///                     the page table will be mapped.
-/// @return     A handle to the created page table.
+/// @returns    A handle to the created page table.
 //----------------------------------------------------------------------------
 void
 pagetable_create(pagetable_t *pt, void *vaddr);
@@ -115,7 +115,7 @@ pagetable_activate(pagetable_t *pt);
 /// @param[in]  vaddr   The virtual address of the first allocated page.
 /// @param[in]  count   The number of contiguous virtual memory pages to
 ///                     allocate.
-/// @return     A virtual memory pointer to the first page allocated.
+/// @returns    A virtual memory pointer to the first page allocated.
 //----------------------------------------------------------------------------
 void *
 page_alloc(pagetable_t *pt, void *vaddr, int count);

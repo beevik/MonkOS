@@ -31,3 +31,6 @@
 
 /// Compile-time static assertion
 #define STATIC_ASSERT(a, b)  _Static_assert(a, b)
+
+/// Forced structure packing (use only when absolutely necessary)
+#define PACKSTRUCT           __attribute__((packed, aligned(1)))

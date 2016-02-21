@@ -28,7 +28,7 @@ TARGET		:= x86_64-elf
 
 CC		:= $(TARGET)-gcc
 
-CCFLAGS		:= -std=gnu11 -I$(DIR_INCLUDE) -Qn -g -Og \
+CCFLAGS		:= -std=gnu11 -I$(DIR_INCLUDE) -Qn -g \
 		   -m64 -mno-red-zone -mno-mmx -mfpmath=sse -masm=intel \
 		   -ffreestanding -fno-asynchronous-unwind-tables \
 		   -Wall -Wextra -Wpedantic

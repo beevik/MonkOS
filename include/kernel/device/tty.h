@@ -192,7 +192,7 @@ tty_print(int id, const char *str);
 ///                     text to be printed.
 /// @param[in]  ...     Variable arguments list to be initialized with
 ///                     va_start.
-/// @return     The number of characters written to the console.
+/// @returns    The number of characters written to the console.
 //----------------------------------------------------------------------------
 int
 tty_printf(int id, const char *format, ...);

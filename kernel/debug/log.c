@@ -46,16 +46,16 @@ typedef struct callback
 struct context
 {
     // Record buffer
-    record_t   rbuf[RBUFSIZE]; ///< Circular record buffer
-    int        rhead;          ///< index of oldest record in rbuf
-    int        rtail;          ///< rbuf index of next record to write
-    int        rbufsz;         ///< number of records in rbuf
+    record_t rbuf[RBUFSIZE]; ///< Circular record buffer
+    int      rhead;          ///< index of oldest record in rbuf
+    int      rtail;          ///< rbuf index of next record to write
+    int      rbufsz;         ///< number of records in rbuf
 
     // Message buffer
-    char       mbuf[MBUFSIZE]; ///< Circular message text buffer
-    int        mhead;          ///< index of oldest char in mbuf
-    int        mtail;          ///< mbuf index of next char to write
-    int        mbufsz;         ///< the number of characters in mbuf
+    char mbuf[MBUFSIZE]; ///< Circular message text buffer
+    int  mhead;          ///< index of oldest char in mbuf
+    int  mtail;          ///< mbuf index of next char to write
+    int  mbufsz;         ///< the number of characters in mbuf
 
     // Callback registrations
     callback_t callbacks[MAX_CALLBACKS];

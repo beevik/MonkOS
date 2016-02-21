@@ -17,7 +17,7 @@
 /// @details    Count the number of characters in the null-terminated string
 ///             and return the count.
 /// @param[in]  str     Pointer to a null-terminated string.
-/// @return             The number of characters preceding the null
+/// @returns            The number of characters preceding the null
 ///                     terminator.
 //----------------------------------------------------------------------------
 size_t
@@ -33,7 +33,7 @@ strlen(const char *str);
 /// @param[in]  src     Pointer to the source string.
 /// @param[in]  dstsize Maximum number of characters in the dst buffer after
 ///                     copying, including the null terminator.
-/// @return     The length of the copied string after truncation.
+/// @returns    The length of the copied string after truncation.
 //----------------------------------------------------------------------------
 size_t
 strlcpy(char *dst, const char *src, size_t dstsize);
@@ -48,7 +48,7 @@ strlcpy(char *dst, const char *src, size_t dstsize);
 /// @param[in]  src     Pointer to the source string.
 /// @param[in]  dstsize Maximum number of characters in the dst buffer after
 ///                     concatenation, including the null terminator.
-/// @return     The length of the concatenated string after truncation.
+/// @returns    The length of the concatenated string after truncation.
 //----------------------------------------------------------------------------
 size_t
 strlcat(char *dst, const char *src, size_t dstsize);
@@ -61,7 +61,7 @@ strlcat(char *dst, const char *src, size_t dstsize);
 /// @param[in]  dst     Address of the destination memory area.
 /// @param[in]  src     Address of the source memory area.
 /// @param[in]  num     Number of bytes to copy.
-/// @return             Destination address.
+/// @returns            Destination address.
 //----------------------------------------------------------------------------
 void *
 memcpy(void *dst, const void *src, size_t num);
@@ -73,7 +73,7 @@ memcpy(void *dst, const void *src, size_t num);
 /// @param[in]  dst     Address of the destination memory area.
 /// @param[in]  src     Address of the source memory area.
 /// @param[in]  num     Number of bytes to copy.
-/// @return             Destination address.
+/// @returns            Destination address.
 //----------------------------------------------------------------------------
 void *
 memmove(void *dst, const void *src, size_t num);
@@ -84,7 +84,7 @@ memmove(void *dst, const void *src, size_t num);
 /// @param[in]  dst     Address of the destination memory area.
 /// @param[in]  b       Value of the byte used to fill memory.
 /// @param[in]  num     Number of bytes to set.
-/// @return             Destination address.
+/// @returns            Destination address.
 //----------------------------------------------------------------------------
 void *
 memset(void *dst, int b, size_t num);
@@ -95,7 +95,7 @@ memset(void *dst, int b, size_t num);
 /// @param[in]  dst     Address of the destination memory area.
 /// @param[in]  w       Value of the word used to fill memory.
 /// @param[in]  num     Number of words to set.
-/// @return             Destination address.
+/// @returns            Destination address.
 //----------------------------------------------------------------------------
 void *
 memsetw(void *dst, int w, size_t num);
@@ -106,7 +106,7 @@ memsetw(void *dst, int w, size_t num);
 /// @param[in]  dst     Address of the destination memory area.
 /// @param[in]  d       Value of the dword used to fill memory.
 /// @param[in]  num     Number of dwords to set.
-/// @return             Destination address.
+/// @returns            Destination address.
 //----------------------------------------------------------------------------
 void *
 memsetd(void *dst, uint32_t d, size_t num);
@@ -116,7 +116,7 @@ memsetd(void *dst, uint32_t d, size_t num);
 /// @brief      Fill a region of memory with zeroes.
 /// @param[in]  dst     Address of the destination memory area.
 /// @param[in]  num     Number of bytes to set to zero.
-/// @return             Destination address.
+/// @returns            Destination address.
 //----------------------------------------------------------------------------
 void *
 memzero(void *dst, size_t num);

@@ -20,7 +20,7 @@
 ///                     null-terminated string.
 /// @param[in]  bufsize Size of the buffer used to hold the string.
 /// @param[in]  regs    Pointer to a CPU registers structure.
-/// @return     The number of characters that would have been written to the
+/// @returns    The number of characters that would have been written to the
 ///             buffer if n had been sufficiently large.
 //----------------------------------------------------------------------------
 int
@@ -33,7 +33,7 @@ dump_registers(char *buf, size_t bufsize, const registers_t *regs);
 ///                     null-terminated string.
 /// @param[in]  bufsize Size of the buffer used to hold the string.
 /// @param[in]  rflags  The 64-bit rflags register value.
-/// @return     The number of characters that would have been written to the
+/// @returns    The number of characters that would have been written to the
 ///             buffer if n had been sufficiently large.
 //----------------------------------------------------------------------------
 int
@@ -61,7 +61,7 @@ enum dumpstyle
 /// @param[in]  mem     Pointer to the first byte of memory to dump.
 /// @param[in]  memsize Number of memory bytes to dump.
 /// @param[in]  style   The output style used for the memory dump.
-/// @return     The number of characters that would have been written to the
+/// @returns    The number of characters that would have been written to the
 ///             buffer if n had been sufficiently large.
 //----------------------------------------------------------------------------
 int

@@ -17,7 +17,7 @@
 ///             function.
 /// @param[in]  a       Pointer to first element to be compared.
 /// @param[in]  b       Pointer to second element to be compared.
-/// @return     <0 if the element pointed to by a should go before the
+/// @returns    <0 if the element pointed to by a should go before the
 ///             element pointed to by b.
 ///
 ///             0 if the elements sort equivalently.

@@ -24,6 +24,7 @@
 #define MEM_STACK_DF_TOP            0x0008e000
 #define MEM_STACK_MC_BOTTOM         0x0008e000
 #define MEM_STACK_MC_TOP            0x00090000
+#define MEM_EXTENDED_BIOS           0x0009f800
 #define MEM_VIDEO                   0x000a0000
 #define MEM_SYSTEM_ROM              0x000c0000
 #define MEM_STACK_INTERRUPT_BOTTOM  0x00100000
@@ -34,7 +35,9 @@
 #define MEM_KERNEL_ENTRYPOINT       0x00301000
 #define MEM_KERNEL_IMAGE_END        0x00a00000
 
+#define MEM_EXTENDED_BIOS_SIZE      0x00000800
 #define MEM_VIDEO_SIZE              0x00020000
+#define MEM_SYSTEM_ROM_SIZE         0x00040000
 #define MEM_KERNEL_PAGETABLE_SIZE   0x0005c000
 
 //----------------------------------------------------------------------------
@@ -44,3 +47,13 @@
 //----------------------------------------------------------------------------
 void
 map_memory();
+
+//----------------------------------------------------------------------------
+//  @function   map_range
+/// @brief      Identity-map the range of memory from addr to addr+size.
+/// @details    Use this function to patch the kernel's virtual memory map
+///             with memory ranges that may not have been included in the
+///             BIOS memory map.
+//----------------------------------------------------------------------------
+void
+map_range(uint64_t addr, uint64_t size);
