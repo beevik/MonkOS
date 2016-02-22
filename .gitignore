@@ -4,6 +4,7 @@
 .tags
 build
 deps
+docs/acpi
 docs/intel
 docs/monk
 notes

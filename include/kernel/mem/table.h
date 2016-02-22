@@ -16,16 +16,17 @@
 
 //----------------------------------------------------------------------------
 //  @enum       memtype
-/// @brief      The types of memory reported in a memory table.
+/// @brief      The types of physical memory.
 //----------------------------------------------------------------------------
 enum memtype
 {
-    MEMTYPE_USABLE   = 1,
-    MEMTYPE_RESERVED = 2,
-    MEMTYPE_ACPI     = 3,
-    MEMTYPE_ACPI_NVS = 4,
-    MEMTYPE_BAD      = 5,
-    MEMTYPE_UNCACHED = 6,
+    MEMTYPE_USABLE   = 1,   ///< Reported usable by the BIOS.
+    MEMTYPE_RESERVED = 2,   ///< Reported (or inferred) to be reserved.
+    MEMTYPE_ACPI     = 3,   ///< Used for ACPI tables or code.
+    MEMTYPE_ACPI_NVS = 4,   ///< Used for ACPI non-volatile storage.
+    MEMTYPE_BAD      = 5,   ///< Reported as bad memory.
+    MEMTYPE_UNCACHED = 6,   ///< Marked as uncacheable, usually for I/O.
+    MEMTYPE_UNMAPPED = 7,   ///< Marked as "do not map".
 };
 
 //----------------------------------------------------------------------------
@@ -51,7 +52,7 @@ typedef struct memregion memregion_t;
 struct memtable
 {
     uint64_t    count;           ///< Memory regions in the table
-    uint64_t    reserved;
+    uint64_t    last_usable;     ///< End of last usable region
     memregion_t region[1];       ///< An array of 'count' memory regions
 };
 typedef struct memtable memtable_t;
@@ -65,13 +66,14 @@ void
 memtable_init();
 
 //----------------------------------------------------------------------------
-//  @function   memtable_reserve
-/// @brief      Reserve a region of memory.
-/// @details    This function should not be called after the page table has
-///             been initialized.
+//  @function   memtable_add
+/// @brief      Add a region of memory to the memory table.
+/// @param[in]  addr    The starting address of the region.
+/// @param[in]  size    The size of the region.
+/// @param[in]  type    The type of memory to add.
 //----------------------------------------------------------------------------
 void
-memtable_reserve(uint64_t addr, uint64_t size);
+memtable_add(uint64_t addr, uint64_t size, enum memtype type);
 
 //----------------------------------------------------------------------------
 //  @function   memtable

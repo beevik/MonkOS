@@ -63,10 +63,11 @@ org 0x8000
 ;
 ; Memory regions used or modified by this code:
 ;
-;   00000100 - 000001ff          256 bytes     Global Descriptor Table (GDT)
-;   00000200 - 000002ff          256 bytes     Task State Segment (TSS)
 ;   00000800 - 00000fff        2,048 bytes     Cdrom sector read buffer
-;   00001000 - 00007bff       27,648 bytes     Real mode stack
+;   00003000 - 000030ff          256 bytes     Global Descriptor Table (GDT)
+;   00003100 - 000031ff          256 bytes     Task State Segment (TSS)
+;   00003200 - 00003fff        3,584 bytes     Global variables
+;   00004000 - 00007bff       16,384 bytes     Real mode stack
 ;   00010000 - 00017fff       32,768 bytes     Page tables
 ;   0006f000 - 0006ffff        4,096 bytes     32-bit protected mode stack
 ;   00070000 - 0007ffff       65,536 bytes     Kernel load buffer

@@ -7,21 +7,38 @@
 //  that can be found in the MonkOS LICENSE file.
 //============================================================================
 
+#include <core.h>
+#include <libc/string.h>
 #include <kernel/debug/log.h>
 #include <kernel/mem/acpi.h>
 #include <kernel/mem/map.h>
 #include <kernel/mem/paging.h>
+#include <kernel/mem/table.h>
 #include <kernel/x86/cpu.h>
 
-#define SIGNATURE_RSDP  0x2052545020445352ll    // "RSD PTR "
-#define SIGNATURE_FADT  0x50434146              // "FACP"
-#define SIGNATURE_BOOT  0x544f4f42              // "BOOT"
-#define SIGNATURE_MADT  0x43495041              // "APIC"
-#define SIGNATURE_MCFG  0x4746434d              // "MCFG"
-#define SIGNATURE_SRAT  0x54415253              // "SRAT"
-#define SIGNATURE_HPET  0x54455048              // "HPET"
-#define SIGNATURE_WAET  0x54454157              // "WAET"
-#define SIGNATURE_SSDT  0x54445353              // "SSDT"
+#define SIGNATURE_RSDP      0x2052545020445352ll // "RSD PTR "
+#define SIGNATURE_MADT      0x43495041           // "APIC"
+#define SIGNATURE_BOOT      0x544f4f42           // "BOOT"
+#define SIGNATURE_FADT      0x50434146           // "FACP"
+#define SIGNATURE_HPET      0x54455048           // "HPET"
+#define SIGNATURE_MCFG      0x4746434d           // "MCFG"
+#define SIGNATURE_SRAT      0x54415253           // "SRAT"
+#define SIGNATURE_SSDT      0x54445353           // "SSDT"
+#define SIGNATURE_WAET      0x54454157           // "WAET"
+
+// Page alignment macros
+#define PAGE_ALIGN_DOWN(a)  ((a) & ~(PAGE_SIZE - 1))
+#define PAGE_ALIGN_UP(a)    (((a) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
+
+/// A structure used to track the state of the temporary page table generated
+/// by the boot loader. The ACPI code updates it to access the memory stored
+/// in ACPI tables.
+typedef struct btable
+{
+    page_t *root;                ///< The top-level (PML4) page table
+    page_t *next_page;           ///< The next page to use when allocating
+    page_t *term_page;           ///< Just beyond the last available page
+} btable_t;
 
 struct acpi_rsdp
 {
@@ -36,7 +53,7 @@ struct acpi_rsdp
     uint64_t ptr_xsdt;     ///< 64-bit pointer to XSDT table
     uint8_t  checksum_ex;  ///< Covers entire rsdp structure
     uint8_t  reserved[3];
-};
+} PACKSTRUCT;
 
 struct acpi_rsdt
 {
@@ -84,17 +101,118 @@ read_table(const struct acpi_hdr *hdr)
     {
         case SIGNATURE_FADT:
             read_fadt(hdr);
+            break;
 
         case SIGNATURE_MADT:
             read_madt(hdr);
+            break;
 
         default:
             break;
     }
 }
 
+static bool
+is_mapped(btable_t *btable, uint64_t addr)
+{
+    uint64_t pml4te = PML4E(addr);
+    uint64_t pdpte  = PDPTE(addr);
+    uint64_t pde    = PDE(addr);
+    uint64_t pte    = PTE(addr);
+
+    page_t *pml4t = btable->root;
+    if (pml4t->entry[pml4te] == 0)
+        return false;
+
+    page_t *pdpt = PGPTR(pml4t->entry[pml4te]);
+    if (pdpt->entry[pdpte] == 0)
+        return false;
+    if (pdpt->entry[pdpte] & PF_PS)
+        return true;
+
+    page_t *pdt = PGPTR(pdpt->entry[pdpte]);
+    if (pdt->entry[pde] == 0)
+        return false;
+    if (pdt->entry[pde] & PF_PS)
+        return true;
+
+    page_t *pt = PGPTR(pdt->entry[pde]);
+    return pt->entry[pte] != 0;
+}
+
+static uint64_t
+alloc_page(btable_t *btable)
+{
+    if (btable->next_page == btable->term_page)
+        fatal();
+
+    page_t *page = btable->next_page++;
+    memzero(page, sizeof(page_t));
+    return (uint64_t)page | PF_PRESENT | PF_RW;
+}
+
 static void
-read_xsdt()
+create_page(btable_t *btable, uint64_t addr, uint64_t flags)
+{
+    uint64_t pml4te = PML4E(addr);
+    uint64_t pdpte  = PDPTE(addr);
+    uint64_t pde    = PDE(addr);
+    uint64_t pte    = PTE(addr);
+
+    page_t *pml4t = btable->root;
+    if (pml4t->entry[pml4te] == 0)
+        pml4t->entry[pml4te] = alloc_page(btable);
+
+    page_t *pdpt = PGPTR(pml4t->entry[pml4te]);
+    if (pdpt->entry[pdpte] == 0)
+        pdpt->entry[pdpte] = alloc_page(btable);
+
+    page_t *pdt = PGPTR(pdpt->entry[pdpte]);
+    if (pdt->entry[pde] == 0)
+        pdt->entry[pde] = alloc_page(btable);
+
+    page_t *pt = PGPTR(pdt->entry[pde]);
+    pt->entry[pte] = addr | flags;
+}
+
+static void
+map_range(btable_t *btable, uint64_t addr, uint64_t size, uint64_t flags)
+{
+    // Calculate the page-aligned extents of the block of memory.
+    uint64_t begin = PAGE_ALIGN_DOWN(addr);
+    uint64_t term  = PAGE_ALIGN_UP(addr + size);
+
+    // If necessary, create new page in the boot page table to cover the
+    // pages.
+    for (uint64_t addr = begin; addr < term; addr += PAGE_SIZE) {
+        if (!is_mapped(btable, addr))
+            create_page(btable, addr, flags);
+    }
+}
+
+static void
+map_table(btable_t *btable, const struct acpi_hdr *hdr)
+{
+    uint64_t addr  = (uint64_t)hdr;
+    uint64_t flags = PF_PRESENT | PF_RW;
+
+    // First map the header itself, since we can't read its length until
+    // it's mapped.
+    map_range(btable, addr, sizeof(struct acpi_hdr), flags);
+
+    // Now that we can read the header's length, map the entire ACPI table.
+    map_range(btable, addr, hdr->length, flags);
+
+    // Calculate the page-aligned extents of the ACPI table, and add them to
+    // the BIOS-generated memory table.
+    memtable_add(
+        PAGE_ALIGN_DOWN(addr),
+        PAGE_ALIGN_UP(addr + hdr->length) - PAGE_ALIGN_DOWN(addr),
+        MEMTYPE_UNCACHED);
+}
+
+static void
+read_xsdt(btable_t *btable)
 {
     const struct acpi_xsdt *xsdt = acpi.xsdt;
     const struct acpi_hdr  *xhdr = &xsdt->hdr;
@@ -103,12 +221,12 @@ read_xsdt()
          "[acpi] oem='%.6s' tbl='%.8s' rev=%#x creator='%.4s'",
          xhdr->oemid, xhdr->oemtableid, xhdr->oemrevision, xhdr->creatorid);
 
+    // Read each of the tables referenced by the XSDT table.
     int tables = (int)(xhdr->length - sizeof(*xhdr)) / sizeof(uint64_t);
     for (int i = 0; i < tables; i++) {
         const struct acpi_hdr *hdr =
             (const struct acpi_hdr *)xsdt->ptr_table[i];
-        map_range((uint64_t)hdr, sizeof(struct acpi_hdr));
-        map_range((uint64_t)hdr, hdr->length);
+        map_table(btable, hdr);
         logf(LOG_INFO, "[acpi] Found %.4s table at %#lx.",
              hdr->signature, (uint64_t)hdr);
         read_table(hdr);
@@ -116,7 +234,7 @@ read_xsdt()
 }
 
 static void
-read_rsdt()
+read_rsdt(btable_t *btable)
 {
     const struct acpi_rsdt *rsdt = acpi.rsdt;
     const struct acpi_hdr  *rhdr = &rsdt->hdr;
@@ -125,12 +243,12 @@ read_rsdt()
          "[acpi] oem='%.6s' tbl='%.8s' rev=%#x creator='%.4s'",
          rhdr->oemid, rhdr->oemtableid, rhdr->oemrevision, rhdr->creatorid);
 
+    // Read each of the tables referenced by the RSDT table.
     int tables = (int)(rhdr->length - sizeof(*rhdr)) / sizeof(uint32_t);
     for (int i = 0; i < tables; i++) {
         const struct acpi_hdr *hdr =
             (const struct acpi_hdr *)(uintptr_t)rsdt->ptr_table[i];
-        map_range((uint64_t)hdr, sizeof(struct acpi_hdr));
-        map_range((uint64_t)hdr, hdr->length);
+        map_table(btable, hdr);
         logf(LOG_INFO, "[acpi] Found %.4s table at %#lx.",
              hdr->signature, (uint64_t)hdr);
         read_table(hdr);
@@ -140,6 +258,8 @@ read_rsdt()
 static const struct acpi_rsdp *
 find_rsdp(uint64_t addr, uint64_t size)
 {
+    // Scan memory for the 8-byte RSDP signature. It's guaranteed to be
+    // aligned on a 16-byte boundary.
     const uint64_t *ptr  = (const uint64_t *)addr;
     const uint64_t *term = (const uint64_t *)(addr + size);
     for (; ptr < term; ptr += 2) {
@@ -152,8 +272,17 @@ find_rsdp(uint64_t addr, uint64_t size)
 void
 acpi_init()
 {
-    // Scan the extended BIOS and system ROM memory regions for the ACPI
-    // RSDP table.
+    // Initialize the state of the temporary page table generated by the boot
+    // loader. We'll be updating it as we scan ACPI tables.
+    btable_t btable =
+    {
+        .root      = (page_t *)MEM_BOOT_PAGETABLE,
+        .next_page = (page_t *)MEM_BOOT_PAGETABLE_LOADED,
+        .term_page = (page_t *)MEM_BOOT_PAGETABLE_END,
+    };
+
+    // Scan the extended BIOS and system ROM memory regions for the ACPI RSDP
+    // table.
     acpi.rsdp = find_rsdp(MEM_EXTENDED_BIOS, MEM_EXTENDED_BIOS_SIZE);
     if (acpi.rsdp == NULL)
         acpi.rsdp = find_rsdp(MEM_SYSTEM_ROM, MEM_SYSTEM_ROM_SIZE);
@@ -177,23 +306,37 @@ acpi_init()
         else {
             logf(LOG_INFO, "[acpi] Found XSDT table at %#lx.",
                  (uintptr_t)acpi.xsdt);
-            map_range((uint64_t)acpi.xsdt, sizeof(struct acpi_xsdt));
-            read_xsdt();
-            return;
+            map_table(&btable, &acpi.xsdt->hdr);
+            read_xsdt(&btable);
         }
     }
 
     // Fall back to the ACPI1.0 RSDT table if XSDT isn't available.
-    acpi.rsdt = (const struct acpi_rsdt *)(uintptr_t)acpi.rsdp->ptr_rsdt;
-    if (acpi.rsdt == NULL) {
-        logf(LOG_CRIT, "[acpi] No RSDT table found.");
-        fatal();
+    if (acpi.xsdt == NULL) {
+        acpi.rsdt = (const struct acpi_rsdt *)(uintptr_t)acpi.rsdp->ptr_rsdt;
+        if (acpi.rsdt == NULL) {
+            logf(LOG_CRIT, "[acpi] No RSDT table found.");
+            fatal();
+        }
+        else {
+            logf(LOG_INFO, "[acpi] Found RSDT table at %#lx.",
+                 (uintptr_t)acpi.rsdt);
+            map_table(&btable, &acpi.rsdt->hdr);
+            read_rsdt(&btable);
+        }
     }
-    else {
-        logf(LOG_INFO, "[acpi] Found RSDT table at %#lx.",
-             (uintptr_t)acpi.rsdt);
-        map_range((uint64_t)acpi.rsdt, sizeof(struct acpi_rsdt));
-        read_rsdt();
+
+    // Reserve local APIC memory-mapped I/O addresses.
+    if (acpi.madt != NULL) {
+        memtable_add(PAGE_ALIGN_DOWN(acpi.madt->ptr_local_apic), PAGE_SIZE,
+                     MEMTYPE_UNCACHED);
+    }
+
+    // Reserve I/O APIC memory-mapped I/O addresses.
+    const struct acpi_madt_io_apic *io = NULL;
+    while ((io = acpi_next_io_apic(io)) != NULL) {
+        memtable_add(PAGE_ALIGN_DOWN(io->ptr_io_apic), PAGE_SIZE,
+                     MEMTYPE_UNCACHED);
     }
 }
 

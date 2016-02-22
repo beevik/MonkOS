@@ -92,7 +92,7 @@ reserve_region(const memtable_t *table, uint64_t size, uint32_t alignshift)
             continue;
 
         // Reserve the aligned memory region and return its address.
-        memtable_reserve(paddr, size);
+        memtable_add(paddr, size, MEMTYPE_RESERVED);
         return (void *)paddr;
     }
     return NULL;
@@ -102,14 +102,12 @@ void
 page_init()
 {
     const memtable_t *table = memtable();
-
-    // Find the last possible physical address in the memory table.
-    const memregion_t *lastregion = &table->region[table->count - 1];
-    uint64_t           lastaddr   = (lastregion->addr + lastregion->size);
+    if (table->last_usable == 0)
+        fatal();
 
     // Calculate the size of the page frame database. It needs to describe
     // each page up to and including the last physical address.
-    pgcontext.pfcount = lastaddr / PAGE_SIZE;
+    pgcontext.pfcount = table->last_usable / PAGE_SIZE;
     uint64_t pfdbsize = pgcontext.pfcount * sizeof(pf_t);
 
     // Round the database size up to the nearest 2MiB since we'll be using

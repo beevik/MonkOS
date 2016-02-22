@@ -15,16 +15,18 @@
 #include <kernel/mem/paging.h>
 #include <kernel/mem/table.h>
 
-/// Structure used to track the kernel's page table.
-typedef struct ktable
+/// Structure used to track the growth of the kernel's page table.
+typedef struct kptable
 {
-    page_t *pml4t;               ///< The top-level page table
+    page_t *root;                ///< The top-level (PML4) page table
     page_t *next_page;           ///< The next page to use when allocating
     page_t *term_page;           ///< Just beyond the last available page.
-} ktable_t;
+} kptable_t;
 
-static ktable_t ktable;
+static kptable_t kptable;
 
+/// Return flags for large-page leaf entries in level 3 (PDPT) and level 2
+/// (PDT) tables.
 static uint64_t
 get_pdflags(uint32_t memtype)
 {
@@ -35,6 +37,7 @@ get_pdflags(uint32_t memtype)
             return PF_PRESENT | PF_RW | PF_PS | PF_PWT | PF_PCD;
 
         case MEMTYPE_BAD:
+        case MEMTYPE_UNMAPPED:
             return 0;
 
         default:
@@ -42,6 +45,7 @@ get_pdflags(uint32_t memtype)
     }
 }
 
+/// Return flags for entries in level 1 (PT) tables.
 static uint64_t
 get_ptflags(uint32_t memtype)
 {
@@ -52,6 +56,7 @@ get_ptflags(uint32_t memtype)
             return PF_PRESENT | PF_RW | PF_PS | PF_PWT | PF_PCD;
 
         case MEMTYPE_BAD:
+        case MEMTYPE_UNMAPPED:
             return 0;
 
         default:
@@ -62,9 +67,9 @@ get_ptflags(uint32_t memtype)
 static inline uint64_t
 alloc_page()
 {
-    if (ktable.next_page == ktable.term_page)
+    if (kptable.next_page == kptable.term_page)
         fatal();
-    return (uint64_t)ktable.next_page++ | PF_PRESENT | PF_RW;
+    return (uint64_t)kptable.next_page++ | PF_PRESENT | PF_RW;
 }
 
 static void
@@ -73,11 +78,11 @@ create_huge_page(uint64_t addr, uint32_t memtype)
     uint64_t pml4te = PML4E(addr);
     uint64_t pdpte  = PDPTE(addr);
 
-    page_t *pml4t = ktable.pml4t;
+    page_t *pml4t = kptable.root;
     if (pml4t->entry[pml4te] == 0)
         pml4t->entry[pml4te] = alloc_page();
 
-    page_t *pdpt = PGPTR(ktable.pml4t->entry[pml4te]);
+    page_t *pdpt = PGPTR(pml4t->entry[pml4te]);
     pdpt->entry[pdpte] = addr | get_pdflags(memtype);
 }
 
@@ -88,11 +93,11 @@ create_large_page(uint64_t addr, uint32_t memtype)
     uint64_t pdpte  = PDPTE(addr);
     uint64_t pde    = PDE(addr);
 
-    page_t *pml4t = ktable.pml4t;
+    page_t *pml4t = kptable.root;
     if (pml4t->entry[pml4te] == 0)
         pml4t->entry[pml4te] = alloc_page();
 
-    page_t *pdpt = PGPTR(ktable.pml4t->entry[pml4te]);
+    page_t *pdpt = PGPTR(pml4t->entry[pml4te]);
     if (pdpt->entry[pdpte] == 0)
         pdpt->entry[pdpte] = alloc_page();
 
@@ -108,11 +113,11 @@ create_small_page(uint64_t addr, uint32_t memtype)
     uint64_t pde    = PDE(addr);
     uint64_t pte    = PTE(addr);
 
-    page_t *pml4t = ktable.pml4t;
+    page_t *pml4t = kptable.root;
     if (pml4t->entry[pml4te] == 0)
         pml4t->entry[pml4te] = alloc_page();
 
-    page_t *pdpt = PGPTR(ktable.pml4t->entry[pml4te]);
+    page_t *pdpt = PGPTR(pml4t->entry[pml4te]);
     if (pdpt->entry[pdpte] == 0)
         pdpt->entry[pdpte] = alloc_page();
 
@@ -125,8 +130,17 @@ create_small_page(uint64_t addr, uint32_t memtype)
 }
 
 static void
-map_region(const memregion_t *region)
+map_region(const memtable_t *table, const memregion_t *region)
 {
+    // Don't map bad (or unmapped) memory.
+    if (region->type == MEMTYPE_UNMAPPED || region->type == MEMTYPE_BAD)
+        return;
+
+    // Don't map reserved regions beyond the last usable physical address.
+    if (region->type == MEMTYPE_RESERVED &&
+        region->addr >= table->last_usable)
+        return;
+
     uint64_t addr = region->addr;
     uint64_t term = region->addr + region->size;
 
@@ -163,57 +177,17 @@ map_memory()
     // Zero all page table memory.
     memzero((void *)MEM_KERNEL_PAGETABLE, MEM_KERNEL_PAGETABLE_SIZE);
 
-    ktable.pml4t     = (page_t *)MEM_KERNEL_PAGETABLE;
-    ktable.next_page = (page_t *)(MEM_KERNEL_PAGETABLE + PAGE_SIZE);
-    ktable.term_page = (page_t *)MEM_KERNEL_PAGETABLE_END;
+    kptable.root      = (page_t *)MEM_KERNEL_PAGETABLE;
+    kptable.next_page = (page_t *)(MEM_KERNEL_PAGETABLE + PAGE_SIZE);
+    kptable.term_page = (page_t *)MEM_KERNEL_PAGETABLE_END;
 
     // For each memory region in the BIOS-supplied memory table, create
     // appropriate page table entries.
     const memtable_t *table = memtable();
     for (uint64_t r = 0; r < table->count; r++)
-        map_region(&table->region[r]);
+        map_region(table, &table->region[r]);
 
     // Install the new page table.
-    uint64_t addr = (uint64_t)ktable.pml4t;
+    uint64_t addr = (uint64_t)kptable.root;
     set_pagetable(addr);
-}
-
-static bool
-is_mapped(uint64_t addr)
-{
-    uint64_t pml4te = PML4E(addr);
-    uint64_t pdpte  = PDPTE(addr);
-    uint64_t pde    = PDE(addr);
-    uint64_t pte    = PTE(addr);
-
-    page_t *pml4t = ktable.pml4t;
-    if (pml4t->entry[pml4te] == 0)
-        return false;
-
-    page_t *pdpt = PGPTR(ktable.pml4t->entry[pml4te]);
-    if (pdpt->entry[pdpte] == 0)
-        return false;
-    if (pdpt->entry[pdpte] & PF_PS)
-        return true;
-
-    page_t *pdt = PGPTR(pdpt->entry[pdpte]);
-    if (pdt->entry[pde] == 0)
-        return false;
-    if (pdt->entry[pde] & PF_PS)
-        return true;
-
-    page_t *pt = PGPTR(pdt->entry[pde]);
-    return pt->entry[pte] != 0;
-}
-
-void
-map_range(uint64_t addr, uint64_t size)
-{
-    uint64_t begin = addr & ~(PAGE_SIZE - 1);
-    uint64_t term  = (addr + size + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
-
-    for (uint64_t addr = begin; addr < term; addr += PAGE_SIZE) {
-        if (!is_mapped(addr))
-            create_small_page(addr, MEMTYPE_RESERVED);
-    }
 }

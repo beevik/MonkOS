@@ -8,14 +8,16 @@
 //============================================================================
 
 // Physical memory layout
-#define MEM_GDT                     0x00000100
-#define MEM_TSS                     0x00000200
-#define MEM_GLOBALS                 0x00000500
 #define MEM_IDT                     0x00001000
 #define MEM_ISR_TABLE               0x00002000
 #define MEM_ISR_THUNKS              0x00002800
+#define MEM_GDT                     0x00003000
+#define MEM_TSS                     0x00003100
+#define MEM_GLOBALS                 0x00003200
 #define MEM_BOOT_PAGETABLE          0x00010000
-#define MEM_KERNEL_PAGETABLE        0x00014000
+#define MEM_BOOT_PAGETABLE_LOADED   0x00014000
+#define MEM_BOOT_PAGETABLE_END      0x00020000
+#define MEM_KERNEL_PAGETABLE        0x00020000
 #define MEM_KERNEL_PAGETABLE_END    0x00070000
 #define MEM_TABLE_BIOS              0x00070000
 #define MEM_STACK_NMI_BOTTOM        0x0008a000
@@ -38,7 +40,7 @@
 #define MEM_EXTENDED_BIOS_SIZE      0x00000800
 #define MEM_VIDEO_SIZE              0x00020000
 #define MEM_SYSTEM_ROM_SIZE         0x00040000
-#define MEM_KERNEL_PAGETABLE_SIZE   0x0005c000
+#define MEM_KERNEL_PAGETABLE_SIZE   0x00050000
 
 //----------------------------------------------------------------------------
 //  @function   map_memory
@@ -47,13 +49,3 @@
 //----------------------------------------------------------------------------
 void
 map_memory();
-
-//----------------------------------------------------------------------------
-//  @function   map_range
-/// @brief      Identity-map the range of memory from addr to addr+size.
-/// @details    Use this function to patch the kernel's virtual memory map
-///             with memory ranges that may not have been included in the
-///             BIOS memory map.
-//----------------------------------------------------------------------------
-void
-map_range(uint64_t addr, uint64_t size);

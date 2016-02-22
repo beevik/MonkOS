@@ -17,11 +17,11 @@
 
 Mem.BIOS.IVT                        equ     0x00000000
 Mem.BIOS.Data                       equ     0x00000400
-Mem.GDT                             equ     0x00000100
-Mem.TSS64                           equ     0x00000200
-Mem.Globals                         equ     0x00000500
 Mem.Sector.Buffer                   equ     0x00000800
-Mem.Stack.Bottom                    equ     0x00001000
+Mem.GDT                             equ     0x00003000
+Mem.TSS64                           equ     0x00003100
+Mem.Globals                         equ     0x00003200
+Mem.Stack.Bottom                    equ     0x00004000
 Mem.Stack.Top                       equ     0x00007c00
 Mem.Loader1                         equ     0x00007c00
 Mem.Loader2                         equ     0x00008000

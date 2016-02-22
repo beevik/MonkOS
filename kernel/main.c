@@ -35,6 +35,11 @@
 static void
 sysinit()
 {
+    // Memory initialization
+    acpi_init();
+    memtable_init();
+    page_init();
+
     // Interrupt initialization
     interrupts_init();
     exceptions_init();
@@ -42,12 +47,7 @@ sysinit()
     // Device initialization
     tty_init();
     kb_init();
-    timer_init(20);              // 20Hz
-
-    // Memory initialization
-    memtable_init();
-    page_init();
-    acpi_init();
+    timer_init(20);     // 20Hz
 
     // System call initialization
     syscall_init();

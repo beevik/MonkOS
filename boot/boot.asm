@@ -80,9 +80,9 @@ org 0
 ;
 ; Memory regions used or modified by this code:
 ;
-;   00000500 - 000006ff          512 bytes     Global variables
 ;   00000800 - 00000fff        2,048 bytes     Cdrom sector read buffer
-;   00001000 - 00007bff       27,648 bytes     Stack
+;   00003200 - 00003fff        3,584 bytes     Global variables
+;   00004000 - 00007bff       27,648 bytes     Stack
 ;   00008000 - 0000ffff       32,768 bytes     Second-stage boot loader
 ;
 ;=============================================================================

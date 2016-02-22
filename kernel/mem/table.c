@@ -17,16 +17,17 @@
 #include <kernel/mem/table.h>
 
 // Pointer to the BIOS-generated memory table.
-static memtable_t *table = (memtable_t *)MEM_TABLE_BIOS;
+static memtable_t *table       = (memtable_t *)MEM_TABLE_BIOS;
+static bool        initialized = false;
 
 /// Add a memory region to the end of the memory table.
 static void
-add_region(uint64_t addr, uint64_t size, int32_t type)
+add_region(uint64_t addr, uint64_t size, enum memtype type)
 {
     memregion_t *r = table->region + table->count;
     r->addr  = addr;
     r->size  = size;
-    r->type  = type;
+    r->type  = (int32_t)type;
     r->flags = 0;
 
     ++table->count;
@@ -257,15 +258,16 @@ consolidate_neighbors()
     }
 }
 
-/// Remove entries from the end of the memory table if they are of the
-/// requested type.
 static void
-remove_trailing(int32_t type)
+update_last_usable()
 {
-    memregion_t *curr = table->region + table->count - 1;
-    while (curr >= table->region && curr->type == type) {
-        --table->count;
-        --curr;
+    table->last_usable = 0;
+    for (int i = table->count - 1; i >= 0; i--) {
+        const memregion_t *r = &table->region[i];
+        if (r->type == MEMTYPE_USABLE) {
+            table->last_usable = r->addr + r->size;
+            break;
+        }
     }
 }
 
@@ -285,8 +287,8 @@ normalize()
     // Squash adjacent memory regions of the same type.
     consolidate_neighbors();
 
-    // Remove trailing regions of "reserved" memory.
-    remove_trailing(MEMTYPE_RESERVED);
+    // Calculate the end of the last usable memory region.
+    update_last_usable();
 }
 
 void
@@ -299,8 +301,14 @@ memtable_init()
     // data structures.
     add_region(0, MEM_KERNEL_IMAGE_END, MEMTYPE_RESERVED);
 
+    // Mark the first page of memory as unmapped so deferencing a null pointer
+    // always faults.
+    add_region(0, 0x1000, MEMTYPE_UNMAPPED);
+
     // Fix up memory table.
     normalize();
+
+    initialized = true;
 }
 
 const memtable_t *
@@ -310,8 +318,10 @@ memtable()
 }
 
 void
-memtable_reserve(uint64_t addr, uint64_t size)
+memtable_add(uint64_t addr, uint64_t size, enum memtype type)
 {
-    add_region(addr, size, MEMTYPE_RESERVED);
-    normalize();
+    add_region(addr, size, type);
+
+    if (initialized)
+        normalize();
 }
