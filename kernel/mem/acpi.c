@@ -35,23 +35,23 @@
 /// in ACPI tables.
 typedef struct btable
 {
-    page_t *root;                ///< The top-level (PML4) page table
-    page_t *next_page;           ///< The next page to use when allocating
-    page_t *term_page;           ///< Just beyond the last available page
+    page_t *root;           ///< The top-level (PML4) page table
+    page_t *next_page;      ///< The next page to use when allocating
+    page_t *term_page;      ///< Just beyond the last available page
 } btable_t;
 
 struct acpi_rsdp
 {
-    char     signature[8]; ///< Contains "RSD PTR "
-    uint8_t  checksum;     ///< Covers up to (and including) ptr_rsdt
-    char     oemid[6];     ///< Supplied by the OEM
-    uint8_t  revision;     ///< 0=1.0, 1=2.0, 2=3.0
-    uint32_t ptr_rsdt;     ///< 32-bit pointer to RSDT table
+    char     signature[8];  ///< Contains "RSD PTR "
+    uint8_t  checksum;      ///< Covers up to (and including) ptr_rsdt
+    char     oemid[6];      ///< Supplied by the OEM
+    uint8_t  revision;      ///< 0=1.0, 1=2.0, 2=3.0
+    uint32_t ptr_rsdt;      ///< 32-bit pointer to RSDT table
 
     // The following fields do not exist in ACPI1.0
-    uint32_t length;       ///< RSDT table length, including header
-    uint64_t ptr_xsdt;     ///< 64-bit pointer to XSDT table
-    uint8_t  checksum_ex;  ///< Covers entire rsdp structure
+    uint32_t length;        ///< RSDT table length, including header
+    uint64_t ptr_xsdt;      ///< 64-bit pointer to XSDT table
+    uint8_t  checksum_ex;   ///< Covers entire rsdp structure
     uint8_t  reserved[3];
 } PACKSTRUCT;
 
@@ -75,6 +75,7 @@ struct acpi
     const struct acpi_xsdt *xsdt;
     const struct acpi_fadt *fadt;
     const struct acpi_madt *madt;
+    const struct acpi_mcfg *mcfg;
 };
 
 static struct acpi acpi;
@@ -94,6 +95,13 @@ read_madt(const struct acpi_hdr *hdr)
 }
 
 static void
+read_mcfg(const struct acpi_hdr *hdr)
+{
+    const struct acpi_mcfg *mcfg = (const struct acpi_mcfg *)hdr;
+    acpi.mcfg = mcfg;
+}
+
+static void
 read_table(const struct acpi_hdr *hdr)
 {
     uint32_t sig = *(const uint32_t *)hdr->signature;
@@ -105,6 +113,10 @@ read_table(const struct acpi_hdr *hdr)
 
         case SIGNATURE_MADT:
             read_madt(hdr);
+            break;
+
+        case SIGNATURE_MCFG:
+            read_mcfg(hdr);
             break;
 
         default:
@@ -182,8 +194,8 @@ map_range(btable_t *btable, uint64_t addr, uint64_t size, uint64_t flags)
     uint64_t begin = PAGE_ALIGN_DOWN(addr);
     uint64_t term  = PAGE_ALIGN_UP(addr + size);
 
-    // If necessary, create new page in the boot page table to cover the
-    // pages.
+    // If necessary, create new pages in the boot page table to cover the
+    // address range.
     for (uint64_t addr = begin; addr < term; addr += PAGE_SIZE) {
         if (!is_mapped(btable, addr))
             create_page(btable, addr, flags);
@@ -208,7 +220,7 @@ map_table(btable_t *btable, const struct acpi_hdr *hdr)
     memtable_add(
         PAGE_ALIGN_DOWN(addr),
         PAGE_ALIGN_UP(addr + hdr->length) - PAGE_ALIGN_DOWN(addr),
-        MEMTYPE_UNCACHED);
+        MEMTYPE_ACPI);
 }
 
 static void
@@ -405,4 +417,24 @@ acpi_next_iso(const struct acpi_madt_iso *prev)
 {
     return (const struct acpi_madt_iso *)madt_find(
         ACPI_MADT_ISO, prev);
+}
+
+const struct acpi_mcfg_addr *
+acpi_next_mcfg_addr(const struct acpi_mcfg_addr *prev)
+{
+    const struct acpi_mcfg *mcfg = acpi.mcfg;
+    if (mcfg == NULL)
+        return NULL;
+
+    const struct acpi_mcfg_addr *ptr;
+    if (prev == NULL)
+        ptr = (const struct acpi_mcfg_addr *)(mcfg + 1);
+    else
+        ptr = prev + 1;
+
+    const uint8_t *term = (const uint8_t *)mcfg + mcfg->hdr.length;
+    if ((const uint8_t *)ptr < term)
+        return ptr;
+    else
+        return NULL;
 }

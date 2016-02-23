@@ -100,10 +100,21 @@ log_apic_stats()
 }
 
 static void
+log_pcie_stats()
+{
+    const struct acpi_mcfg_addr *addr = NULL;
+    while ((addr = acpi_next_mcfg_addr(addr)) != NULL) {
+        logf(LOG_INFO, "PCIe addr=0x%08x  grp=%-2u bus=%02x..%02x",
+             addr->base, addr->seg_group, addr->bus_start, addr->bus_end);
+    }
+}
+
+static void
 do_test()
 {
     log_addcallback(LOG_DEFAULT, on_log);
     log_apic_stats();
+    log_pcie_stats();
 
     // Test code below...
     for (;;) {

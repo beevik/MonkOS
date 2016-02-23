@@ -77,6 +77,31 @@ struct acpi_fadt
 } PACKSTRUCT;
 
 //----------------------------------------------------------------------------
+//  @struct     acpi_mcfg
+/// @brief      PCI express Mapped Configuration (MCFG) table.
+//----------------------------------------------------------------------------
+struct acpi_mcfg
+{
+    struct acpi_hdr hdr;
+
+    uint64_t reserved;
+} PACKSTRUCT;
+
+//----------------------------------------------------------------------------
+//  @struct     acpi_mcfg_addr
+/// @brief      MCFG entry, one or more of which appears at the tail of the
+///             acpi_mcfg struct.
+//----------------------------------------------------------------------------
+struct acpi_mcfg_addr
+{
+    uint64_t base;          ///< Base address of configuration mechanism
+    uint16_t seg_group;     ///< PCI segment group number
+    uint8_t  bus_start;     ///< Start PCI bus number
+    uint8_t  bus_end;       ///< End PCI bus number
+    uint32_t reserved;
+} PACKSTRUCT;
+
+//----------------------------------------------------------------------------
 //  @struct     acpi_madt
 /// @brief      Multiple APIC description table (MADT).
 //----------------------------------------------------------------------------
@@ -226,3 +251,14 @@ acpi_next_io_apic(const struct acpi_madt_io_apic *prev);
 //----------------------------------------------------------------------------
 const struct acpi_madt_iso *
 acpi_next_iso(const struct acpi_madt_iso *prev);
+
+//----------------------------------------------------------------------------
+//  @function   acpi_next_mcfg_addr
+/// @brief      Return a pointer to the next Mapped Configuration (MCFG)
+///             address entry, used for PCIe.
+/// @param[in]  prev    Pointer to the MCFG entry returned by a previous call
+///                     to this function. Pass NULL for the first call.
+/// @returns    A pointer to a the next MCFG entry, or NULL if none remain.
+//----------------------------------------------------------------------------
+const struct acpi_mcfg_addr *
+acpi_next_mcfg_addr(const struct acpi_mcfg_addr *prev);
