@@ -336,26 +336,37 @@ tty_printchar(tty_t *cons, const char **strptr)
 void
 tty_print(int id, const char *str)
 {
-    if ((id < 0) || (id >= MAX_TTYS)) {
+    if ((id < 0) || (id >= MAX_TTYS))
         id = 0;
-    }
 
     tty_t *cons = &tty[id];
-    for (; *str; ++str) {
+    for (; *str; ++str)
         tty_printchar(cons, &str);
-    }
 
-    if (cons == active_tty) {
+    if (cons == active_tty)
         update_cursor();
-    }
+}
+
+void
+tty_printc(int id, char ch)
+{
+    if ((id < 0) || (id >= MAX_TTYS))
+        id = 0;
+
+    const char  str[2] = { ch, 0 };
+    const char *ptr    = str;
+    tty_t      *cons   = &tty[id];
+    tty_printchar(cons, &ptr);
+
+    if (cons == active_tty)
+        update_cursor();
 }
 
 int
 tty_printf(int id, const char *format, ...)
 {
-    if ((id < 0) || (id >= MAX_TTYS)) {
+    if ((id < 0) || (id >= MAX_TTYS))
         id = 0;
-    }
 
     va_list args;
     va_start(args, format);

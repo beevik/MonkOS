@@ -123,12 +123,10 @@ static kbstate_t state;
 static inline void
 toggle(uint8_t flag)
 {
-    if (state.meta & flag) {
+    if (state.meta & flag)
         state.meta &= ~flag;
-    }
-    else {
+    else
         state.meta |= flag;
-    }
 }
 
 static void
@@ -142,9 +140,8 @@ addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
     // There is no need for an atomic comparison here, because the ISR
     // function calling addkey can never be interrupted by anything that
     // touches the buffer.
-    if (state.buf_size == MAX_BUFSIZ) {
+    if (state.buf_size == MAX_BUFSIZ)
         return;
-    }
 
     key_t key =
     {
@@ -156,9 +153,8 @@ addkey(uint8_t brk, uint8_t meta, uint8_t code, uint8_t ch)
 
     // Add the character to the tail of the buffer.
     state.buf[state.buf_tail++] = key;
-    if (state.buf_tail == MAX_BUFSIZ) {
+    if (state.buf_tail == MAX_BUFSIZ)
         state.buf_tail = 0;
-    }
 
     // state.buf_size++;
     atomic_fetch_add_explicit(&state.buf_size, 1, memory_order_relaxed);
@@ -191,9 +187,8 @@ isr_keyboard(const interrupt_context_t *context)
 
     // Alter shift state based on capslock state.
     if (state.meta & META_CAPSLOCK) {
-        if ((ukeycode >= 'a') && (ukeycode <= 'z')) {
+        if ((ukeycode >= 'a') && (ukeycode <= 'z'))
             shifted = !shifted;
-        }
     }
 
     // Convert the scan code to a properly shifted key code.
@@ -227,7 +222,7 @@ isr_keyboard(const interrupt_context_t *context)
                 toggle(META_SCRLOCK);
                 break;
         }
-        addkey(0, state.meta, ukeycode, 0);
+        addkey(KEYBRK_UP, state.meta, ukeycode, 0);
     }
     // Key down?
     else {
@@ -256,13 +251,12 @@ isr_keyboard(const interrupt_context_t *context)
                     break;
 
                 case META_CTRL:
-                    if ((ukeycode >= 'a') && (ukeycode <= 'z')) {
+                    if ((ukeycode >= 'a') && (ukeycode <= 'z'))
                         ch = (char)(ukeycode - 'a' + 1);
-                    }
                     break;
             }
         }
-        addkey(1, state.meta, ukeycode, ch);
+        addkey(KEYBRK_DOWN, state.meta, ukeycode, ch);
     }
 
 done:
@@ -303,23 +297,20 @@ kb_getchar()
         // Buffer empty? (state.buf_size == 0?) Check atomically because
         // this function could be interrupted by the keyboard ISR.
         uint8_t size = 0;
-        if (atomic_compare_exchange_strong(&state.buf_size, &size, 0)) {
+        if (atomic_compare_exchange_strong(&state.buf_size, &size, 0))
             return 0;
-        }
 
         // Pull the next character from the head of the buffer.
         char ch = state.buf[state.buf_head++].ch;
-        if (state.buf_head == MAX_BUFSIZ) {
+        if (state.buf_head == MAX_BUFSIZ)
             state.buf_head = 0;
-        }
 
         // state.buf_size--
         atomic_fetch_sub_explicit(&state.buf_size, 1, memory_order_relaxed);
 
         // Valid character?
-        if (ch != 0) {
+        if (ch != 0)
             return ch;
-        }
     }
 }
 
@@ -336,9 +327,8 @@ kb_getkey(key_t *key)
 
     // Pull the next character from the head of the buffer.
     *key = state.buf[state.buf_head++];
-    if (state.buf_head == MAX_BUFSIZ) {
+    if (state.buf_head == MAX_BUFSIZ)
         state.buf_head = 0;
-    }
 
     // state.buf_size--
     atomic_fetch_sub_explicit(&state.buf_size, 1, memory_order_relaxed);

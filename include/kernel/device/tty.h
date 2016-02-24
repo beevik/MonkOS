@@ -183,6 +183,17 @@ void
 tty_print(int id, const char *str);
 
 //----------------------------------------------------------------------------
+//  @function   tty_printc
+/// @brief      Output a single character to the virtual console using
+///             the console's current text color and screen position.
+/// @details    See tty_print for further details.
+/// @param[in]  id      Virtual tty id (0-3).
+/// @param[in]  ch      The character to be printed.
+//----------------------------------------------------------------------------
+void
+tty_printc(int id, char ch);
+
+//----------------------------------------------------------------------------
 //  @function   tty_printf
 /// @brief      Output a printf-formatted string to the virtual console using
 ///             the console's current text color and screen position.

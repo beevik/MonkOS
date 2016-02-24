@@ -54,6 +54,22 @@ size_t
 strlcat(char *dst, const char *src, size_t dstsize);
 
 //----------------------------------------------------------------------------
+//  @function   strcmp
+/// @brief      Compare two strings and return a value indicating their
+///             lexicographical order.
+/// @details    String comparison continues until a null terminator is reached
+///             in one of the strings.
+/// @param[in]  str1    Pointer to the first string.
+/// @param[in]  str2    Pointer to the second string.
+/// @returns    < 0 if the first character in str1 that doesn't match a
+///                 character in str2 has a lower value.
+///             = 0 if the two strings are identical.
+///             > 0 otherwise.
+//----------------------------------------------------------------------------
+int
+strcmp(const char *str1, const char *str2);
+
+//----------------------------------------------------------------------------
 //  @function   memcpy
 /// @brief      Copy bytes from one memory region to another.
 /// @details    If the memory regions overlap, this function's behavior

@@ -15,6 +15,10 @@
 // Constants
 //----------------------------------------------------------------------------
 
+// Keyboard break codes
+#define KEYBRK_DOWN    0          ///< Key-down break code
+#define KEYBRK_UP      1          ///< Key-up break code
+
 // Meta-key bit masks
 #define META_SHIFT     (1 << 0)   ///< Set while the shift key is pressed.
 #define META_CTRL      (1 << 1)   ///< Set while the ctrl key is pressed.
@@ -82,7 +86,7 @@ typedef enum keycode keycode_t;
 //----------------------------------------------------------------------------
 struct key
 {
-    uint8_t brk;                 ///< Break code. 0 = key down, 1 = key up.
+    uint8_t brk;                 ///< KEYBRK_UP or KEYBRK_DOWN
     uint8_t meta;                ///< Metakey mask when key was generated.
     uint8_t code;                ///< Keycode value (type = keycode_t).
     uint8_t ch;                  ///< Character value, if valid.
