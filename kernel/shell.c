@@ -18,11 +18,16 @@
 
 #define TTY_CONSOLE  0
 
-/*
- *  Shell handler modes
- *
- */
+// Forward declarations
+static void command_prompt();
+static void command_run();
+static void keycode_run();
+static bool cmd_display_help();
+static bool cmd_display_apic();
+static bool cmd_display_pcie();
+static bool cmd_switch_to_keycodes();
 
+/// Shell mode descriptor.
 typedef struct mode
 {
     void (*start)();
@@ -30,23 +35,15 @@ typedef struct mode
     void (*stop)();
 } mode_t;
 
-// Interactive shell mode
-static void
-shell_prompt();
-static void
-shell_run();
-
-static mode_t mode_shell =
+// Standard shell command mode
+static mode_t mode_command =
 {
-    shell_prompt,
-    shell_run,
+    command_prompt,
+    command_run,
     NULL
 };
 
-// Keyboard key-code display mode
-static void
-keycode_run();
-
+// Keycode display mode
 static mode_t mode_keycode =
 {
     NULL,
@@ -54,7 +51,7 @@ static mode_t mode_keycode =
     NULL
 };
 
-static mode_t *active_mode = &mode_shell;
+static mode_t *active_mode;
 
 static void
 switch_mode(mode_t *mode)
@@ -68,20 +65,7 @@ switch_mode(mode_t *mode)
         active_mode->start();
 }
 
-/*
- *  Interactive shell commands
- *
- */
-
-static bool
-cmd_display_help();
-static bool
-cmd_display_apic();
-static bool
-cmd_display_pcie();
-static bool
-cmd_switch_to_keycodes();
-
+/// A command descriptor, describing each command accepted in command mode.
 struct cmd
 {
     const char *str;
@@ -103,12 +87,6 @@ cmp_cmds(const void *c1, const void *c2)
 {
     return strcmp(((const struct cmd *)c1)->str,
                   ((const struct cmd *)c2)->str);
-}
-
-static void
-sort_cmds()
-{
-    qsort(commands, arrsize(commands), sizeof(struct cmd), cmp_cmds);
 }
 
 static bool
@@ -190,8 +168,11 @@ cmd_switch_to_keycodes()
 }
 
 static bool
-shell_exec(const char *cmd)
+command_exec(const char *cmd)
 {
+    if (cmd[0] == 0)
+        return true;
+
     for (int i = 0; i < arrsize(commands); i++) {
         if (!strcmp(commands[i].str, cmd))
             return commands[i].run();
@@ -202,13 +183,13 @@ shell_exec(const char *cmd)
 }
 
 static void
-shell_prompt()
+command_prompt()
 {
     tty_print(TTY_CONSOLE, "> ");
 }
 
 static void
-shell_run()
+command_run()
 {
     char cmd[256];
     int  cmdlen = 0;
@@ -219,6 +200,8 @@ shell_run()
         key_t key;
         bool  avail;
         while ((avail = kb_getkey(&key)) != false) {
+
+            // If a printable character was typed, append it to the command.
             if (key.ch >= 32 && key.ch < 127) {
                 if (cmdlen < arrsize(cmd) - 1) {
                     cmd[cmdlen] = key.ch;
@@ -226,17 +209,32 @@ shell_run()
                     cmdlen++;
                 }
             }
+
+            // Handle special keys (like enter, backspace).
             else if (key.brk == KEYBRK_DOWN) {
+
                 if (key.code == KEY_ENTER) {
                     tty_printc(TTY_CONSOLE, '\n');
+
+                    // Strip trailing whitespace.
+                    while (cmdlen > 0 && cmd[cmdlen - 1] == ' ')
+                        cmdlen--;
                     cmd[cmdlen] = 0;
-                    bool cont = shell_exec(cmd);
+
+                    // Execute the command.
+                    bool cont = command_exec(cmd);
                     cmdlen = 0;
                     if (cont)
-                        shell_prompt();
+                        command_prompt();
                     else
                         return;
                 }
+
+                else if (key.code == KEY_BACKSPACE && cmdlen > 0) {
+                    tty_printc(TTY_CONSOLE, '\b');
+                    cmdlen--;
+                }
+
             }
         }
     }
@@ -270,7 +268,7 @@ keycode_run()
             }
             if ((key.brk == KEYBRK_UP) && (key.meta & META_ALT) &&
                 (key.code == KEY_TAB)) {
-                switch_mode(&mode_shell);
+                switch_mode(&mode_command);
                 return;
             }
         }
@@ -280,8 +278,9 @@ keycode_run()
 void
 kshell()
 {
-    sort_cmds();
+    qsort(commands, arrsize(commands), sizeof(struct cmd), cmp_cmds);
 
+    active_mode = &mode_command;
     active_mode->start();
     for (;;)
         active_mode->run();

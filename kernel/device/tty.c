@@ -270,6 +270,12 @@ tty_printchar(tty_t *cons, const char **strptr)
         }
         return;
     }
+    else if (ch == '\b') {
+        if (cons->pos.x > 0) {
+            int offset = cons->ybuf * SCREEN_COLS + --cons->pos.x;
+            cons->screen[offset] = cons->textcolor | ' ';
+        }
+    }
     else {
         // Use the current foreground and background color.
         uint16_t value = cons->textcolor | ch;

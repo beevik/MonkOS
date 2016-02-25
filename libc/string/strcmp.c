@@ -12,10 +12,11 @@
 int
 strcmp(const char *str1, const char *str2)
 {
-    for (; *str1 && *str2; str1++, str2++) {
-        if (*str1 == *str2)
+    int i = 0;
+    for (; str1[i] && str2[i]; i++) {
+        if (str1[i] == str2[i])
             continue;
-        return (int)(*str1 - *str2);
+        return (int)str1[i] - (int)str2[i];
     }
-    return (int)(*str1 - *str2);
+    return (int)str1[i] - (int)str2[i];
 }

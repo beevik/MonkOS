@@ -26,8 +26,8 @@
 
 #define TTY_CONSOLE  0
 
-static void
-sysinit()
+void
+kmain()
 {
     // Memory initialization
     acpi_init();
@@ -48,13 +48,6 @@ sysinit()
 
     // Let the games begin
     enable_interrupts();
-}
-
-void
-kmain()
-{
-    // Initialize all kernel subsystems.
-    sysinit();
 
     // Display a welcome message on the virtual console.
     tty_set_textcolor(TTY_CONSOLE, TEXTCOLOR_LTGRAY, TEXTCOLOR_BLACK);
