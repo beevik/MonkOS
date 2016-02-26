@@ -115,6 +115,42 @@ void
 io_outb(uint16_t port, uint8_t value);
 
 //----------------------------------------------------------------------------
+//  @function   io_inw
+/// @brief      Retrieve a 16-bit word value from an input port.
+/// @param[in]  port    Port number (0-65535).
+/// @returns    value   Word value read from the port.
+//----------------------------------------------------------------------------
+uint16_t
+io_inw(uint16_t port);
+
+//----------------------------------------------------------------------------
+//  @function   io_outw
+/// @brief      Write a 16-bit word value to an output port.
+/// @param[in]  port    Port number (0-65535).
+/// @param[in]  value   Word value to write to the port.
+//----------------------------------------------------------------------------
+void
+io_outw(uint16_t port, uint16_t value);
+
+//----------------------------------------------------------------------------
+//  @function   io_ind
+/// @brief      Retrieve a 32-bit dword value from an input port.
+/// @param[in]  port    Port number (0-65535).
+/// @returns    value   Dword value read from the port.
+//----------------------------------------------------------------------------
+uint32_t
+io_ind(uint16_t port);
+
+//----------------------------------------------------------------------------
+//  @function   io_outd
+/// @brief      Write a 32-bit dword value to an output port.
+/// @param[in]  port    Port number (0-65535).
+/// @param[in]  value   Dword value to write to the port.
+//----------------------------------------------------------------------------
+void
+io_outd(uint16_t port, uint32_t value);
+
+//----------------------------------------------------------------------------
 //  @function   set_pagetable
 /// @brief      Update the CPU's page table register.
 /// @param[in]  paddr   The physical address containing the new pagetable.

@@ -65,6 +65,50 @@ io_outb(uint16_t port, uint8_t value)
         );
 }
 
+__forceinline uint16_t
+io_inw(uint16_t port)
+{
+    uint16_t value;
+    asm volatile (
+        "inw  %[v],   %[p]"
+        : [v] "=a" (value)
+        : [p] "Nd" (port)
+        );
+    return value;
+}
+
+__forceinline void
+io_outw(uint16_t port, uint16_t value)
+{
+    asm volatile (
+        "outw  %[p],  %[v]"
+        :
+        : [p] "Nd" (port), [v] "a" (value)
+        );
+}
+
+__forceinline uint32_t
+io_ind(uint16_t port)
+{
+    uint32_t value;
+    asm volatile (
+        "ind  %[v],   %[p]"
+        : [v] "=a" (value)
+        : [p] "Nd" (port)
+        );
+    return value;
+}
+
+__forceinline void
+io_outd(uint16_t port, uint32_t value)
+{
+    asm volatile (
+        "outd  %[p],  %[v]"
+        :
+        : [p] "Nd" (port), [v] "a" (value)
+        );
+}
+
 __forceinline void
 set_pagetable(uint64_t paddr)
 {

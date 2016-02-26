@@ -10,6 +10,7 @@
 //============================================================================
 
 #include <kernel/device/keyboard.h>
+#include <kernel/device/pci.h>
 #include <kernel/device/timer.h>
 #include <kernel/device/tty.h>
 #include <kernel/interrupt/exception.h>

@@ -19,6 +19,10 @@ section .text
     global wrmsr
     global io_inb
     global io_outb
+    global io_inw
+    global io_outw
+    global io_ind
+    global io_outd
     global set_pagetable
     global enable_interrupts
     global disable_interrupts
@@ -106,6 +110,58 @@ io_outb:
     mov     dx,     di
     mov     ax,     si
     out     dx,     al
+    ret
+
+;-----------------------------------------------------------------------------
+; @function     io_inw
+; @brief        Retrieve a 16-bit word value from an input port.
+; @reg[in]      rdi     Port number (0-65535).
+; @reg[out]     rax     Word value read from the port.
+;-----------------------------------------------------------------------------
+io_inw:
+
+    mov     dx,     di
+    xor     rax,    rax
+    in      ax,     dx
+    ret
+
+;-----------------------------------------------------------------------------
+; @function     io_outw
+; @brief        Write a 16-bit word value to an output port.
+; @reg[in]      rdi     Port number (0-65535).
+; @reg[in]      rsi     Word value to write to the port.
+;-----------------------------------------------------------------------------
+io_outw:
+
+    mov     dx,     di
+    mov     ax,     si
+    out     dx,     ax
+    ret
+
+;-----------------------------------------------------------------------------
+; @function     io_ind
+; @brief        Retrieve a 32-bit dword value from an input port.
+; @reg[in]      rdi     Port number (0-65535).
+; @reg[out]     rax     Dword value read from the port.
+;-----------------------------------------------------------------------------
+io_ind:
+
+    mov     dx,     di
+    xor     rax,    rax
+    in      eax,    dx
+    ret
+
+;-----------------------------------------------------------------------------
+; @function     io_outd
+; @brief        Write a 32-bit dword value to an output port.
+; @reg[in]      rdi     Port number (0-65535).
+; @reg[in]      rsi     Dord value to write to the port.
+;-----------------------------------------------------------------------------
+io_outd:
+
+    mov     dx,     di
+    mov     eax,    esi
+    out     dx,     eax
     ret
 
 ;-----------------------------------------------------------------------------

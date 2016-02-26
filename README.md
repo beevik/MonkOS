@@ -40,6 +40,7 @@ understand the numerous and various aspects of bootloader and OS development:
   * [Setting up long mode](http://wiki.osdev.org/Setting_Up_Long_Mode)
   * [ISO 9660](http://wiki.osdev.org/ISO_9660)
   * [PS/2 Keyboard](http://wiki.osdev.org/PS2_Keyboard)
+  * [PCI](http://wiki.osdev.org/PCI)
 * [The System V ABI](http://www.sco.com/developers/gabi/latest/contents.html)
   * [AMD64 supplement](http://www.x86-64.org/documentation/abi.pdf)
 * [The El Torito specification]
@@ -47,6 +48,9 @@ understand the numerous and various aspects of bootloader and OS development:
 * [Hardware Level VGA and SVGA Video Programming Information Page]
   (http://www.osdever.net/FreeVGA/vga/vgareg.htm)
   * [CRT Controller Registers](http://www.osdever.net/FreeVGA/vga/crtcreg.htm)
+  * [Advanced Programmable Interrupt Controller]
+    (http://www.osdever.net/tutorials/view/advanced-programming-interrupt-controller)
+* [The PCI Database](http://pcidatabase.com/)
 * [Write your own operating system](http://geezer.osdevbrasil.net/osd/index.htm)
   * [PC keyboard](http://geezer.osdevbrasil.net/osd/kbd/index.htm)
 * [The Xeos project](https://github.com/macmade/XEOS)

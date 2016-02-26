@@ -11,6 +11,7 @@
 #include <libc/stdio.h>
 #include <libc/stdlib.h>
 #include <libc/string.h>
+#include <kernel/device/pci.h>
 #include <kernel/device/tty.h>
 #include <kernel/device/keyboard.h>
 #include <kernel/mem/acpi.h>
@@ -24,6 +25,7 @@ static void command_run();
 static void keycode_run();
 static bool cmd_display_help();
 static bool cmd_display_apic();
+static bool cmd_display_pci();
 static bool cmd_display_pcie();
 static bool cmd_switch_to_keycodes();
 
@@ -78,6 +80,7 @@ static struct cmd commands[] =
     { "?", NULL, cmd_display_help },
     { "help", "Show this help text", cmd_display_help },
     { "apic", "Show APIC configuration", cmd_display_apic },
+    { "pci", "Show PCI devices", cmd_display_pci },
     { "pcie", "Show PCIexpress configuration", cmd_display_pcie },
     { "kc", "Switch to keycode display mode", cmd_switch_to_keycodes },
 };
@@ -136,6 +139,13 @@ cmd_display_apic()
                    iso->flags);
     }
 
+    return true;
+}
+
+static bool
+cmd_display_pci()
+{
+    pci_init();         // Temporary
     return true;
 }
 
