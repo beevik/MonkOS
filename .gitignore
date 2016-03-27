@@ -1,0 +1,11 @@
+.gdb
+.gdbinit
+.p4ignore
+.tags
+build
+deps
+docs/acpi
+docs/intel
+docs/monk
+notes
+TODO

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>MonkOS by beevik</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">MonkOS</h1>
+      <h2 class="project-tagline">An experimental 64-bit operating system</h2>
+      <a href="https://github.com/beevik/MonkOS" class="btn">View on GitHub</a>
+      <a href="https://github.com/beevik/MonkOS/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/beevik/MonkOS/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="monkos" class="anchor" href="#monkos" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>MonkOS</h1>
+
+<p>MonkOS is an experimental 64-bit operating system for Intel and AMD
+processors. It is a mix of C and assembly language and is a work in progress.
+Currently, it consists of a BIOS boot loader, a virtual console system, an
+interrupt handling system, a paged memory manager, a few simple device
+drivers, and a primitive interactive shell. The boot loader is designed to
+launch the operating system from a cdrom.</p>
+
+<h2>
+<a id="building" class="anchor" href="#building" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building</h2>
+
+<p>The OS currently builds under linux using a cross-compiler.  There are two
+ways to build it: (1) by installing all the necessary tools on your system and
+running <code>make</code>, or (2) by using a ready-made docker container that  contains
+all the build tools you'll need.</p>
+
+<h3>
+<a id="building-with-local-tools" class="anchor" href="#building-with-local-tools" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building with local tools</h3>
+
+<p>To build with tools installed on your local system, you'll need to have
+the following software already installed:</p>
+
+<ul>
+<li>gcc x86_64 cross-compiler for elf binaries (I used version 5.3)</li>
+<li>gnu binutils (I used version 2.26)</li>
+<li>nasm assembler</li>
+<li>genisoimage</li>
+<li>exuberant-ctags (optional, for help with editing)</li>
+<li>gdb (optional, for debugging)</li>
+<li>qemu (optional, for testing)</li>
+<li>doxygen (optional)</li>
+</ul>
+
+<p>Most of these tools are available from standard linux package managers. The
+cross-compiler, however, is not. To build a cross-compiler, consult the
+instructions on <a href="http://wiki.osdev.org/GCC_Cross-Compiler">this page</a>. Make
+sure to also follow the <a href="http://wiki.osdev.org/Libgcc_without_red_zone">libgcc without red-zone</a>
+instructions.  Note that the red-zone instructions are a bit out of date; if
+you are using a more recent version of gcc (such as 5.3), you'll need to
+modify the <code>gcc/config.gcc</code> file (not <code>gcc/config.cc</code>).</p>
+
+<p>Once you've installed all the tools and made sure the cross-compiler is in
+your path, run <code>make</code>.</p>
+
+<div class="highlight highlight-source-shell"><pre>$ make</pre></div>
+
+<p>This results in a bootable cdrom ISO file called <code>monk.iso</code> in your build
+subdirectory.</p>
+
+<h3>
+<a id="building-with-docker-ized-tools" class="anchor" href="#building-with-docker-ized-tools" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building with docker-ized tools</h3>
+
+<p>Because it can be a bit of a pain to build and install a cross-compiler, a
+docker container has been prepared, allowing you to avoid building the cross-compiler
+yourself.  To run the docker-based build, make sure you have a recent
+version of docker installed on your system, add yourself to your system's
+docker user group, and then type the following:</p>
+
+<div class="highlight highlight-source-shell"><pre>$ make docker</pre></div>
+
+<p>This will pull down the docker container
+(<a href="https://hub.docker.com/r/brett/monkos/"><code>brett/monkos</code></a>) if you don't
+already have it, run the build inside the container, and generate the iso file
+(and all other intermediate output files) in your build subdirectory.  It
+behaves almost exactly as if you ran <code>make</code> using a cross-compiler installed
+locally on your system.</p>
+
+<h2>
+<a id="running-monkos" class="anchor" href="#running-monkos" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running MonkOS</h2>
+
+<p>There are several ways to run MonkOS once you have the iso file. The first and
+most time-consuming way is to burn it to a CD or DVD ROM using your favorite
+burning utility. This is the only way to test MonkOS on a bare-metal system.</p>
+
+<p>Alternatively, you can launch the operating system using virtual machine
+software like VMware or virtualbox.</p>
+
+<p>Or you can run the operating system in a linux-based emulator like qemu or
+bochs.  The MonkOS makefile makes this alternative particularly easy by
+providing a simple build rule to launch the OS in qemu:</p>
+
+<div class="highlight highlight-source-shell"><pre>$ make <span class="pl-c1">test</span></pre></div>
+
+<p>You can also use the makefile to start a kernel debugging session under qemu
+and gdb. First, launch qemu in debugging mode:</p>
+
+<div class="highlight highlight-source-shell"><pre>$ make debug</pre></div>
+
+<p>Then start a gdb debugger session by attaching gdb to the qemu debugger
+endpoint:</p>
+
+<div class="highlight highlight-source-shell"><pre>$ gdb
+(gdb) <span class="pl-c1">set</span> arch i386:x86-64
+(gdb) symbol-file build/monk.sys
+(gdb) target remote localhost:8864
+(gdb) layout <span class="pl-c1">source</span></pre></div>
+
+<h2>
+<a id="other-build-options" class="anchor" href="#other-build-options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Other build options</h2>
+
+<p>Run <code>make docs</code> to build nicely formatted documentation for MonkOS. You'll
+need doxygen installed on your system to do this.</p>
+
+<div class="highlight highlight-source-shell"><pre>$ make docs</pre></div>
+
+<p>The doxygen documents will appear in the <code>docs/monk</code> subdirectory. To view
+them, launch them in your browser (in this case firefox):</p>
+
+<div class="highlight highlight-source-shell"><pre>$ firefox docs/monk/index.html</pre></div>
+
+<p>To build code tags for easy symbol searching within your editor, use the
+makefile to run the exuberant-tags utility:</p>
+
+<div class="highlight highlight-source-shell"><pre>$ make tags</pre></div>
+
+<p>This produces a <code>.tags</code> file in your MonkOS directory.</p>
+
+<p>To clean up all intermediate files, use the clean build:</p>
+
+<div class="highlight highlight-source-shell"><pre>$ make clean</pre></div>
+
+<p>To clean all generated dependencies files, use the cleandeps build:</p>
+
+<div class="highlight highlight-source-shell"><pre>$ make cleandeps</pre></div>
+
+<h2>
+<a id="resources" class="anchor" href="#resources" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resources</h2>
+
+<p>These are some of the resources I have relied on in my attempt to better
+understand the numerous and various aspects of bootloader and OS development:</p>
+
+<ul>
+<li><a href="https://www-ssl.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html">Intel 64 and IA-32 Architectures: Software Developer’s Manual</a></li>
+<li>
+<a href="http://wiki.osdev.org/Main_Page">The OsDev wiki</a>
+
+<ul>
+<li><a href="http://wiki.osdev.org/Bare_Bones">Bare Bones guide</a></li>
+<li><a href="http://wiki.osdev.org/Setting_Up_Long_Mode">Setting up long mode</a></li>
+<li><a href="http://wiki.osdev.org/ISO_9660">ISO 9660</a></li>
+<li><a href="http://wiki.osdev.org/PS2_Keyboard">PS/2 Keyboard</a></li>
+<li><a href="http://wiki.osdev.org/PCI">PCI</a></li>
+</ul>
+</li>
+<li>
+<a href="http://www.sco.com/developers/gabi/latest/contents.html">The System V ABI</a>
+
+<ul>
+<li><a href="http://www.x86-64.org/documentation/abi.pdf">AMD64 supplement</a></li>
+</ul>
+</li>
+<li><a href="http://download.intel.com/support/motherboards/desktop/sb/specscdrom.pdf">The El Torito specification</a></li>
+<li>
+<a href="http://www.osdever.net/FreeVGA/vga/vgareg.htm">Hardware Level VGA and SVGA Video Programming Information Page</a>
+
+<ul>
+<li><a href="http://www.osdever.net/FreeVGA/vga/crtcreg.htm">CRT Controller Registers</a></li>
+<li><a href="http://www.osdever.net/tutorials/view/advanced-programming-interrupt-controller">Advanced Programmable Interrupt Controller</a></li>
+</ul>
+</li>
+<li><a href="http://pcidatabase.com/">The PCI Database</a></li>
+<li>
+<a href="http://geezer.osdevbrasil.net/osd/index.htm">Write your own operating system</a>
+
+<ul>
+<li><a href="http://geezer.osdevbrasil.net/osd/kbd/index.htm">PC keyboard</a></li>
+</ul>
+</li>
+<li><a href="https://github.com/macmade/XEOS">The Xeos project</a></li>
+<li><a href="https://github.com/ReturnInfinity/BareMetal">BareMetal OS</a></li>
+<li><a href="http://www.ijack.org.uk/">IanOS</a></li>
+</ul>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>Use of this source code is governed by a BSD-style license that can be found
+in the <a href="https://github.com/beevik/MonkOS/blob/master/LICENSE">LICENSE</a> file.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/beevik/MonkOS">MonkOS</a> is maintained by <a href="https://github.com/beevik">beevik</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
