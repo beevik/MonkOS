@@ -17,6 +17,9 @@ default: boot kernel iso
 
 all: boot kernel iso tags docs
 
+docker: .force
+	@$(DIR_SCRIPTS)/mkdocker.sh iso
+
 boot: .force
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_BOOT)
 
@@ -43,13 +46,13 @@ uncrustify: .force
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_LIBC) uncrustify
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_KERNEL) uncrustify
 
-debug: iso
+debug: .force
 	@$(QEMU) -gdb tcp::8864 -cdrom $(DIR_BUILD)/monk.iso
 
-debugwait: iso
+debugwait: .force
 	@$(QEMU) -S -gdb tcp::8864 -cdrom $(DIR_BUILD)/monk.iso
 
-test: iso
+test: .force
 	@$(QEMU) -cdrom $(DIR_BUILD)/monk.iso
 
 clean: .force
