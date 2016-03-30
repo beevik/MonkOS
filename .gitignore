@@ -6,6 +6,5 @@ build
 deps
 docs/acpi
 docs/intel
-docs/monk
 notes
 TODO

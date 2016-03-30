@@ -82,11 +82,11 @@ docker user group, and then type the following:</p>
 <div class="highlight highlight-source-shell"><pre>$ make docker</pre></div>
 
 <p>This will pull down the docker container
-(<a href="https://hub.docker.com/r/brett/monkos/"><code>brett/monkos</code></a>) if you don't
-already have it, run the build inside the container, and generate the iso file
-(and all other intermediate output files) in your build subdirectory.  It
-behaves almost exactly as if you ran <code>make</code> using a cross-compiler installed
-locally on your system.</p>
+(<a href="https://hub.docker.com/r/brett/monkos-build/"><code>brett/monkos-build</code></a>)
+if you don't already have it, run the build inside the container, and generate
+the iso file (and all other intermediate output files) in your build
+subdirectory.  It behaves almost exactly as if you ran <code>make</code> using a cross-
+compiler installed locally on your system.</p>
 
 <h2>
 <a id="running-monkos" class="anchor" href="#running-monkos" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running MonkOS</h2>
@@ -145,6 +145,13 @@ makefile to run the exuberant-tags utility:</p>
 <p>To clean all generated dependencies files, use the cleandeps build:</p>
 
 <div class="highlight highlight-source-shell"><pre>$ make cleandeps</pre></div>
+
+<h2>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Documentation</h2>
+
+<p>Please consult the
+<a href="https://beevik.github.io/MonkOS/docs/monk/index.html">Doxygen-formatted documentation</a>,
+which is part of the <a href="https://beevik.github.io/MonkOS/">MonkOS documentation set</a>.</p>
 
 <h2>
 <a id="resources" class="anchor" href="#resources" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resources</h2>
