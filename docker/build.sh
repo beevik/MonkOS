@@ -9,4 +9,4 @@ code=$(realpath .)
 docker run --rm -it \
     -v ${code}:/code \
     -u ${uid}:${gid} \
-    brett/monkos /bin/bash -c "cd /code && make ${args}"
+    brett/monkos-build /bin/bash -c "cd /code && make ${args}"

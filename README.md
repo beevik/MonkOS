@@ -60,11 +60,11 @@ $ make docker
 ```
 
 This will pull down the docker container
-([`brett/monkos`](https://hub.docker.com/r/brett/monkos/)) if you don't
-already have it, run the build inside the container, and generate the iso file
-(and all other intermediate output files) in your build subdirectory.  It
-behaves almost exactly as if you ran `make` using a cross-compiler installed
-locally on your system.
+([`brett/monkos-build`](https://hub.docker.com/r/brett/monkos-build/))
+if you don't already have it, run the build inside the container, and generate
+the iso file (and all other intermediate output files) in your build
+subdirectory.  It behaves almost exactly as if you ran `make` using a cross-
+compiler installed locally on your system.
 
 ##Running MonkOS
 
@@ -137,6 +137,12 @@ To clean all generated dependencies files, use the cleandeps build:
 ```bash
 $ make cleandeps
 ```
+
+##Documentation
+
+Please consult the
+[Doxygen-formatted documentation](https://beevik.github.io/MonkOS/docs/monk/index.html),
+which is part of the [MonkOS documentation set](https://beevik.github.io/MonkOS/).
 
 ##Resources
 

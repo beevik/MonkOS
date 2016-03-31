@@ -18,7 +18,7 @@ default: boot kernel iso
 all: boot kernel iso tags docs
 
 docker: .force
-	@$(DIR_SCRIPTS)/mkdocker.sh iso
+	@$(DIR_DOCKER)/build.sh iso
 
 boot: .force
 	@$(MAKE) $(MAKE_FLAGS) --directory=$(DIR_BOOT)

@@ -14,6 +14,7 @@
 DIR_BOOT	:= $(DIR_ROOT)/boot
 DIR_BUILD	:= $(DIR_ROOT)/build
 DIR_DEPS	:= $(DIR_ROOT)/deps
+DIR_DOCKER 	:= $(DIR_ROOT)/docker
 DIR_DOCS	:= $(DIR_ROOT)/docs
 DIR_INCLUDE	:= $(DIR_ROOT)/include
 DIR_KERNEL	:= $(DIR_ROOT)/kernel
