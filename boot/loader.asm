@@ -334,9 +334,10 @@ bits 64
     .launch64:
 
         ; Wipe the real mode stack.
+        xor     eax,    eax
         mov     rdi,    Mem.Stack.Bottom
         mov     ecx,    Mem.Stack.Top - Mem.Stack.Bottom
-        rep     movsb
+        rep     stosb
 
         ; Load the mandatory 64-bit task state segment.
         mov     ax,     GDT64.Selector.TSS
