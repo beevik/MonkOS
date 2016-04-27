@@ -20,7 +20,7 @@ all the build tools you'll need.
 To build with tools installed on your local system, you'll need to have
 the following software already installed:
 
-* gcc x86_64 cross-compiler for elf binaries (I used version 5.3)
+* gcc x86_64 cross-compiler for elf binaries (I used version 6.1)
 * gnu binutils (I used version 2.26)
 * nasm assembler
 * genisoimage
@@ -32,10 +32,11 @@ the following software already installed:
 Most of these tools are available from standard linux package managers. The
 cross-compiler, however, is not. To build a cross-compiler, consult the
 instructions on [this page](http://wiki.osdev.org/GCC_Cross-Compiler). Make
-sure to also follow the [libgcc without red-zone](http://wiki.osdev.org/Libgcc_without_red_zone)
-instructions.  Note that the red-zone instructions are a bit out of date; if
-you are using a more recent version of gcc (such as 5.3), you'll need to
-modify the `gcc/config.gcc` file (not `gcc/config.cc`).
+sure to also follow the [libgcc without
+red-zone](http://wiki.osdev.org/Libgcc_without_red_zone) instructions.  Note
+that the red-zone instructions are a bit out of date; if you are using a more
+recent version of gcc (such as 5.3 or greater), you'll need to modify the
+`gcc/config.gcc` file (not `gcc/config.cc`).
 
 Once you've installed all the tools and made sure the cross-compiler is in
 your path, run `make`.
