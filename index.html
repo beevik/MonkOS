@@ -44,7 +44,7 @@ all the build tools you'll need.</p>
 the following software already installed:</p>
 
 <ul>
-<li>gcc x86_64 cross-compiler for elf binaries (I used version 5.3)</li>
+<li>gcc x86_64 cross-compiler for elf binaries (I used version 6.1)</li>
 <li>gnu binutils (I used version 2.26)</li>
 <li>nasm assembler</li>
 <li>genisoimage</li>
@@ -59,7 +59,7 @@ cross-compiler, however, is not. To build a cross-compiler, consult the
 instructions on <a href="http://wiki.osdev.org/GCC_Cross-Compiler">this page</a>. Make
 sure to also follow the <a href="http://wiki.osdev.org/Libgcc_without_red_zone">libgcc without red-zone</a>
 instructions.  Note that the red-zone instructions are a bit out of date; if
-you are using a more recent version of gcc (such as 5.3), you'll need to
+you are using a more recent version of gcc (such as 5.3 or greater), you'll need to
 modify the <code>gcc/config.gcc</code> file (not <code>gcc/config.cc</code>).</p>
 
 <p>Once you've installed all the tools and made sure the cross-compiler is in
