@@ -11,9 +11,9 @@
 #include <libc/string.h>
 #include <kernel/debug/log.h>
 #include <kernel/mem/acpi.h>
-#include <kernel/mem/map.h>
+#include <kernel/mem/kmem.h>
 #include <kernel/mem/paging.h>
-#include <kernel/mem/table.h>
+#include <kernel/mem/pmap.h>
 #include <kernel/x86/cpu.h>
 
 #define SIGNATURE_RSDP      0x2052545020445352ll // "RSD PTR "
@@ -108,16 +108,13 @@ read_table(const struct acpi_hdr *hdr)
     switch (sig)
     {
         case SIGNATURE_FADT:
-            read_fadt(hdr);
-            break;
+            read_fadt(hdr); break;
 
         case SIGNATURE_MADT:
-            read_madt(hdr);
-            break;
+            read_madt(hdr); break;
 
         case SIGNATURE_MCFG:
-            read_mcfg(hdr);
-            break;
+            read_mcfg(hdr); break;
 
         default:
             break;
@@ -213,14 +210,14 @@ map_table(btable_t *btable, const struct acpi_hdr *hdr)
     map_range(btable, addr, sizeof(struct acpi_hdr), flags);
 
     // Now that we can read the header's length, map the entire ACPI table.
-    map_range(btable, addr, hdr->length, flags);
+    uint64_t size = hdr->length;
+    map_range(btable, addr, size, flags);
 
     // Calculate the page-aligned extents of the ACPI table, and add them to
     // the BIOS-generated memory table.
-    memtable_add(
-        PAGE_ALIGN_DOWN(addr),
-        PAGE_ALIGN_UP(addr + hdr->length) - PAGE_ALIGN_DOWN(addr),
-        MEMTYPE_ACPI);
+    pmap_add(PAGE_ALIGN_DOWN(addr),
+             PAGE_ALIGN_UP(addr + hdr->length) - PAGE_ALIGN_DOWN(addr),
+             PMEMTYPE_ACPI);
 }
 
 static void
@@ -288,16 +285,16 @@ acpi_init()
     // loader. We'll be updating it as we scan ACPI tables.
     btable_t btable =
     {
-        .root      = (page_t *)MEM_BOOT_PAGETABLE,
-        .next_page = (page_t *)MEM_BOOT_PAGETABLE_LOADED,
-        .term_page = (page_t *)MEM_BOOT_PAGETABLE_END,
+        .root      = (page_t *)KMEM_BOOT_PAGETABLE,
+        .next_page = (page_t *)KMEM_BOOT_PAGETABLE_LOADED,
+        .term_page = (page_t *)KMEM_BOOT_PAGETABLE_END,
     };
 
     // Scan the extended BIOS and system ROM memory regions for the ACPI RSDP
     // table.
-    acpi.rsdp = find_rsdp(MEM_EXTENDED_BIOS, MEM_EXTENDED_BIOS_SIZE);
+    acpi.rsdp = find_rsdp(KMEM_EXTENDED_BIOS, KMEM_EXTENDED_BIOS_SIZE);
     if (acpi.rsdp == NULL)
-        acpi.rsdp = find_rsdp(MEM_SYSTEM_ROM, MEM_SYSTEM_ROM_SIZE);
+        acpi.rsdp = find_rsdp(KMEM_SYSTEM_ROM, KMEM_SYSTEM_ROM_SIZE);
 
     // Fatal out if the ACPI tables could not be found.
     if (acpi.rsdp == NULL) {
@@ -340,15 +337,15 @@ acpi_init()
 
     // Reserve local APIC memory-mapped I/O addresses.
     if (acpi.madt != NULL) {
-        memtable_add(PAGE_ALIGN_DOWN(acpi.madt->ptr_local_apic), PAGE_SIZE,
-                     MEMTYPE_UNCACHED);
+        pmap_add(PAGE_ALIGN_DOWN(acpi.madt->ptr_local_apic), PAGE_SIZE,
+                 PMEMTYPE_UNCACHED);
     }
 
     // Reserve I/O APIC memory-mapped I/O addresses.
     const struct acpi_madt_io_apic *io = NULL;
     while ((io = acpi_next_io_apic(io)) != NULL) {
-        memtable_add(PAGE_ALIGN_DOWN(io->ptr_io_apic), PAGE_SIZE,
-                     MEMTYPE_UNCACHED);
+        pmap_add(PAGE_ALIGN_DOWN(io->ptr_io_apic), PAGE_SIZE,
+                 PMEMTYPE_UNCACHED);
     }
 }
 

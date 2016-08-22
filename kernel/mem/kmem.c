@@ -1,6 +1,6 @@
 //============================================================================
-/// @file       map.h
-/// @brief      Kernel's physical memory map.
+/// @file       kmem.c
+/// @brief      Kernel physical (and virtual) memory map.
 //
 // Copyright 2016 Brett Vickers.
 // Use of this source code is governed by a BSD-style license that can
@@ -11,16 +11,16 @@
 #include <libc/string.h>
 #include <kernel/x86/cpu.h>
 #include <kernel/interrupt/interrupt.h>
-#include <kernel/mem/map.h>
+#include <kernel/mem/kmem.h>
 #include <kernel/mem/paging.h>
-#include <kernel/mem/table.h>
+#include <kernel/mem/pmap.h>
 
 /// Structure used to track the growth of the kernel's page table.
 typedef struct kptable
 {
-    page_t *root;                ///< The top-level (PML4) page table
-    page_t *next_page;           ///< The next page to use when allocating
-    page_t *term_page;           ///< Just beyond the last available page.
+    page_t *root;       ///< The top-level (PML4) page table
+    page_t *next_page;  ///< The next page to use when allocating
+    page_t *term_page;  ///< Just beyond the last available page.
 } kptable_t;
 
 static kptable_t kptable;
@@ -32,12 +32,12 @@ get_pdflags(uint32_t memtype)
 {
     switch (memtype)
     {
-        case MEMTYPE_ACPI_NVS:
-        case MEMTYPE_UNCACHED:
+        case PMEMTYPE_ACPI_NVS:
+        case PMEMTYPE_UNCACHED:
             return PF_PRESENT | PF_RW | PF_PS | PF_PWT | PF_PCD;
 
-        case MEMTYPE_BAD:
-        case MEMTYPE_UNMAPPED:
+        case PMEMTYPE_BAD:
+        case PMEMTYPE_UNMAPPED:
             return 0;
 
         default:
@@ -51,12 +51,12 @@ get_ptflags(uint32_t memtype)
 {
     switch (memtype)
     {
-        case MEMTYPE_ACPI_NVS:
-        case MEMTYPE_UNCACHED:
+        case PMEMTYPE_ACPI_NVS:
+        case PMEMTYPE_UNCACHED:
             return PF_PRESENT | PF_RW | PF_PS | PF_PWT | PF_PCD;
 
-        case MEMTYPE_BAD:
-        case MEMTYPE_UNMAPPED:
+        case PMEMTYPE_BAD:
+        case PMEMTYPE_UNMAPPED:
             return 0;
 
         default:
@@ -64,6 +64,7 @@ get_ptflags(uint32_t memtype)
     }
 }
 
+/// Allocate the next available page in the kernel page table.
 static inline uint64_t
 alloc_page()
 {
@@ -72,6 +73,7 @@ alloc_page()
     return (uint64_t)kptable.next_page++ | PF_PRESENT | PF_RW;
 }
 
+/// Create a 1GiB page entry in the kernel page table.
 static void
 create_huge_page(uint64_t addr, uint32_t memtype)
 {
@@ -86,6 +88,7 @@ create_huge_page(uint64_t addr, uint32_t memtype)
     pdpt->entry[pdpte] = addr | get_pdflags(memtype);
 }
 
+/// Create a 2MiB page entry in the kernel page table.
 static void
 create_large_page(uint64_t addr, uint32_t memtype)
 {
@@ -105,6 +108,7 @@ create_large_page(uint64_t addr, uint32_t memtype)
     pdt->entry[pde] = addr | get_pdflags(memtype);
 }
 
+/// Create a 4KiB page entry in the kernel page table.
 static void
 create_small_page(uint64_t addr, uint32_t memtype)
 {
@@ -129,15 +133,17 @@ create_small_page(uint64_t addr, uint32_t memtype)
     pt->entry[pte] = addr | get_ptflags(memtype);
 }
 
+/// Map a region of memory into the kernel page table, using the largest
+/// page sizes possible.
 static void
-map_region(const memtable_t *table, const memregion_t *region)
+map_region(const pmap_t *table, const pmapregion_t *region)
 {
     // Don't map bad (or unmapped) memory.
-    if (region->type == MEMTYPE_UNMAPPED || region->type == MEMTYPE_BAD)
+    if (region->type == PMEMTYPE_UNMAPPED || region->type == PMEMTYPE_BAD)
         return;
 
     // Don't map reserved regions beyond the last usable physical address.
-    if (region->type == MEMTYPE_RESERVED &&
+    if (region->type == PMEMTYPE_RESERVED &&
         region->addr >= table->last_usable)
         return;
 
@@ -172,18 +178,18 @@ map_region(const memtable_t *table, const memregion_t *region)
 }
 
 void
-map_memory()
+kmem_init()
 {
-    // Zero all page table memory.
-    memzero((void *)MEM_KERNEL_PAGETABLE, MEM_KERNEL_PAGETABLE_SIZE);
-
-    kptable.root      = (page_t *)MEM_KERNEL_PAGETABLE;
-    kptable.next_page = (page_t *)(MEM_KERNEL_PAGETABLE + PAGE_SIZE);
-    kptable.term_page = (page_t *)MEM_KERNEL_PAGETABLE_END;
+    // Zero all kernel page table memory.
+    memzero((void *)KMEM_KERNEL_PAGETABLE, KMEM_KERNEL_PAGETABLE_SIZE);
 
     // For each memory region in the BIOS-supplied memory table, create
     // appropriate page table entries.
-    const memtable_t *table = memtable();
+    kptable.root      = (page_t *)KMEM_KERNEL_PAGETABLE;
+    kptable.next_page = (page_t *)(KMEM_KERNEL_PAGETABLE + PAGE_SIZE);
+    kptable.term_page = (page_t *)KMEM_KERNEL_PAGETABLE_END;
+
+    const pmap_t *table = pmap();
     for (uint64_t r = 0; r < table->count; r++)
         map_region(table, &table->region[r]);
 

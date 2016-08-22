@@ -12,8 +12,8 @@
 #include <libc/string.h>
 #include <kernel/x86/cpu.h>
 #include <kernel/interrupt/interrupt.h>
-#include <kernel/mem/map.h>
-#include <kernel/mem/table.h>
+#include <kernel/mem/kmem.h>
+#include <kernel/mem/pmap.h>
 #include <kernel/mem/paging.h>
 
 // Page shift constants
@@ -70,14 +70,14 @@ static struct context pgcontext;
 
 /// Reserve an aligned region of memory managed by the memory table module.
 static void *
-reserve_region(const memtable_t *table, uint64_t size, uint32_t alignshift)
+reserve_region(const pmap_t *map, uint64_t size, uint32_t alignshift)
 {
-    const memregion_t *r = table->region;
-    const memregion_t *t = table->region + table->count;
+    const pmapregion_t *r = map->region;
+    const pmapregion_t *t = map->region + map->count;
     for (; r < t; r++) {
 
         // Skip reserved regions and regions that are too small.
-        if (r->type != MEMTYPE_USABLE)
+        if (r->type != PMEMTYPE_USABLE)
             continue;
         if (r->size < size)
             continue;
@@ -92,7 +92,7 @@ reserve_region(const memtable_t *table, uint64_t size, uint32_t alignshift)
             continue;
 
         // Reserve the aligned memory region and return its address.
-        memtable_add(paddr, size, MEMTYPE_RESERVED);
+        pmap_add(paddr, size, PMEMTYPE_RESERVED);
         return (void *)paddr;
     }
     return NULL;
@@ -101,13 +101,13 @@ reserve_region(const memtable_t *table, uint64_t size, uint32_t alignshift)
 void
 page_init()
 {
-    const memtable_t *table = memtable();
-    if (table->last_usable == 0)
+    const pmap_t *map = pmap();
+    if (map->last_usable == 0)
         fatal();
 
     // Calculate the size of the page frame database. It needs to describe
     // each page up to and including the last physical address.
-    pgcontext.pfcount = table->last_usable / PAGE_SIZE;
+    pgcontext.pfcount = map->last_usable / PAGE_SIZE;
     uint64_t pfdbsize = pgcontext.pfcount * sizeof(pf_t);
 
     // Round the database size up to the nearest 2MiB since we'll be using
@@ -119,15 +119,12 @@ page_init()
     // Find a contiguous, 2MiB-aligned region of memory large enough to hold
     // the entire pagedb.
     pgcontext.pfdb =
-        (pf_t *)reserve_region(table, pfdbsize, PAGE_SHIFT_LARGE);
+        (pf_t *)reserve_region(map, pfdbsize, PAGE_SHIFT_LARGE);
     if (pgcontext.pfdb == NULL)
         fatal();
 
-    // Identity-map all physical memory into the kernel's page table.
-    map_memory();
-
     // Keep track of the root PML4 table.
-    pgcontext.pagetable = (page_t *)MEM_KERNEL_PAGETABLE;
+    pgcontext.pagetable = (page_t *)KMEM_KERNEL_PAGETABLE;
 
     // Create the page frame database in the newly mapped virtual memory.
     memzero(pgcontext.pfdb, pfdbsize);
@@ -139,11 +136,11 @@ page_init()
 
     // Traverse the memory table, adding page frame database entries for each
     // region in the table.
-    for (uint64_t r = 0; r < table->count; r++) {
-        const memregion_t *region = &table->region[r];
+    for (uint64_t r = 0; r < map->count; r++) {
+        const pmapregion_t *region = &map->region[r];
 
         // Ignore non-usable memory regions.
-        if (region->type != MEMTYPE_USABLE)
+        if (region->type != PMEMTYPE_USABLE)
             continue;
 
         // Create a chain of available page frames.
@@ -169,7 +166,7 @@ page_init()
         pgcontext.pfavail += (uint32_t)(pfnN - pfn0);
     }
 
-    // Install page fault handler
+    // TODO: Install page fault handler
 }
 
 static pf_t *

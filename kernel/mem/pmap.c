@@ -1,9 +1,10 @@
 //============================================================================
-/// @file       table.c
-/// @brief      Physical memory table describing usable and reserved regions
+/// @file       pmap.c
+/// @brief      Physical memory map describing usable and reserved regions
 ///             of physical memory.
-/// @details    Most of the table is derived from data provided by the system
-///             BIOS at boot time.
+/// @details    Before this code is ever executed, the boot code has filled
+///             much of the memory map with memory regions supplied by the
+///             BIOS.
 //
 // Copyright 2016 Brett Vickers.
 // Use of this source code is governed by a BSD-style license that can
@@ -13,32 +14,32 @@
 #include <core.h>
 #include <libc/stdlib.h>
 #include <libc/string.h>
-#include <kernel/mem/map.h>
-#include <kernel/mem/table.h>
+#include <kernel/mem/kmem.h>
+#include <kernel/mem/pmap.h>
 
-// Pointer to the BIOS-generated memory table.
-static memtable_t *table       = (memtable_t *)MEM_TABLE_BIOS;
-static bool        initialized = false;
+// Pointer to the BIOS-generated memory map.
+static pmap_t *map         = (pmap_t *)KMEM_TABLE_BIOS;
+static bool    initialized = false;
 
-/// Add a memory region to the end of the memory table.
+/// Add a memory region to the end of the memory map.
 static void
-add_region(uint64_t addr, uint64_t size, enum memtype type)
+add_region(uint64_t addr, uint64_t size, enum pmemtype type)
 {
-    memregion_t *r = table->region + table->count;
+    pmapregion_t *r = map->region + map->count;
     r->addr  = addr;
     r->size  = size;
     r->type  = (int32_t)type;
     r->flags = 0;
 
-    ++table->count;
+    ++map->count;
 }
 
 /// Compare two memory region records and return a sorting integer.
 static int
 cmp_region(const void *a, const void *b)
 {
-    const memregion_t *r1 = (const memregion_t *)a;
-    const memregion_t *r2 = (const memregion_t *)b;
+    const pmapregion_t *r1 = (const pmapregion_t *)a;
+    const pmapregion_t *r2 = (const pmapregion_t *)b;
     if (r1->addr > r2->addr)
         return +1;
     if (r1->addr < r2->addr)
@@ -50,47 +51,47 @@ cmp_region(const void *a, const void *b)
     return 0;
 }
 
-/// Remove a region from the memory table and shift all subsequent regions
+/// Remove a region from the memory map and shift all subsequent regions
 /// down by one.
 static inline void
-collapse(memregion_t *r, memregion_t *term)
+collapse(pmapregion_t *r, pmapregion_t *term)
 {
     if (r + 1 < term)
-        memmove(r, r + 1, (term - r) * sizeof(memregion_t));
-    --table->count;
+        memmove(r, r + 1, (term - r) * sizeof(pmapregion_t));
+    --map->count;
 }
 
 /// Insert a new, uninitialized memory region record after an existing record
-/// in the memory table.
+/// in the memory map.
 static inline void
-insertafter(memregion_t *r, memregion_t *term)
+insertafter(pmapregion_t *r, pmapregion_t *term)
 {
     if (r + 1 < term)
-        memmove(r + 2, r + 1, (term - (r + 1)) * sizeof(memregion_t));
-    ++table->count;
+        memmove(r + 2, r + 1, (term - (r + 1)) * sizeof(pmapregion_t));
+    ++map->count;
 }
 
 /// Re-sort all unsorted region records starting from the requested record.
 static void
-resort(memregion_t *r, memregion_t *term)
+resort(pmapregion_t *r, pmapregion_t *term)
 {
     while (r + 1 < term) {
         if (cmp_region(r, r + 1) < 0)
             break;
-        memregion_t tmp = r[0];
+        pmapregion_t tmp = r[0];
         r[0] = r[1];
         r[1] = tmp;
         r++;
     }
 }
 
-/// Find all overlapping memory regions in the memory table and collapse or
+/// Find all overlapping memory regions in the memory map and collapse or
 /// reorganize them.
 static void
 collapse_overlaps()
 {
-    memregion_t *curr = table->region;
-    memregion_t *term = table->region + table->count;
+    pmapregion_t *curr = map->region;
+    pmapregion_t *term = map->region + map->count;
 
     while (curr + 1 < term) {
 
@@ -100,7 +101,7 @@ collapse_overlaps()
             continue;
         }
 
-        memregion_t *next = curr + 1;
+        pmapregion_t *next = curr + 1;
 
         uint64_t cl = curr->addr;
         uint64_t cr = curr->addr + curr->size;
@@ -198,16 +199,16 @@ collapse_overlaps()
     }
 }
 
-/// Find missing memory regions in the table, and fill them with entries of
+/// Find missing memory regions in the map, and fill them with entries of
 /// the requested type.
 static void
 fill_gaps(int32_t type)
 {
-    memregion_t *curr = table->region;
-    memregion_t *term = table->region + table->count;
+    pmapregion_t *curr = map->region;
+    pmapregion_t *term = map->region + map->count;
 
     while (curr + 1 < term) {
-        memregion_t *next = curr + 1;
+        pmapregion_t *next = curr + 1;
 
         uint64_t cr = curr->addr + curr->size;
         uint64_t nl = next->addr;
@@ -243,11 +244,11 @@ fill_gaps(int32_t type)
 static void
 consolidate_neighbors()
 {
-    memregion_t *curr = table->region;
-    memregion_t *term = table->region + table->count;
+    pmapregion_t *curr = map->region;
+    pmapregion_t *term = map->region + map->count;
 
     while (curr + 1 < term) {
-        memregion_t *next = curr + 1;
+        pmapregion_t *next = curr + 1;
         if (curr->type == next->type) {
             curr->size += next->size;
             collapse(next, term--);
@@ -261,11 +262,11 @@ consolidate_neighbors()
 static void
 update_last_usable()
 {
-    table->last_usable = 0;
-    for (int i = table->count - 1; i >= 0; i--) {
-        const memregion_t *r = &table->region[i];
-        if (r->type == MEMTYPE_USABLE) {
-            table->last_usable = r->addr + r->size;
+    map->last_usable = 0;
+    for (int i = map->count - 1; i >= 0; i--) {
+        const pmapregion_t *r = &map->region[i];
+        if (r->type == PMEMTYPE_USABLE) {
+            map->last_usable = r->addr + r->size;
             break;
         }
     }
@@ -274,51 +275,52 @@ update_last_usable()
 static void
 normalize()
 {
-    // Sort the memory table by address.
-    qsort(table->region, table->count, sizeof(memregion_t),
+    // Sort the memory map by address.
+    qsort(map->region, map->count, sizeof(pmapregion_t),
           cmp_region);
 
-    // Remove overlapping regions.
+    // Remove overlapping regions, fill gaps between regions with "reserved"
+    // memory, squash adjacent regions of the same type, and calculate the end
+    // of the last usable memory region.
     collapse_overlaps();
-
-    // Fill gaps between regions with "reserved" memory.
-    fill_gaps(MEMTYPE_RESERVED);
-
-    // Squash adjacent memory regions of the same type.
+    fill_gaps(PMEMTYPE_RESERVED);
     consolidate_neighbors();
-
-    // Calculate the end of the last usable memory region.
     update_last_usable();
 }
 
 void
-memtable_init()
+pmap_init()
 {
+    // During the boot process, the physical memory map at KMEM_TABLE_BIOS has
+    // been updated to include memory regions reported by the BIOS. This
+    // function cleans up the BIOS memory map (sorts it, removes overlaps,
+    // etc.) and adds a few additional memory regions.
+
     // Mark VGA video memory as uncached.
-    add_region(MEM_VIDEO, MEM_VIDEO_SIZE, MEMTYPE_UNCACHED);
+    add_region(KMEM_VIDEO, KMEM_VIDEO_SIZE, PMEMTYPE_UNCACHED);
 
     // Reserve the first 10MiB of memory for the kernel and its global
     // data structures.
-    add_region(0, MEM_KERNEL_IMAGE_END, MEMTYPE_RESERVED);
+    add_region(0, KMEM_KERNEL_IMAGE_END, PMEMTYPE_RESERVED);
 
     // Mark the first page of memory as unmapped so deferencing a null pointer
     // always faults.
-    add_region(0, 0x1000, MEMTYPE_UNMAPPED);
+    add_region(0, 0x1000, PMEMTYPE_UNMAPPED);
 
-    // Fix up memory table.
+    // Fix up the memory map.
     normalize();
 
     initialized = true;
 }
 
-const memtable_t *
-memtable()
+const pmap_t *
+pmap()
 {
-    return table;
+    return map;
 }
 
 void
-memtable_add(uint64_t addr, uint64_t size, enum memtype type)
+pmap_add(uint64_t addr, uint64_t size, enum pmemtype type)
 {
     add_region(addr, size, type);
 

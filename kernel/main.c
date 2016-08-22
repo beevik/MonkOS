@@ -16,8 +16,9 @@
 #include <kernel/interrupt/exception.h>
 #include <kernel/interrupt/interrupt.h>
 #include <kernel/mem/acpi.h>
+#include <kernel/mem/kmem.h>
 #include <kernel/mem/paging.h>
-#include <kernel/mem/table.h>
+#include <kernel/mem/pmap.h>
 #include <kernel/syscall/syscall.h>
 #include "shell.h"
 
@@ -32,7 +33,8 @@ kmain()
 {
     // Memory initialization
     acpi_init();
-    memtable_init();
+    pmap_init();
+    kmem_init();
     page_init();
 
     // Interrupt initialization
