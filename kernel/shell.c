@@ -15,6 +15,7 @@
 #include <kernel/device/tty.h>
 #include <kernel/device/keyboard.h>
 #include <kernel/mem/acpi.h>
+#include <kernel/mem/paging.h>
 #include <kernel/x86/cpu.h>
 
 #define TTY_CONSOLE  0
@@ -28,6 +29,7 @@ static bool cmd_display_apic();
 static bool cmd_display_pci();
 static bool cmd_display_pcie();
 static bool cmd_switch_to_keycodes();
+static bool cmd_test_heap();
 
 /// Shell mode descriptor.
 typedef struct mode
@@ -83,6 +85,7 @@ static struct cmd commands[] =
     { "pci", "Show PCI devices", cmd_display_pci },
     { "pcie", "Show PCIexpress configuration", cmd_display_pcie },
     { "kc", "Switch to keycode display mode", cmd_switch_to_keycodes },
+    { "heap", "Test heap allocation", cmd_test_heap },
 };
 
 static int
@@ -175,6 +178,18 @@ cmd_switch_to_keycodes()
               "Entering keycode mode. Hit Alt-Tab to exit.\n");
     switch_mode(&mode_keycode);
     return false;
+}
+
+static bool
+cmd_test_heap()
+{
+    pagetable_t pt;
+    pagetable_create(&pt, (void *)0x2000000, (void *)0x4000000);
+    // map kernel code into the page table
+    pagetable_activate(&pt);
+    pagetable_activate(NULL);
+    pagetable_destroy(&pt);
+    return true;
 }
 
 static bool

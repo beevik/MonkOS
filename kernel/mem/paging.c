@@ -58,12 +58,11 @@ STATIC_ASSERT(sizeof(pf_t) == 32, "Unexpected page frame size");
 /// The paging context structure holds the state of the paging module.
 struct context
 {
-    page_t  *pagetable;             ///< The kernel's page table
-    pf_t    *pfdb;                  ///< Page frame database
-    uint32_t pfcount;               ///< Number of frames in the pfdb.
-    uint32_t pfavail;               ///< Available frames in the pfdb;
-    uint32_t pfnhead;               ///< Available frame list head
-    uint32_t pfntail;               ///< Available frame list tail
+    pf_t    *pfdb;           ///< Page frame database
+    uint32_t pfcount;        ///< Number of frames in the pfdb
+    uint32_t pfavail;        ///< Available frames in the pfdb
+    uint32_t pfnhead;        ///< Available frame list head
+    uint32_t pfntail;        ///< Available frame list tail
 };
 
 static struct context pgcontext;
@@ -101,6 +100,7 @@ reserve_region(const pmap_t *map, uint64_t size, uint32_t alignshift)
 void
 page_init()
 {
+    // Retrieve the physical memory map.
     const pmap_t *map = pmap();
     if (map->last_usable == 0)
         fatal();
@@ -122,9 +122,6 @@ page_init()
         (pf_t *)reserve_region(map, pfdbsize, PAGE_SHIFT_LARGE);
     if (pgcontext.pfdb == NULL)
         fatal();
-
-    // Keep track of the root PML4 table.
-    pgcontext.pagetable = (page_t *)KMEM_KERNEL_PAGETABLE;
 
     // Create the page frame database in the newly mapped virtual memory.
     memzero(pgcontext.pfdb, pfdbsize);
@@ -269,6 +266,10 @@ pgfree_recurse(page_t *page, int level)
 static void
 add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags)
 {
+    // Fatal out if virtual address space is exhausted.
+    if (vaddr >= pt->vterm)
+        fatal();
+
     // Keep track of the pages we add to the page table as we add this new
     // page table entry.
     uint64_t added[3];
@@ -283,7 +284,7 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags)
     // Follow the page table hierarchy down to the lowest level, creating
     // new pages for tables as needed.
 
-    page_t *pml4t = pt->pml4t;
+    page_t *pml4t = (page_t *)pt->vroot;
     if (pml4t->entry[pml4e] == 0) {
         uint64_t pgaddr = pgalloc();
         added[count++]      = pgaddr;
@@ -310,8 +311,10 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags)
 
     // If adding the new entry required the page table to grow, make sure to
     // add the page table's new pages as well.
-    for (int i = 0; i < count; i++)
-        add_pte(pt, (uint64_t)pt->next++, added[i], PF_PRESENT | PF_RW);
+    for (int i = 0; i < count; i++) {
+        add_pte(pt, pt->vnext, added[i], PF_PRESENT | PF_RW);
+        pt->vnext += PAGE_SIZE;
+    }
 }
 
 static uint64_t
@@ -324,7 +327,7 @@ remove_pte(pagetable_t *pt, uint64_t vaddr)
     uint32_t pte   = PTE(vaddr);
 
     // Traverse the hierarchy, looking for the page.
-    page_t *pml4t = pt->pml4t;
+    page_t *pml4t = (page_t *)pt->vroot;
     page_t *pdpt  = PGPTR(pml4t->entry[pml4e]);
     page_t *pdt   = PGPTR(pdpt->entry[pdpte]);
     page_t *ptt   = PGPTR(pdt->entry[pde]);
@@ -338,36 +341,39 @@ remove_pte(pagetable_t *pt, uint64_t vaddr)
 }
 
 void
-pagetable_create(pagetable_t *pt, void *vaddr)
+pagetable_create(pagetable_t *pt, void *vaddr, void *taddr)
 {
     // Allocate a page from the top level of the page table hierarchy.
-    pt->pml4t = (page_t *)pgalloc();
-    pt->next  = (page_t *)vaddr + 1;
+    pt->proot = pgalloc();
+    pt->vroot = (uint64_t)vaddr;
+    pt->vnext = (uint64_t)vaddr + PAGE_SIZE;
+    pt->vterm = (uint64_t)taddr;
 
     // Create a page table entry for the page holding the top level table.
-    add_pte(pt, (uint64_t)vaddr, (uint64_t)pt->pml4t, PF_PRESENT | PF_RW);
+    add_pte(pt, (uint64_t)vaddr, (uint64_t)pt->proot, PF_PRESENT | PF_RW);
 }
 
 void
 pagetable_destroy(pagetable_t *pt)
 {
-    if (pt->pml4t == NULL)
+    if (pt->proot == 0)
         fatal();
 
     // Recursively destroy all pages starting from the PML4 table.
-    pgfree_recurse(pt->pml4t, 4);
-    pt->pml4t = NULL;
-    pt->next  = 0;
+    pgfree_recurse((page_t *)pt->vroot, 4);
+    pt->proot = 0;
+    pt->vroot = 0;
+    pt->vnext = 0;
+    pt->vterm = 0;
 }
 
 void
 pagetable_activate(pagetable_t *pt)
 {
-    if (pt->pml4t == NULL)
+    if (pt->proot == 0)
         fatal();
 
-    uint64_t paddr = (uint64_t)pt->pml4t;
-    set_pagetable(paddr);
+    set_pagetable(pt->proot);
 }
 
 void *

@@ -64,8 +64,10 @@ typedef union page
 //----------------------------------------------------------------------------
 typedef struct pagetable
 {
-    page_t *pml4t;      ///< Page map level 4 table (root table)
-    page_t *next;       ///< Next virtual page to use when growing the table
+    uint64_t proot;     ///< Physical address of root page table (PML4T) entry
+    uint64_t vroot;     ///< Virtual address of root page table (PML4T) entry
+    uint64_t vnext;     ///< Virtual address to use for next allocated page
+    uint64_t vterm;     ///< Virtual address terminator (max address)
 } pagetable_t;
 
 //----------------------------------------------------------------------------
@@ -85,10 +87,12 @@ page_init();
 ///                     the page table.
 /// @param[in]  vaddr   The virtual address within the new page table where
 ///                     the page table will be mapped.
+/// @param[in]  taddr   The terminal virtual address beyond which no pages
+///                     will be allocated.
 /// @returns    A handle to the created page table.
 //----------------------------------------------------------------------------
 void
-pagetable_create(pagetable_t *pt, void *vaddr);
+pagetable_create(pagetable_t *pt, void *vaddr, void *taddr);
 
 //----------------------------------------------------------------------------
 //  @function   pagetable_destroy

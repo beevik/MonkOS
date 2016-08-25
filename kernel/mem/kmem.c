@@ -15,15 +15,7 @@
 #include <kernel/mem/paging.h>
 #include <kernel/mem/pmap.h>
 
-/// Structure used to track the growth of the kernel's page table.
-typedef struct kptable
-{
-    page_t *root;       ///< The top-level (PML4) page table
-    page_t *next_page;  ///< The next page to use when allocating
-    page_t *term_page;  ///< Just beyond the last available page.
-} kptable_t;
-
-static kptable_t kptable;
+static pagetable_t kptable;
 
 /// Return flags for large-page leaf entries in level 3 (PDPT) and level 2
 /// (PDT) tables.
@@ -68,9 +60,12 @@ get_ptflags(uint32_t memtype)
 static inline uint64_t
 alloc_page()
 {
-    if (kptable.next_page == kptable.term_page)
+    if (kptable.vnext >= kptable.vterm)
         fatal();
-    return (uint64_t)kptable.next_page++ | PF_PRESENT | PF_RW;
+
+    uint64_t pg = kptable.vnext;
+    kptable.vnext += PAGE_SIZE;
+    return pg | PF_PRESENT | PF_RW;
 }
 
 /// Create a 1GiB page entry in the kernel page table.
@@ -80,7 +75,7 @@ create_huge_page(uint64_t addr, uint32_t memtype)
     uint64_t pml4te = PML4E(addr);
     uint64_t pdpte  = PDPTE(addr);
 
-    page_t *pml4t = kptable.root;
+    page_t *pml4t = (page_t *)kptable.vroot;
     if (pml4t->entry[pml4te] == 0)
         pml4t->entry[pml4te] = alloc_page();
 
@@ -96,7 +91,7 @@ create_large_page(uint64_t addr, uint32_t memtype)
     uint64_t pdpte  = PDPTE(addr);
     uint64_t pde    = PDE(addr);
 
-    page_t *pml4t = kptable.root;
+    page_t *pml4t = (page_t *)kptable.vroot;
     if (pml4t->entry[pml4te] == 0)
         pml4t->entry[pml4te] = alloc_page();
 
@@ -117,7 +112,7 @@ create_small_page(uint64_t addr, uint32_t memtype)
     uint64_t pde    = PDE(addr);
     uint64_t pte    = PTE(addr);
 
-    page_t *pml4t = kptable.root;
+    page_t *pml4t = (page_t *)kptable.vroot;
     if (pml4t->entry[pml4te] == 0)
         pml4t->entry[pml4te] = alloc_page();
 
@@ -183,17 +178,23 @@ kmem_init()
     // Zero all kernel page table memory.
     memzero((void *)KMEM_KERNEL_PAGETABLE, KMEM_KERNEL_PAGETABLE_SIZE);
 
-    // For each memory region in the BIOS-supplied memory table, create
-    // appropriate page table entries.
-    kptable.root      = (page_t *)KMEM_KERNEL_PAGETABLE;
-    kptable.next_page = (page_t *)(KMEM_KERNEL_PAGETABLE + PAGE_SIZE);
-    kptable.term_page = (page_t *)KMEM_KERNEL_PAGETABLE_END;
+    // Initialize the kernel page table.
+    kptable.proot = KMEM_KERNEL_PAGETABLE;
+    kptable.vroot = kptable.proot;      // identity-mapped
+    kptable.vnext = KMEM_KERNEL_PAGETABLE + PAGE_SIZE;
+    kptable.vterm = KMEM_KERNEL_PAGETABLE_END;
 
+    // For each region in the physical memory map, create appropriate page
+    // table entries.
     const pmap_t *table = pmap();
     for (uint64_t r = 0; r < table->count; r++)
         map_region(table, &table->region[r]);
 
-    // Install the new page table.
-    uint64_t addr = (uint64_t)kptable.root;
-    set_pagetable(addr);
+    pagetable_activate(&kptable);
+}
+
+pagetable_t *
+kmem_pagetable()
+{
+    return &kptable;
 }
