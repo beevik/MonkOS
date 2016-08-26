@@ -17,15 +17,16 @@
 #define PAGE_SIZE_HUGE   0x40000000
 
 // Page table entry flags
-#define PF_PRESENT       (1 << 0)
-#define PF_RW            (1 << 1)
-#define PF_USER          (1 << 2)
+#define PF_PRESENT       (1 << 0)   // Page is present in the table
+#define PF_RW            (1 << 1)   // Read-write
+#define PF_USER          (1 << 2)   // User-mode (CPL==3) access allowed
 #define PF_PWT           (1 << 3)   // Page write-thru
 #define PF_PCD           (1 << 4)   // Cache disable
-#define PF_ACCESS        (1 << 5)
-#define PF_DIRTY         (1 << 6)
+#define PF_ACCESS        (1 << 5)   // Indicates whether page was accessed
+#define PF_DIRTY         (1 << 6)   // Indicates whether 4K page was written
 #define PF_PS            (1 << 7)   // Page size (valid for PD and PDPT only)
-#define PF_GLOBAL        (1 << 8)
+#define PF_GLOBAL        (1 << 8)   // Indicates the page is globally cached
+#define PF_SYSTEM        (1 << 9)   // Page used by the kernel
 
 // Virtual address bitmasks and shifts
 #define PGSHIFT_PML4E    39
@@ -66,8 +67,8 @@ typedef struct pagetable
 {
     uint64_t proot;     ///< Physical address of root page table (PML4T) entry
     uint64_t vroot;     ///< Virtual address of root page table (PML4T) entry
-    uint64_t vnext;     ///< Virtual address to use for next allocated page
-    uint64_t vterm;     ///< Virtual address terminator (max address)
+    uint64_t vnext;     ///< Virtual address to use for table's next page
+    uint64_t vterm;     ///< Boundary of pages used to store the table
 } pagetable_t;
 
 //----------------------------------------------------------------------------
@@ -82,17 +83,18 @@ page_init();
 //----------------------------------------------------------------------------
 //  @function   pagetable_create
 /// @brief      Create a new page table that can be used to associate virtual
-///             addresses with physical addresses.
+///             addresses with physical addresses. The page table includes
+///             protected mappings for kernel memory.
 /// @param[in]  pt      A pointer to the pagetable structure that will hold
 ///                     the page table.
 /// @param[in]  vaddr   The virtual address within the new page table where
 ///                     the page table will be mapped.
-/// @param[in]  taddr   The terminal virtual address beyond which no pages
-///                     will be allocated.
+/// @param[in]  size    Maximum size of the page table in bytes. Must be a
+///                     multiple of PAGE_SIZE.
 /// @returns    A handle to the created page table.
 //----------------------------------------------------------------------------
 void
-pagetable_create(pagetable_t *pt, void *vaddr, void *taddr);
+pagetable_create(pagetable_t *pt, void *vaddr, uint64_t size);
 
 //----------------------------------------------------------------------------
 //  @function   pagetable_destroy
@@ -106,7 +108,8 @@ pagetable_destroy(pagetable_t *pt);
 //  @function   pagetable_activate
 /// @brief      Activate a page table on the CPU, so all virtual memory
 ///             operations are performed relative to the page table.
-/// @param[in]  pt      A handle to the activated page table.
+/// @param[in]  pt      A handle to the activated page table. Pass NULL to
+///                     activate the kernel page table.
 //----------------------------------------------------------------------------
 void
 pagetable_activate(pagetable_t *pt);

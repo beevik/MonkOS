@@ -184,9 +184,14 @@ static bool
 cmd_test_heap()
 {
     pagetable_t pt;
-    pagetable_create(&pt, (void *)0x2000000, (void *)0x4000000);
-    // map kernel code into the page table
+    pagetable_create(&pt, (void *)0x8000000000, PAGE_SIZE * 1024);
     pagetable_activate(&pt);
+
+    uint8_t *vaddr = (uint8_t *)page_alloc(&pt, (void *)0x9000000000, 16);
+    for (int i = 0; i < 16 * PAGE_SIZE; i++)
+        vaddr[i] = (uint8_t)i;
+    page_free(&pt, vaddr, 16);
+
     pagetable_activate(NULL);
     pagetable_destroy(&pt);
     return true;

@@ -34,7 +34,6 @@ kmain()
     // Memory initialization
     acpi_init();
     pmap_init();
-    kmem_init();
     page_init();
 
     // Interrupt initialization

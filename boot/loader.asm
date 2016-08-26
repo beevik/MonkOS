@@ -300,7 +300,7 @@ load:
 
         ; Enable PAE paging.
         mov     eax,    cr4
-        or      eax,    (1 << 5)
+        or      eax,    (1 << 5)    ; CR4.PAE
         mov     cr4,    eax
 
     ;-------------------------------------------------------------------------
@@ -316,8 +316,13 @@ load:
 
         ; Enable paging and protected mode.
         mov     eax,    cr0
-        or      eax,    (1 << 31) | (1 << 0)
+        or      eax,    (1 << 31) | (1 << 0)    ; CR0.PG, CR0.PE
         mov     cr0,    eax
+
+        ; Enable global pages and process-context identifiers
+        mov     eax,    cr4
+        or      eax,    (1 << 7) | (1 << 17)    ; CR4.PGE, CR4.PCIDE
+        mov     cr4,    eax
 
         ; Load the 64-bit GDT.
         lgdt    [GDT64.Table.Pointer]
@@ -1034,7 +1039,7 @@ LoadKernel:
 
         ; Enable protected mode.
         mov     eax,    cr0
-        or      eax,    (1 << 0)
+        or      eax,    (1 << 0)    ; CR.PE
         mov     cr0,    eax
 
         ; Do a far jump to switch to 32-bit protected mode.
@@ -1098,7 +1103,7 @@ bits 16
 
         ; Disable protected mode.
         mov     eax,    cr0
-        and     eax,    ~(1 << 0)
+        and     eax,    ~(1 << 0)   ; CR0.PE
         mov     cr0,    eax
 
         ; Do a far jump to switch back to real mode.

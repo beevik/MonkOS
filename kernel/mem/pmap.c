@@ -299,8 +299,7 @@ pmap_init()
     // Mark VGA video memory as uncached.
     add_region(KMEM_VIDEO, KMEM_VIDEO_SIZE, PMEMTYPE_UNCACHED);
 
-    // Reserve the first 10MiB of memory for the kernel and its global
-    // data structures.
+    // Reserve memory for the kernel and its global data structures.
     add_region(0, KMEM_KERNEL_IMAGE_END, PMEMTYPE_RESERVED);
 
     // Mark the first page of memory as unmapped so deferencing a null pointer

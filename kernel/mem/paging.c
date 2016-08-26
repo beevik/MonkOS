@@ -16,6 +16,9 @@
 #include <kernel/mem/pmap.h>
 #include <kernel/mem/paging.h>
 
+// add_pte addflags
+#define CONTAINS_TABLE     (1 << 0)
+
 // Page shift constants
 #define PAGE_SHIFT         12       // 1<<12 = 4KiB
 #define PAGE_SHIFT_LARGE   21       // 1<<21 = 2MiB
@@ -24,10 +27,10 @@
 #define PFN_INVALID        ((uint32_t)-1)
 
 // Helper macros
-#define PADDR_TO_PF(a)     ((pf_t *)(pgcontext.pfdb + ((a) >> PAGE_SHIFT)))
-#define PF_TO_PADDR(pf)    ((uint64_t)((pf) - pgcontext.pfdb) << PAGE_SHIFT)
-#define PFN_TO_PF(pfn)     ((pf_t *)((pfn) + pgcontext.pfdb))
-#define PF_TO_PFN(pf)      ((uint32_t)((pf) - pgcontext.pfdb))
+#define PADDR_TO_PF(a)     ((pf_t *)(pfdb.pf + ((a) >> PAGE_SHIFT)))
+#define PF_TO_PADDR(pf)    ((uint64_t)((pf) - pfdb.pf) << PAGE_SHIFT)
+#define PFN_TO_PF(pfn)     ((pf_t *)((pfn) + pfdb.pf))
+#define PF_TO_PFN(pf)      ((uint32_t)((pf) - pfdb.pf))
 #define PTE_TO_PADDR(pte)  ((pte) & ~PGMASK_OFFSET)
 
 // Page frame types
@@ -42,8 +45,8 @@ enum
 /// in the page frame database.
 typedef struct pf
 {
-    uint32_t prev;          ///< Prev pfn on available list
-    uint32_t next;          ///< Next pfn on available list
+    uint32_t prev;          ///< Index of prev pfn on available list
+    uint32_t next;          ///< Index of next pfn on available list
     uint16_t refcount;      ///< Number of references to this page
     uint16_t sharecount;    ///< Number of processes sharing page
     uint16_t flags;
@@ -55,17 +58,17 @@ typedef struct pf
 
 STATIC_ASSERT(sizeof(pf_t) == 32, "Unexpected page frame size");
 
-/// The paging context structure holds the state of the paging module.
-struct context
+/// The pfdb describes the state of the page frame database.
+struct pfdb
 {
-    pf_t    *pfdb;           ///< Page frame database
-    uint32_t pfcount;        ///< Number of frames in the pfdb
-    uint32_t pfavail;        ///< Available frames in the pfdb
-    uint32_t pfnhead;        ///< Available frame list head
-    uint32_t pfntail;        ///< Available frame list tail
+    pf_t    *pf;          ///< Pointer to array of page frames
+    uint32_t count;       ///< Total number of frames in the pfdb
+    uint32_t avail;       ///< Available number of frames in the pfdb
+    uint32_t head;        ///< Index of available frame list head
+    uint32_t tail;        ///< Index of available frame list tail
 };
 
-static struct context pgcontext;
+static struct pfdb pfdb;
 
 /// Reserve an aligned region of memory managed by the memory table module.
 static void *
@@ -107,8 +110,8 @@ page_init()
 
     // Calculate the size of the page frame database. It needs to describe
     // each page up to and including the last physical address.
-    pgcontext.pfcount = map->last_usable / PAGE_SIZE;
-    uint64_t pfdbsize = pgcontext.pfcount * sizeof(pf_t);
+    pfdb.count = map->last_usable / PAGE_SIZE;
+    uint64_t pfdbsize = pfdb.count * sizeof(pf_t);
 
     // Round the database size up to the nearest 2MiB since we'll be using
     // large pages in the kernel page table to describe the database.
@@ -118,18 +121,21 @@ page_init()
 
     // Find a contiguous, 2MiB-aligned region of memory large enough to hold
     // the entire pagedb.
-    pgcontext.pfdb =
-        (pf_t *)reserve_region(map, pfdbsize, PAGE_SHIFT_LARGE);
-    if (pgcontext.pfdb == NULL)
+    pfdb.pf = (pf_t *)reserve_region(map, pfdbsize, PAGE_SHIFT_LARGE);
+    if (pfdb.pf == NULL)
         fatal();
 
+    // Initialize the kernel's page table.
+    uint64_t ptaddr = kmem_init();
+    set_pagetable(ptaddr);
+
     // Create the page frame database in the newly mapped virtual memory.
-    memzero(pgcontext.pfdb, pfdbsize);
+    memzero(pfdb.pf, pfdbsize);
 
     // Initialize available page frame list.
-    pgcontext.pfavail = 0;
-    pgcontext.pfnhead = PFN_INVALID;
-    pgcontext.pfntail = PFN_INVALID;
+    pfdb.avail = 0;
+    pfdb.head  = PFN_INVALID;
+    pfdb.tail  = PFN_INVALID;
 
     // Traverse the memory table, adding page frame database entries for each
     // region in the table.
@@ -151,16 +157,16 @@ page_init()
         }
 
         // Link the chain to the list of available frames.
-        if (pgcontext.pfntail == PFN_INVALID)
-            pgcontext.pfnhead = pfn0;
+        if (pfdb.tail == PFN_INVALID)
+            pfdb.head = pfn0;
         else
-            pgcontext.pfdb[pgcontext.pfntail].next = pfn0;
-        pgcontext.pfdb[pfn0].prev     = pgcontext.pfntail;
-        pgcontext.pfdb[pfnN - 1].next = PFN_INVALID;
-        pgcontext.pfntail             = pfnN - 1;
+            pfdb.pf[pfdb.tail].next = pfn0;
+        pfdb.pf[pfn0].prev     = pfdb.tail;
+        pfdb.pf[pfnN - 1].next = PFN_INVALID;
+        pfdb.tail              = pfnN - 1;
 
         // Update the total number of available frames.
-        pgcontext.pfavail += (uint32_t)(pfnN - pfn0);
+        pfdb.avail += (uint32_t)(pfnN - pfn0);
     }
 
     // TODO: Install page fault handler
@@ -170,17 +176,16 @@ static pf_t *
 pfalloc()
 {
     // For now, fatal out. Later, we'll add swapping.
-    if (pgcontext.pfavail == 0)
+    if (pfdb.avail == 0)
         fatal();
 
     // Grab the first available page frame from the database.
-    pf_t *pfdb = pgcontext.pfdb;
-    pf_t *pf   = PFN_TO_PF(pgcontext.pfnhead);
+    pf_t *pf = PFN_TO_PF(pfdb.head);
 
     // Update the available frame list.
-    pgcontext.pfnhead = pfdb[pgcontext.pfnhead].next;
-    if (pgcontext.pfnhead != PFN_INVALID)
-        pfdb[pgcontext.pfnhead].prev = PFN_INVALID;
+    pfdb.head = pfdb.pf[pfdb.head].next;
+    if (pfdb.head != PFN_INVALID)
+        pfdb.pf[pfdb.head].prev = PFN_INVALID;
 
     // Initialize and return the page frame.
     memzero(pf, sizeof(pf_t));
@@ -195,20 +200,18 @@ pffree(pf_t *pf)
     if (pf->type != PFTYPE_ALLOCATED)
         fatal();
 
-    pf_t *pfdb = pgcontext.pfdb;
-
     // Re-initialize the page frame record.
     memzero(pf, sizeof(pf_t));
     pf->prev = PFN_INVALID;
-    pf->next = pgcontext.pfnhead;
+    pf->next = pfdb.head;
     pf->type = PFTYPE_AVAILABLE;
 
     // Update the database's available frame list.
     uint32_t pfn = PF_TO_PFN(pf);
-    pfdb[pgcontext.pfnhead].prev = pfn;
-    pgcontext.pfnhead            = pfn;
+    pfdb.pf[pfdb.head].prev = pfn;
+    pfdb.head               = pfn;
 
-    pgcontext.pfavail++;
+    pfdb.avail++;
 }
 
 static uint64_t
@@ -254,9 +257,12 @@ pgfree_recurse(page_t *page, int level)
     // until we reach the PT level.
     else {
         for (uint64_t e = 0; e < 512; e++) {
+            if (page->entry[e] & PF_SYSTEM)     // Never free system tables
+                continue;
             page_t *child = PGPTR(page->entry[e]);
-            if (child != NULL)
-                pgfree_recurse(child, level - 1);
+            if (child == NULL)
+                continue;
+            pgfree_recurse(child, level - 1);
         }
     }
 }
@@ -264,10 +270,11 @@ pgfree_recurse(page_t *page, int level)
 /// Add to the page table an entry mapping a virtual address to a physical
 /// address.
 static void
-add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags)
+add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags,
+        uint32_t addflags)
 {
     // Fatal out if virtual address space is exhausted.
-    if (vaddr >= pt->vterm)
+    if ((addflags & CONTAINS_TABLE) && (vaddr >= pt->vterm))
         fatal();
 
     // Keep track of the pages we add to the page table as we add this new
@@ -284,11 +291,17 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags)
     // Follow the page table hierarchy down to the lowest level, creating
     // new pages for tables as needed.
 
-    page_t *pml4t = (page_t *)pt->vroot;
+    page_t *pml4t = (page_t *)pt->proot;
     if (pml4t->entry[pml4e] == 0) {
         uint64_t pgaddr = pgalloc();
         added[count++]      = pgaddr;
         pml4t->entry[pml4e] = pgaddr | PF_PRESENT | PF_RW;
+    }
+    else if (pml4t->entry[pml4e] & PF_SYSTEM) {
+        // A system page table should never be modified. This check is
+        // performed only within the root PML4 table because checks on
+        // lower level tables would be redundant.
+        fatal();
     }
 
     page_t *pdpt = PGPTR(pml4t->entry[pml4e]);
@@ -312,7 +325,7 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags)
     // If adding the new entry required the page table to grow, make sure to
     // add the page table's new pages as well.
     for (int i = 0; i < count; i++) {
-        add_pte(pt, pt->vnext, added[i], PF_PRESENT | PF_RW);
+        add_pte(pt, pt->vnext, added[i], PF_PRESENT | PF_RW, CONTAINS_TABLE);
         pt->vnext += PAGE_SIZE;
     }
 }
@@ -327,7 +340,7 @@ remove_pte(pagetable_t *pt, uint64_t vaddr)
     uint32_t pte   = PTE(vaddr);
 
     // Traverse the hierarchy, looking for the page.
-    page_t *pml4t = (page_t *)pt->vroot;
+    page_t *pml4t = (page_t *)pt->proot;
     page_t *pdpt  = PGPTR(pml4t->entry[pml4e]);
     page_t *pdt   = PGPTR(pdpt->entry[pdpte]);
     page_t *ptt   = PGPTR(pdt->entry[pde]);
@@ -341,16 +354,22 @@ remove_pte(pagetable_t *pt, uint64_t vaddr)
 }
 
 void
-pagetable_create(pagetable_t *pt, void *vaddr, void *taddr)
+pagetable_create(pagetable_t *pt, void *vaddr, uint64_t size)
 {
+    if (size % PAGE_SIZE != 0)
+        fatal();
+
     // Allocate a page from the top level of the page table hierarchy.
     pt->proot = pgalloc();
     pt->vroot = (uint64_t)vaddr;
     pt->vnext = (uint64_t)vaddr + PAGE_SIZE;
-    pt->vterm = (uint64_t)taddr;
+    pt->vterm = (uint64_t)vaddr + size;
 
-    // Create a page table entry for the page holding the top level table.
-    add_pte(pt, (uint64_t)vaddr, (uint64_t)pt->proot, PF_PRESENT | PF_RW);
+    // Install the kernel's page table into the created page table.
+    page_t *src = (page_t *)kmem_pagetable_addr();
+    page_t *dst = (page_t *)pt->proot;
+    for (int i = 0; i < 512; i++)
+        dst->entry[i] = src->entry[i];
 }
 
 void
@@ -360,7 +379,7 @@ pagetable_destroy(pagetable_t *pt)
         fatal();
 
     // Recursively destroy all pages starting from the PML4 table.
-    pgfree_recurse((page_t *)pt->vroot, 4);
+    pgfree_recurse((page_t *)pt->proot, 4);
     pt->proot = 0;
     pt->vroot = 0;
     pt->vnext = 0;
@@ -370,6 +389,12 @@ pagetable_destroy(pagetable_t *pt)
 void
 pagetable_activate(pagetable_t *pt)
 {
+    if (pt == NULL) {
+        uint64_t ptaddr = kmem_pagetable_addr();
+        set_pagetable(ptaddr);
+        return;
+    }
+
     if (pt->proot == 0)
         fatal();
 
@@ -381,7 +406,7 @@ page_alloc(pagetable_t *pt, void *vaddr_in, int count)
 {
     for (uint64_t vaddr = (uint64_t)vaddr_in; count--; vaddr += PAGE_SIZE) {
         uint64_t paddr = pgalloc();
-        add_pte(pt, vaddr, paddr, PF_PRESENT | PF_RW);
+        add_pte(pt, vaddr, paddr, PF_PRESENT | PF_RW, 0);
     }
     return vaddr_in;
 }
