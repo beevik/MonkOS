@@ -15,6 +15,7 @@
 #include <kernel/device/tty.h>
 #include <kernel/device/keyboard.h>
 #include <kernel/mem/acpi.h>
+#include <kernel/mem/heap.h>
 #include <kernel/mem/paging.h>
 #include <kernel/x86/cpu.h>
 
@@ -187,10 +188,11 @@ cmd_test_heap()
     pagetable_create(&pt, (void *)0x8000000000, PAGE_SIZE * 1024);
     pagetable_activate(&pt);
 
-    uint8_t *vaddr = (uint8_t *)page_alloc(&pt, (void *)0x9000000000, 16);
-    for (int i = 0; i < 16 * PAGE_SIZE; i++)
-        vaddr[i] = (uint8_t)i;
-    page_free(&pt, vaddr, 16);
+    struct heap *heap = heap_create(&pt, (void *)0x9000000000, 1024);
+    void        *ptr1 = heap_alloc(heap, 128);
+    void        *ptr2 = heap_alloc(heap, 0xff24);
+    heap_free(heap, ptr1);
+    heap_free(heap, ptr2);
 
     pagetable_activate(NULL);
     pagetable_destroy(&pt);

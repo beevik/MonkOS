@@ -8,62 +8,214 @@
 //============================================================================
 
 #include <core.h>
+#include <kernel/mem/heap.h>
 #include <kernel/mem/paging.h>
+
+// Constants
+#define INITIAL_PAGES   16
+
+// block_header flags
+#define FLAG_ALLOCATED  (1 << 0)
+
+// Macros
+#define ROUND12(n)      (((((n) + 23) >> 4) << 4) - 8)
 
 struct heap
 {
-    uint32_t              size;         // size of this heap in bytes
-    uint32_t              reserved;
-    struct heap          *root_heap;    // first heap in the heap chain
-    struct heap          *next_heap;    // next heap in the heap chain
+    void                 *vaddr;        // address of heap start
+    uint64_t              pages;        // pages currently alloced to the heap
+    uint64_t              maxpages;     // max pages used by the heap
     struct fblock_header *first_fblock; // first free block in the heap
 };
 
-struct block_header
+typedef struct block_header
 {
-    uint32_t size;          // size of this (free or allocated) block
-    uint32_t heap_offset;   // offset from the start of the block's heap
-};
+    uint64_t size;          // size of block in bytes, not incl header/footer
+    uint64_t flags;
+} block_header_t;
 
-struct block_footer
+typedef struct block_footer
 {
-    uint32_t size;       // size of the preceding block
-};
+    uint64_t size;          // size of the preceding block
+} block_footer_t;
 
-struct fblock_header
+typedef struct fblock_header
 {
     struct block_header   block;
-    struct fblock_header *next_fblock;  // next fblock in the heap
-    struct fblock_header *prev_fblock;  // prev fblock in the heap
-};
+    struct fblock_header *next_fblock;  // next fh in the heap
+    struct fblock_header *prev_fblock;  // prev fh in the heap
+} fblock_header_t;
 
-struct heap *
-heap_create(pagetable_t *pt, void *vaddr, uint32_t chunk_size)
+heap_t *
+heap_create(pagetable_t *pt, void *vaddr, uint64_t maxpages)
 {
-    chunk_size = ((chunk_size + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE;
-    int count = (int)(chunk_size / PAGE_SIZE);
+    heap_t *heap = (heap_t *)page_alloc(pt, vaddr, INITIAL_PAGES);
+    heap->vaddr        = vaddr;
+    heap->pages        = INITIAL_PAGES;
+    heap->maxpages     = max(INITIAL_PAGES, maxpages);
+    heap->first_fblock = (fblock_header_t *)(heap + 1);
 
-    struct heap *heap = (struct heap *)page_alloc(pt, vaddr, count);
-    heap->size         = chunk_size;
-    heap->reserved     = 0;
-    heap->root_heap    = heap;
-    heap->next_heap    = NULL;
-    heap->first_fblock = (struct fblock_header *)(heap + 1);
+    uint64_t block_size = heap->pages * PAGE_SIZE - sizeof(heap_t) -
+                          sizeof(block_header_t) -
+                          sizeof(block_footer_t);
 
-    uint32_t block_size = chunk_size - sizeof(struct heap) -
-                          sizeof(struct block_header) -
-                          sizeof(struct block_footer);
+    fblock_header_t *fh = heap->first_fblock;
+    fh->block.size  = block_size;
+    fh->block.flags = 0;
+    fh->next_fblock = NULL;
+    fh->prev_fblock = NULL;
 
-    struct fblock_header *fblock = heap->first_fblock;
-    fblock->block.size        = block_size;
-    fblock->block.heap_offset = sizeof(struct heap);
-    fblock->next_fblock       = NULL;
-    fblock->prev_fblock       = NULL;
-
-    struct block_footer *footer =
-        (struct block_footer *)((uint8_t *)(fblock + 1) + block_size -
-                                sizeof(struct block_footer));
+    block_footer_t *footer =
+        (block_footer_t *)((uint8_t *)fh + block_size +
+                           sizeof(block_header_t));
     footer->size = block_size;
 
     return heap;
+}
+
+// Find a free block large enough to hold 'size' bytes. If such a block is not
+// found, grow the heap.
+static fblock_header_t *
+find_fblock(heap_t *heap, uint64_t size)
+{
+    fblock_header_t *fb = heap->first_fblock;
+    while (fb) {
+        if (fb->block.size >= size)
+            return fb;
+        fb = fb->next_fblock;
+    }
+
+    // TODO: Grow the heap
+    return NULL;
+}
+
+void *
+heap_alloc(heap_t *heap, uint64_t size)
+{
+    // Round the size up to the nearest (mod 16) == 8 value. This way all
+    // returned pointers will remain aligned on 16-byte boundaries.
+    size = ROUND12(size);
+
+    // Find a free block big enough to hold the allocation
+    fblock_header_t *fb = find_fblock(heap, size);
+    if (fb == NULL)
+        return NULL;
+
+    // Copy the original free block's size and pointers, since we'll be
+    // modifying their current storage.
+    uint64_t         fsize = fb->block.size;
+    fblock_header_t *next  = fb->next_fblock;
+    fblock_header_t *prev  = fb->prev_fblock;
+
+    // If the free block would be filled (or nearly filled) by the
+    // allocation, replace it with an allocated block.
+    block_header_t *ah;
+    if (fsize - size <= 8) {
+
+        // Mark the block header as allocated, leaving the size unchanged.
+        ah        = &fb->block;
+        ah->flags = FLAG_ALLOCATED;
+
+        // Ignore the allocated block footer, since the size remains
+        // unchanged.
+
+        // Fix up the free list.
+        if (prev)
+            prev->next_fblock = next;
+        else
+            heap->first_fblock = next;
+        if (next)
+            next->prev_fblock = prev;
+    }
+
+    // Otherwise, split the free block into an allocated block and a smaller
+    // free block.
+    else {
+
+        // Initialize the allocated block header.
+        ah        = &fb->block;
+        ah->size  = size;
+        ah->flags = FLAG_ALLOCATED;
+
+        // Initialize the allocated block footer.
+        block_footer_t *af =
+            (block_footer_t *)((uint8_t *)ah + size + sizeof(block_header_t));
+        af->size = size;
+
+        // Initialize the new free block header, which follows the allocated
+        // block.
+        fblock_header_t *fh = (fblock_header_t *)(af + 1);
+        fh->block.size = fsize - size - sizeof(block_header_t) -
+                         sizeof(block_footer_t);
+        fh->block.flags = 0;
+
+        // Initialize the new free block footer.
+        block_footer_t *ff =
+            (block_footer_t *)((uint8_t *)fh + fh->block.size +
+                               sizeof(block_header_t));
+        ff->size = fh->block.size;
+
+        // Fix up the free list.
+        fh->prev_fblock = prev;
+        fh->next_fblock = next;
+        if (prev)
+            prev->next_fblock = fh;
+        else
+            heap->first_fblock = fh;
+        if (next)
+            next->prev_fblock = fh;
+    }
+
+    // Return a pointer just beyond the allocated block header.
+    return (void *)((uint8_t *)ah + sizeof(block_header_t));
+}
+
+/// Check the next block adjacent to 'b'. If it's free, return a pointer to
+/// it.
+static fblock_header_t *
+next_fblock_adj(heap_t *heap, block_header_t *b)
+{
+    uint8_t *term = (uint8_t *)heap->vaddr + heap->pages * PAGE_SIZE;
+    uint8_t *ptr  = (uint8_t *)b + b->size + sizeof(block_header_t) +
+                    sizeof(block_footer_t);
+    if (ptr >= term)
+        return NULL;
+
+    block_header_t *h = (block_header_t *)ptr;
+    if (!(h->flags & FLAG_ALLOCATED))
+        return (fblock_header_t *)h;
+
+    return NULL;
+}
+
+/// Check the preceding block adjacent to 'b'. If it's free, return a pointer
+/// to it.
+static fblock_header_t *
+prev_fblock_adj(heap_t *heap, block_header_t *b)
+{
+    uint8_t *start = (uint8_t *)heap->vaddr + sizeof(heap_t);
+    if ((uint8_t *)b == start)
+        return NULL;
+
+    block_footer_t *f =
+        (block_footer_t *)((uint8_t *)b - sizeof(block_footer_t));
+    block_header_t *h =
+        (block_header_t *)((uint8_t *)b - f->size - sizeof(block_header_t) -
+                           sizeof(block_footer_t));
+    if (!(h->flags & FLAG_ALLOCATED))
+        return (fblock_header_t *)h;
+
+    return NULL;
+}
+
+void
+heap_free(heap_t *heap, void *ptr)
+{
+    // @@@ dummy code.  TODO: write free code.
+    block_header_t *h =
+        (block_header_t *)((uint8_t *)ptr - sizeof(block_header_t));
+    fblock_header_t *f1 = next_fblock_adj(heap, h);
+    fblock_header_t *f2 = prev_fblock_adj(heap, h);
+    (void)f1;
+    (void)f2;
 }
