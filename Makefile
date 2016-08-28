@@ -64,4 +64,6 @@ cleandeps: .force
 	@rm -rf $(DIR_DEPS)
 	@echo "$(BLUE)[clean]$(NORMAL) Dependency files deleted"
 
+cleanall: clean cleandeps
+
 .force:

@@ -17,8 +17,9 @@
 // block_header flags
 #define FLAG_ALLOCATED  (1 << 0)
 
-// Macros
-#define ROUND12(n)      (((((n) + 23) >> 4) << 4) - 8)
+// ROUND16: return the first value x greater than or equal to n that satisfies
+//          (x mod 16) = r
+#define ROUND16(n, r)  (((((n) - (r) + 31) >> 4) << 4) + (r) - 16)
 
 struct heap
 {
@@ -94,7 +95,7 @@ heap_alloc(heap_t *heap, uint64_t size)
 {
     // Round the size up to the nearest (mod 16) == 8 value. This way all
     // returned pointers will remain aligned on 16-byte boundaries.
-    size = ROUND12(size);
+    size = ROUND16(size, 8);
 
     // Find a free block big enough to hold the allocation
     fblock_header_t *fb = find_fblock(heap, size);
@@ -182,7 +183,7 @@ next_fblock_adj(heap_t *heap, block_header_t *b)
         return NULL;
 
     block_header_t *h = (block_header_t *)ptr;
-    if (!(h->flags & FLAG_ALLOCATED))
+    if ((h->flags & FLAG_ALLOCATED) == 0)
         return (fblock_header_t *)h;
 
     return NULL;
@@ -202,9 +203,49 @@ prev_fblock_adj(heap_t *heap, block_header_t *b)
     block_header_t *h =
         (block_header_t *)((uint8_t *)b - f->size - sizeof(block_header_t) -
                            sizeof(block_footer_t));
-    if (!(h->flags & FLAG_ALLOCATED))
+    if ((h->flags & FLAG_ALLOCATED) == 0)
         return (fblock_header_t *)h;
 
+    return NULL;
+}
+
+/// Scan all blocks after 'b' until a free block is encountered and return it.
+/// If no free blocks are found, return NULL.
+static fblock_header_t *
+next_fblock(heap_t *heap, block_header_t *b)
+{
+    uint8_t *term = (uint8_t *)heap->vaddr + heap->pages * PAGE_SIZE;
+    for (;;) {
+        uint8_t *ptr = (uint8_t *)b + b->size + sizeof(block_header_t) +
+                       sizeof(block_footer_t);
+        if (ptr >= term)
+            return NULL;
+
+        b = (block_header_t *)ptr;
+        if ((b->flags & FLAG_ALLOCATED) == 0)
+            return (fblock_header_t *)b;
+    }
+    return NULL;
+}
+
+/// Scan all blocks preceding 'b' until a free block is encountered and return
+/// it. If no free blocks are found, return NULL.
+static fblock_header_t *
+prev_fblock(heap_t *heap, block_header_t *b)
+{
+    uint8_t *start = (uint8_t *)heap->vaddr + sizeof(heap_t);
+    for (;;) {
+        if ((uint8_t *)b == start)
+            return NULL;
+
+        block_footer_t *f =
+            (block_footer_t *)((uint8_t *)b - sizeof(block_footer_t));
+        b = (block_header_t *)((uint8_t *)b - f->size -
+                               sizeof(block_header_t) -
+                               sizeof(block_footer_t));
+        if ((b->flags & FLAG_ALLOCATED) == 0)
+            return (fblock_header_t *)b;
+    }
     return NULL;
 }
 
@@ -216,6 +257,10 @@ heap_free(heap_t *heap, void *ptr)
         (block_header_t *)((uint8_t *)ptr - sizeof(block_header_t));
     fblock_header_t *f1 = next_fblock_adj(heap, h);
     fblock_header_t *f2 = prev_fblock_adj(heap, h);
+    fblock_header_t *f3 = next_fblock(heap, h);
+    fblock_header_t *f4 = prev_fblock(heap, h);
     (void)f1;
     (void)f2;
+    (void)f3;
+    (void)f4;
 }
