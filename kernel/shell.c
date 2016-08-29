@@ -190,10 +190,13 @@ cmd_test_heap()
 
     struct heap *heap = heap_create(&pt, (void *)0x9000000000, 1024);
     void        *ptr1 = heap_alloc(heap, 128);
-    void        *ptr2 = heap_alloc(heap, 0xff24);
+    void        *ptr2 = heap_alloc(heap, 0xff00);
+    void        *ptr3 = heap_alloc(heap, 8);
     heap_free(heap, ptr1);
     heap_free(heap, ptr2);
+    heap_free(heap, ptr3);
 
+    heap_destroy(heap);
     pagetable_activate(NULL);
     pagetable_destroy(&pt);
     return true;

@@ -1,6 +1,6 @@
 //============================================================================
 /// @file       heap.h
-/// @brief      Heap memory manager
+/// @brief      A simple heap memory manager
 //
 //  Copyright 2016 Brett Vickers.
 //  Use of this source code is governed by a BSD-style license
@@ -27,6 +27,14 @@ typedef struct heap heap_t;
 //----------------------------------------------------------------------------
 heap_t *
 heap_create(pagetable_t *pt, void *vaddr, uint64_t maxpages);
+
+//----------------------------------------------------------------------------
+//  @function   heap_destroy
+/// @brief      Destroy a heap, returning its memory to page table.
+/// @param[in]  heap        The heap to be destroyed.
+//----------------------------------------------------------------------------
+void
+heap_destroy(heap_t *heap);
 
 //----------------------------------------------------------------------------
 //  @function   heap_alloc

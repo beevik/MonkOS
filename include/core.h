@@ -29,6 +29,18 @@
 #define min(a, b)            ((a) < (b) ? (a) : (b))
 #define max(a, b)            ((a) > (b) ? (a) : (b))
 
+// Division macros, rounding (a/b) up or down
+#define div_dn(a, b)         ((a) / (b))
+#define div_up(a, b)         (((a) + (b) - 1) / (b))
+
+// Alignment macros, align a to the nearest multiple of b.
+#define align_dn(a, b)       (div_dn(a, b) * (b))
+#define align_up(a, b)       (div_up(a, b) * (b))
+
+// Typed pointer arithmetic. Pointer p +/- offset o, cast to t*.
+#define ptr_add(t, p, o)     ((t *)((uint8_t *)(p) + (o)))
+#define ptr_sub(t, p, o)     ((t *)((uint8_t *)(p) - (o)))
+
 /// Compile-time static assertion
 #define STATIC_ASSERT(a, b)  _Static_assert(a, b)
 
