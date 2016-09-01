@@ -158,6 +158,14 @@ io_outd(uint16_t port, uint32_t value);
 void
 set_pagetable(uint64_t paddr);
 
+//-----------------------------------------------------------------------------
+//  @function   invalidate_page
+/// @brief      Invalidate the page containing a virtual address.
+/// @reg[in]    vaddr   The virtual address of the page to invalidate.
+//-----------------------------------------------------------------------------
+void
+invalidate_page(void *vaddr);
+
 //----------------------------------------------------------------------------
 //  @function   enable_interrupts
 /// @brief      Enable interrupts.
@@ -193,7 +201,7 @@ invalid_opcode();
 void
 fatal();
 
-// Use inline assembly versions if __NO_INLINE__ is not defined
-#else
-#    include "cpu_inl.h"
-#endif
+#endif // __NO_INLINE__
+
+
+#include "cpu_inl.h"

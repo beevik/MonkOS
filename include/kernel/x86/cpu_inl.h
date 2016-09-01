@@ -121,6 +121,16 @@ set_pagetable(uint64_t paddr)
 }
 
 __forceinline void
+invalidate_page(void *vaddr)
+{
+    asm volatile (
+        "invlpg     %[v]\n"
+        :
+        : [v] "m" (vaddr)
+        : "memory" );
+}
+
+__forceinline void
 enable_interrupts()
 {
     asm volatile ("sti");

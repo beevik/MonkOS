@@ -296,6 +296,7 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags,
         uint64_t pgaddr = pgalloc();
         added[count++]      = pgaddr;
         pml4t->entry[pml4e] = pgaddr | PF_PRESENT | PF_RW;
+        invalidate_page(pml4t);
     }
     else if (pml4t->entry[pml4e] & PF_SYSTEM) {
         // A system page table should never be modified. This check is
@@ -309,6 +310,7 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags,
         uint64_t pgaddr = pgalloc();
         added[count++]     = pgaddr;
         pdpt->entry[pdpte] = pgaddr | PF_PRESENT | PF_RW;
+        invalidate_page(pdpt);
     }
 
     page_t *pdt = PGPTR(pdpt->entry[pdpte]);
@@ -316,11 +318,13 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags,
         uint64_t pgaddr = pgalloc();
         added[count++]  = pgaddr;
         pdt->entry[pde] = pgaddr | PF_PRESENT | PF_RW;
+        invalidate_page(pdt);
     }
 
     // Add the page table entry.
     page_t *ptt = PGPTR(pdt->entry[pde]);
     ptt->entry[pte] = paddr | pflags;
+    invalidate_page(ptt);
 
     // If adding the new entry required the page table to grow, make sure to
     // add the page table's new pages as well.
@@ -348,6 +352,10 @@ remove_pte(pagetable_t *pt, uint64_t vaddr)
 
     // Clear the page table entry for the virtual address.
     ptt->entry[pte] = 0;
+    invalidate_page(ptt);
+
+    // Invalidate the TLB entry for the page that was just removed.
+    invalidate_page((void *)vaddr);
 
     // Return the physical address of the page table entry that was removed.
     return (uint64_t)pg;
@@ -390,8 +398,7 @@ void
 pagetable_activate(pagetable_t *pt)
 {
     if (pt == NULL) {
-        uint64_t ptaddr = kmem_pagetable_addr();
-        set_pagetable(ptaddr);
+        set_pagetable(kmem_pagetable_addr());
         return;
     }
 

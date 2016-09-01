@@ -52,8 +52,15 @@ debug: .force
 debugwait: .force
 	@$(QEMU) -S -gdb tcp::8864 -cdrom $(DIR_BUILD)/monk.iso
 
+hdebug: .force
+	@$(QEMU) -gdb tcp::8864 -enable-kvm -cpu host \
+	-cdrom $(DIR_BUILD)/monk.iso
+
 test: .force
 	@$(QEMU) -cdrom $(DIR_BUILD)/monk.iso
+
+htest: .force
+	@$(QEMU) -enable-kvm -cpu host -cdrom $(DIR_BUILD)/monk.iso
 
 clean: .force
 	@rm -rf $(DIR_BUILD)

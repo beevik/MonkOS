@@ -156,6 +156,10 @@ load:
         mov     eax,    1
         cpuid
 
+        ; Check for FXSAVE/FXRSTOR support.
+        test    edx,    (1 << 24)
+        jz      .error.noFXinst
+
         ; Check for SSE1 support.
         test    edx,    (1 << 25)
         jz      .error.noSSE
@@ -163,10 +167,6 @@ load:
         ; Check for SSE2 support.
         test    edx,    (1 << 26)
         jz      .error.noSSE2
-
-        ; Check for FXSAVE/FXRSTOR support.
-        test    edx,    (1 << 24)
-        jz      .error.noFXinst
 
         ; Enable hardware FPU with monitoring.
         mov     eax,    cr0
@@ -319,9 +319,9 @@ load:
         or      eax,    (1 << 31) | (1 << 0)    ; CR0.PG, CR0.PE
         mov     cr0,    eax
 
-        ; Enable global pages and process-context identifiers
+        ; Enable global pages
         mov     eax,    cr4
-        or      eax,    (1 << 7) | (1 << 17)    ; CR4.PGE, CR4.PCIDE
+        or      eax,    (1 << 7)    ; CR4.PGE
         mov     cr4,    eax
 
         ; Load the 64-bit GDT.
@@ -337,6 +337,12 @@ bits 64
     ; Launch the 64-bit kernel
     ;-------------------------------------------------------------------------
     .launch64:
+
+        ; Save CPU feature bits into global memory block
+        mov     eax,    1
+        cpuid
+        mov     [Globals.CPUFeatureBitsECX], ecx
+        mov     [Globals.CPUFeatureBitsEDX], edx
 
         ; Wipe the real mode stack.
         xor     eax,    eax

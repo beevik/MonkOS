@@ -104,8 +104,7 @@ read_mcfg(const struct acpi_hdr *hdr)
 static void
 read_table(const struct acpi_hdr *hdr)
 {
-    uint32_t sig = *(const uint32_t *)hdr->signature;
-    switch (sig)
+    switch (hdr->signature.dword)
     {
         case SIGNATURE_FADT:
             read_fadt(hdr); break;
@@ -237,7 +236,7 @@ read_xsdt(btable_t *btable)
             (const struct acpi_hdr *)xsdt->ptr_table[i];
         map_table(btable, hdr);
         logf(LOG_INFO, "[acpi] Found %.4s table at %#lx.",
-             hdr->signature, (uint64_t)hdr);
+             hdr->signature.bytes, (uint64_t)hdr);
         read_table(hdr);
     }
 }
@@ -259,7 +258,7 @@ read_rsdt(btable_t *btable)
             (const struct acpi_hdr *)(uintptr_t)rsdt->ptr_table[i];
         map_table(btable, hdr);
         logf(LOG_INFO, "[acpi] Found %.4s table at %#lx.",
-             hdr->signature, (uint64_t)hdr);
+             hdr->signature.bytes, (uint64_t)hdr);
         read_table(hdr);
     }
 }

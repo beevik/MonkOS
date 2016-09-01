@@ -90,7 +90,7 @@ void
 heap_destroy(heap_t *heap)
 {
     page_free(heap->pt, heap->vaddr, heap->pages);
-    memzero(heap, sizeof(heap_t));
+    // The heap pointer now points to unpaged memory.
 }
 
 /// Check the next block adjacent to 'b'. If it's free, return a pointer to

@@ -21,6 +21,8 @@ struc Globals, Mem.Globals
     .RootDirectorySector    resw    1
     .KernelSector           resw    1
     .KernelSize             resd    1
+    .CPUFeatureBitsECX      resd    1
+    .CPUFeatureBitsEDX      resd    1
 endstruc
 
 %endif ; __MONK_BOOT_GLOBALS_INC__

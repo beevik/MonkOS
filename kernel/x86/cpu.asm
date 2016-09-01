@@ -24,6 +24,7 @@ section .text
     global io_ind
     global io_outd
     global set_pagetable
+    global invalidate_page
     global enable_interrupts
     global disable_interrupts
     global halt
@@ -172,6 +173,16 @@ io_outd:
 set_pagetable:
 
     mov     cr3,    rdi
+    ret
+
+;-----------------------------------------------------------------------------
+; @function     invalidate_page
+; @brief        Invalidate the page containing a virtual address.
+; @reg[in]      rdi     The virtual address of the page to invalidate.
+;-----------------------------------------------------------------------------
+invalidate_page:
+
+    invlpg  [rdi]
     ret
 
 ;-----------------------------------------------------------------------------
