@@ -17,10 +17,11 @@
 //----------------------------------------------------------------------------
 struct acpi_hdr
 {
-    union {
+    union
+    {
         char     bytes[4];     ///< Contains 4-letter table identifier
         uint32_t dword;
-    } signature;
+    }        signature;
     uint32_t length;           ///< Length of this table including header
     uint8_t  revision;         ///< Revision number, should be 1
     uint8_t  checksum;         ///< Covers entire table

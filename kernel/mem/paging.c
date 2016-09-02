@@ -41,8 +41,7 @@ enum
     PFTYPE_ALLOCATED = 2,
 };
 
-/// The pf structure represents a page frame record, which tracks page frames
-/// in the page frame database.
+/// The pf structure represents a record in the page frame database.
 typedef struct pf
 {
     uint32_t prev;          ///< Index of prev pfn on available list
@@ -68,7 +67,11 @@ struct pfdb
     uint32_t tail;        ///< Index of available frame list tail
 };
 
-static struct pfdb pfdb;
+static struct pfdb  pfdb;      // Global page frame database
+static pagetable_t  kpt;       // Kernel page table (all physical memory)
+static pagetable_t *active_pt; // Currently active page table
+
+// TODO: Modify to support multi-core
 
 /// Reserve an aligned region of memory managed by the memory table module.
 static void *
@@ -126,8 +129,9 @@ page_init()
         fatal();
 
     // Initialize the kernel's page table.
-    uint64_t ptaddr = kmem_init();
-    set_pagetable(ptaddr);
+    kmem_init(&kpt);
+    set_pagetable(kpt.proot);
+    active_pt = &kpt;
 
     // Create the page frame database in the newly mapped virtual memory.
     memzero(pfdb.pf, pfdbsize);
@@ -246,7 +250,6 @@ pgfree_recurse(page_t *page, int level)
             uint64_t paddr = PTE_TO_PADDR(page->entry[e]);
             if (paddr == 0)
                 continue;
-
             pf_t *pf = PADDR_TO_PF(paddr);
             if (pf->type == PFTYPE_ALLOCATED)
                 pgfree(paddr);
@@ -296,7 +299,6 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags,
         uint64_t pgaddr = pgalloc();
         added[count++]      = pgaddr;
         pml4t->entry[pml4e] = pgaddr | PF_PRESENT | PF_RW;
-        invalidate_page(pml4t);
     }
     else if (pml4t->entry[pml4e] & PF_SYSTEM) {
         // A system page table should never be modified. This check is
@@ -310,7 +312,6 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags,
         uint64_t pgaddr = pgalloc();
         added[count++]     = pgaddr;
         pdpt->entry[pdpte] = pgaddr | PF_PRESENT | PF_RW;
-        invalidate_page(pdpt);
     }
 
     page_t *pdt = PGPTR(pdpt->entry[pdpte]);
@@ -318,13 +319,11 @@ add_pte(pagetable_t *pt, uint64_t vaddr, uint64_t paddr, uint32_t pflags,
         uint64_t pgaddr = pgalloc();
         added[count++]  = pgaddr;
         pdt->entry[pde] = pgaddr | PF_PRESENT | PF_RW;
-        invalidate_page(pdt);
     }
 
     // Add the page table entry.
     page_t *ptt = PGPTR(pdt->entry[pde]);
     ptt->entry[pte] = paddr | pflags;
-    invalidate_page(ptt);
 
     // If adding the new entry required the page table to grow, make sure to
     // add the page table's new pages as well.
@@ -352,10 +351,10 @@ remove_pte(pagetable_t *pt, uint64_t vaddr)
 
     // Clear the page table entry for the virtual address.
     ptt->entry[pte] = 0;
-    invalidate_page(ptt);
 
     // Invalidate the TLB entry for the page that was just removed.
-    invalidate_page((void *)vaddr);
+    if (pt == active_pt)
+        invalidate_page((void *)vaddr);
 
     // Return the physical address of the page table entry that was removed.
     return (uint64_t)pg;
@@ -374,7 +373,7 @@ pagetable_create(pagetable_t *pt, void *vaddr, uint64_t size)
     pt->vterm = (uint64_t)vaddr + size;
 
     // Install the kernel's page table into the created page table.
-    page_t *src = (page_t *)kmem_pagetable_addr();
+    page_t *src = (page_t *)kpt.proot;
     page_t *dst = (page_t *)pt->proot;
     for (int i = 0; i < 512; i++)
         dst->entry[i] = src->entry[i];
@@ -388,24 +387,28 @@ pagetable_destroy(pagetable_t *pt)
 
     // Recursively destroy all pages starting from the PML4 table.
     pgfree_recurse((page_t *)pt->proot, 4);
-    pt->proot = 0;
-    pt->vroot = 0;
-    pt->vnext = 0;
-    pt->vterm = 0;
+
+    // Invalidate TLB entries of all table pages.
+    if (pt == active_pt) {
+        for (uint64_t vaddr = pt->vroot; vaddr < pt->vterm;
+             vaddr += PAGE_SIZE) {
+            invalidate_page((void *)vaddr);
+        }
+    }
+
+    memzero(pt, sizeof(pagetable_t));
 }
 
 void
 pagetable_activate(pagetable_t *pt)
 {
-    if (pt == NULL) {
-        set_pagetable(kmem_pagetable_addr());
-        return;
-    }
-
+    if (pt == NULL)
+        pt = &kpt;
     if (pt->proot == 0)
         fatal();
 
     set_pagetable(pt->proot);
+    active_pt = pt;
 }
 
 void *

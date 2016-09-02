@@ -7,6 +7,8 @@
 // be found in the MonkOS LICENSE file.
 //============================================================================
 
+#include <kernel/mem/paging.h>
+
 // Kernel physical (and virtual) memory layout
 #define KMEM_IDT                     0x00001000
 #define KMEM_ISR_TABLE               0x00002000
@@ -43,18 +45,11 @@
 #define KMEM_KERNEL_PAGETABLE_SIZE   0x00050000
 
 //----------------------------------------------------------------------------
-//  @function   kmem_init
-/// @brief      Using the contents of the physical memory map, identity-map
-///             all physical memory into the kernel's page table.
-/// @returns    Physical address of the kernel page table.
+//  @function       kmem_init
+/// @brief          Using the contents of the physical memory map, identity
+///                 map all physical memory into the kernel's page table.
+/// @param[inout]   pt  The pagetable structure to hold a description of the
+///                     kernel's page table.
 //----------------------------------------------------------------------------
-uint64_t
-kmem_init();
-
-//----------------------------------------------------------------------------
-//  @function   kmem_pagetable_addr
-/// @brief      Return the physical address of the kernel's page table.
-/// @returns    Physical address of the kernel page table.
-//----------------------------------------------------------------------------
-uint64_t
-kmem_pagetable_addr();
+void
+kmem_init(pagetable_t *pt);

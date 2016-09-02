@@ -127,7 +127,7 @@ invalidate_page(void *vaddr)
         "invlpg     %[v]\n"
         :
         : [v] "m" (vaddr)
-        : "memory" );
+        : "memory");
 }
 
 __forceinline void
