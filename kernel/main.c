@@ -16,7 +16,6 @@
 #include <kernel/interrupt/exception.h>
 #include <kernel/interrupt/interrupt.h>
 #include <kernel/mem/acpi.h>
-#include <kernel/mem/kmem.h>
 #include <kernel/mem/paging.h>
 #include <kernel/mem/pmap.h>
 #include <kernel/syscall/syscall.h>

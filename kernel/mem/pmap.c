@@ -14,8 +14,8 @@
 #include <core.h>
 #include <libc/stdlib.h>
 #include <libc/string.h>
-#include <kernel/mem/kmem.h>
 #include <kernel/mem/pmap.h>
+#include "kmem.h"
 
 // Pointer to the BIOS-generated memory map.
 static pmap_t *map         = (pmap_t *)KMEM_TABLE_BIOS;

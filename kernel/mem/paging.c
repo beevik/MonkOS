@@ -12,9 +12,9 @@
 #include <libc/string.h>
 #include <kernel/x86/cpu.h>
 #include <kernel/interrupt/interrupt.h>
-#include <kernel/mem/kmem.h>
 #include <kernel/mem/pmap.h>
 #include <kernel/mem/paging.h>
+#include "kmem.h"
 
 // add_pte addflags
 #define CONTAINS_TABLE     (1 << 0)

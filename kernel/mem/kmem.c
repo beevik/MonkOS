@@ -11,9 +11,9 @@
 #include <libc/string.h>
 #include <kernel/x86/cpu.h>
 #include <kernel/interrupt/interrupt.h>
-#include <kernel/mem/kmem.h>
 #include <kernel/mem/paging.h>
 #include <kernel/mem/pmap.h>
+#include "kmem.h"
 
 /// Return flags for large-page leaf entries in level 3 (PDPT) and level 2
 /// (PDT) tables.

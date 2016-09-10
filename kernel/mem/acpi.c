@@ -11,10 +11,10 @@
 #include <libc/string.h>
 #include <kernel/debug/log.h>
 #include <kernel/mem/acpi.h>
-#include <kernel/mem/kmem.h>
 #include <kernel/mem/paging.h>
 #include <kernel/mem/pmap.h>
 #include <kernel/x86/cpu.h>
+#include "kmem.h"
 
 #define SIGNATURE_RSDP      0x2052545020445352ll // "RSD PTR "
 #define SIGNATURE_MADT      0x43495041           // "APIC"
