@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['memtype',['memtype',['../table_8h.html#aed630e868b0e22f472f1c1879117b84c',1,'table.h']]]
+  ['pmemtype',['pmemtype',['../pmap_8h.html#a9be8aefa1ff64f2eea05142128993c56',1,'pmap.h']]]
 ];

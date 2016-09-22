@@ -11,6 +11,7 @@ var shell_8c =
     [ "cmd_display_pci", "shell_8c.html#a42011e1a2c1ecd7a5702d9b305de622f", null ],
     [ "cmd_display_pcie", "shell_8c.html#aff3e72b54ac4324dba7bbf8df393b451", null ],
     [ "cmd_switch_to_keycodes", "shell_8c.html#a27572c7e1ae1d060cce07014ccaa9f9d", null ],
+    [ "cmd_test_heap", "shell_8c.html#ab5f707afb2831c0e6c6bb71cbe58479a", null ],
     [ "switch_mode", "shell_8c.html#a9d1189e8060c5b297add9f37f9fda9ac", null ],
     [ "cmp_cmds", "shell_8c.html#a4a3d7640fd5343f02d08fa2cbb1c4dc7", null ],
     [ "command_exec", "shell_8c.html#ade4b22d7c78e5ef054d9b7987692b7cb", null ],

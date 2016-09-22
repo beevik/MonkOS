@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['initialized',['initialized',['../table_8c.html#aedeffc7d23da25d52b9a50045189fe2b',1,'table.c']]],
-  ['insertafter',['insertafter',['../table_8c.html#a48dee5d102482bf0a6b9f43c0f352ef8',1,'table.c']]],
+  ['initialized',['initialized',['../pmap_8c.html#aedeffc7d23da25d52b9a50045189fe2b',1,'pmap.c']]],
+  ['insertafter',['insertafter',['../pmap_8c.html#aacdc77c05173b5a3318e6d59154dd59a',1,'pmap.c']]],
   ['interrupt',['interrupt',['../interrupt_8h.html#afd2425af8ad703bf9f84b27cbf4552aa',1,'interrupt_context::interrupt()'],['../acpi_8h.html#aad3f4159828c8a252e96a49f7d2c8bd7',1,'acpi_madt_iso::interrupt()']]],
   ['interrupt_2eh',['interrupt.h',['../interrupt_8h.html',1,'']]],
   ['interrupt_5fbase',['interrupt_base',['../acpi_8h.html#a54730a53048cbb83bd6dc6019b87160f',1,'acpi_madt_io_apic']]],
@@ -9,6 +9,7 @@ var searchData=
   ['interrupts_5finit',['interrupts_init',['../interrupt_8h.html#a5c99cba5ccc698fc7feb8902442176ea',1,'interrupt.h']]],
   ['inv',['INV',['../keyboard_8c.html#a7a00fd6bd8552a6d3fa38691127eda06',1,'keyboard.c']]],
   ['invalid_5fopcode',['invalid_opcode',['../cpu__inl_8h.html#a57c36371552fc672ef1bb2fc41f70dc4',1,'cpu_inl.h']]],
+  ['invalidate_5fpage',['invalidate_page',['../cpu__inl_8h.html#a9b4f39b35dba202bb9e894d9fb016235',1,'cpu_inl.h']]],
   ['io_5finb',['io_inb',['../cpu__inl_8h.html#a51126daa233e648ce97bbcdeb960e7de',1,'cpu_inl.h']]],
   ['io_5find',['io_ind',['../cpu__inl_8h.html#adffbc2b873ed654b30acee1ac1234f9c',1,'cpu_inl.h']]],
   ['io_5finw',['io_inw',['../cpu__inl_8h.html#abab879a89c27c04efce719bf803e8c57',1,'cpu_inl.h']]],

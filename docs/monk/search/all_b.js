@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['last_5fusable',['last_usable',['../table_8h.html#aff36c8dcdf9b4b3122e60c4139a6a6a1',1,'memtable']]],
+  ['last_5fusable',['last_usable',['../pmap_8h.html#a6772689c28fd87c459a72a3adf62354b',1,'pmap']]],
   ['latency_5fc2',['latency_c2',['../acpi_8h.html#a487d3aff1a9f2062742c3868b548f945',1,'acpi_fadt']]],
   ['latency_5fc3',['latency_c3',['../acpi_8h.html#aefa9427f9f4253db5410593b5b8700fe',1,'acpi_fadt']]],
   ['layout',['layout',['../keyboard_8c.html#a749261791b3d9b42dec5899c7dc40501',1,'kbstate']]],

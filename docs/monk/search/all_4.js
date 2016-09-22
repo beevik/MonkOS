@@ -3,6 +3,8 @@ var searchData=
   ['debug_5fpci',['DEBUG_PCI',['../pci_8c.html#ab22bd9c011bb52ef6a9b4469fcb91f9c',1,'pci.c']]],
   ['digit',['digit',['../dump_8c.html#ac8608a2d90e42a25a61f734461ab6dea',1,'dump.c']]],
   ['disable_5finterrupts',['disable_interrupts',['../cpu__inl_8h.html#af26ca4ff29309e958ec3eb96b56850fc',1,'cpu_inl.h']]],
+  ['div_5fdn',['div_dn',['../core_8h.html#a99b67c1a87dc11e35708ce83e551e1ab',1,'core.h']]],
+  ['div_5fup',['div_up',['../core_8h.html#acc55b76e1c86e0ee2982f2e46b62163b',1,'core.h']]],
   ['dump_2ec',['dump.c',['../dump_8c.html',1,'']]],
   ['dump_2eh',['dump.h',['../dump_8h.html',1,'']]],
   ['dump_5fcontext',['dump_context',['../exception_8c.html#a1115b36a69cc21f6bbc2ddf356ed5389',1,'exception.c']]],

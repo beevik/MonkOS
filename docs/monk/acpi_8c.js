@@ -43,7 +43,7 @@ var acpi_8c =
     [ "SIGNATURE_SSDT", "acpi_8c.html#aff810f33abad48d8a25f4927042700e8", null ],
     [ "SIGNATURE_WAET", "acpi_8c.html#ac02afa5b1cf0d2c5d6f671769009135a", null ],
     [ "PAGE_ALIGN_DOWN", "acpi_8c.html#a9ce15055d80356b2621b9aef7ad38b3b", null ],
-    [ "PAGE_ALIGN_UP", "acpi_8c.html#ab9c9eb1da75202701c245996cb53f183", null ],
+    [ "PAGE_ALIGN_UP", "acpi_8c.html#adfa9e0bbc246ce204000d4bc6cc66270", null ],
     [ "read_fadt", "acpi_8c.html#ae3cbea7d2c62a4f02fd1b0f90e508636", null ],
     [ "read_madt", "acpi_8c.html#ac4e48bb79e81d20d71010b0c505da7e0", null ],
     [ "read_mcfg", "acpi_8c.html#a3c502236ce0f734b2042b89b369ab558", null ],

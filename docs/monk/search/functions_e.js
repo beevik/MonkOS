@@ -15,6 +15,6 @@ var searchData=
   ['read_5fvendor',['read_vendor',['../pci_8c.html#a537de1a405ca02dc495eeadfa4d891d5',1,'pci.c']]],
   ['read_5fxsdt',['read_xsdt',['../acpi_8c.html#aa63a211de6e1b5dd1db9fb6cd979f492',1,'acpi.c']]],
   ['remove_5fpte',['remove_pte',['../paging_8c.html#af01bc99389562e06df451379f5ac6734',1,'paging.c']]],
-  ['reserve_5fregion',['reserve_region',['../paging_8c.html#a5e5e7a5310c4c77ead8e31a89eb91e56',1,'paging.c']]],
-  ['resort',['resort',['../table_8c.html#a6ac2a23a253085ac1d69b9139b4b57b6',1,'table.c']]]
+  ['reserve_5fregion',['reserve_region',['../paging_8c.html#a6be2960de04942b5f2a243411bd9b925',1,'paging.c']]],
+  ['resort',['resort',['../pmap_8c.html#aefa31511e3c25090f4f497140ea853d1',1,'pmap.c']]]
 ];

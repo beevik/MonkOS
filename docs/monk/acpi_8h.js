@@ -1,7 +1,7 @@
 var acpi_8h =
 [
     [ "acpi_hdr", "acpi_8h.html#structacpi__hdr", [
-      [ "signature", "acpi_8h.html#aa21b7ea80e9d92db5e352881fc7603ec", null ],
+      [ "signature", "acpi_8h.html#aab734f0da2b1b96bdeb29a8202c085c5", null ],
       [ "length", "acpi_8h.html#a7c66691f0e4973b5a900a5e43774fab0", null ],
       [ "revision", "acpi_8h.html#a787e36453dd99a1deda48fa46e8086ab", null ],
       [ "checksum", "acpi_8h.html#a72b83f97f75903ca5e18bf517bd9b485", null ],
@@ -91,6 +91,10 @@ var acpi_8h =
       [ "source", "acpi_8h.html#a5c092651d3e3d454fccd6f91728db4db", null ],
       [ "interrupt", "acpi_8h.html#aad3f4159828c8a252e96a49f7d2c8bd7", null ],
       [ "flags", "acpi_8h.html#a4a369aff5405a6fa441df8199f483d6b", null ]
+    ] ],
+    [ "acpi_hdr.signature", "acpi_8h.html#unionacpi__hdr_8signature", [
+      [ "bytes", "acpi_8h.html#a2239c705b80ca3d95e1dcff44725bd36", null ],
+      [ "dword", "acpi_8h.html#afc50124be4e2da8156d08b7375d79804", null ]
     ] ],
     [ "acpi_madt_type", "acpi_8h.html#aba2038ef26a378a860b6afcd14928919", [
       [ "ACPI_MADT_LOCAL_APIC", "acpi_8h.html#aba2038ef26a378a860b6afcd14928919a90f9c3f0cf0d4666b44ef4eb997a8960", null ],

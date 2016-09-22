@@ -10,6 +10,7 @@ var cpu__inl_8h =
     [ "io_ind", "cpu__inl_8h.html#adffbc2b873ed654b30acee1ac1234f9c", null ],
     [ "io_outd", "cpu__inl_8h.html#a0ae07cf4c2adce9a9b2245333fa6ea53", null ],
     [ "set_pagetable", "cpu__inl_8h.html#a80a562a606b1818035662a30a524cd4e", null ],
+    [ "invalidate_page", "cpu__inl_8h.html#a9b4f39b35dba202bb9e894d9fb016235", null ],
     [ "enable_interrupts", "cpu__inl_8h.html#a2338d387b0c52c77dad5f9131e85737c", null ],
     [ "disable_interrupts", "cpu__inl_8h.html#af26ca4ff29309e958ec3eb96b56850fc", null ],
     [ "halt", "cpu__inl_8h.html#abc97c69be0309ed5340bddeb2f6861c9", null ],

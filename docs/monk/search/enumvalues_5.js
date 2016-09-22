@@ -1,6 +1,19 @@
 var searchData=
 [
-  ['pftype_5fallocated',['PFTYPE_ALLOCATED',['../paging_8c.html#a06fc87d81c62e9abb8790b6e5713c55ba3a525e79142673094aa9f281b95d760f',1,'paging.c']]],
-  ['pftype_5favailable',['PFTYPE_AVAILABLE',['../paging_8c.html#a06fc87d81c62e9abb8790b6e5713c55ba4f1516b5057621008f450d05e7a38f1c',1,'paging.c']]],
-  ['pftype_5freserved',['PFTYPE_RESERVED',['../paging_8c.html#a06fc87d81c62e9abb8790b6e5713c55ba0586af8c45710adfdc0d59b27b980725',1,'paging.c']]]
+  ['textcolor_5fblack',['TEXTCOLOR_BLACK',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009aa8ded329f737c4265441091f4b4a1666',1,'tty.h']]],
+  ['textcolor_5fblue',['TEXTCOLOR_BLUE',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009ac66e3f688478bfa3dff676370150ad8c',1,'tty.h']]],
+  ['textcolor_5fbrown',['TEXTCOLOR_BROWN',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009a8c0b655c66e90906f0fd6d38a5aef824',1,'tty.h']]],
+  ['textcolor_5fcyan',['TEXTCOLOR_CYAN',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009a9dd4d08897bf37a5e44344221591226a',1,'tty.h']]],
+  ['textcolor_5fgray',['TEXTCOLOR_GRAY',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009a6160d7ea06fe16326cb96bed463a8d8b',1,'tty.h']]],
+  ['textcolor_5fgreen',['TEXTCOLOR_GREEN',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009a31700732358f99ef609a84da2f32a738',1,'tty.h']]],
+  ['textcolor_5fltblue',['TEXTCOLOR_LTBLUE',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009aeed787324c0c99f8f3f18cc1ede06e14',1,'tty.h']]],
+  ['textcolor_5fltcyan',['TEXTCOLOR_LTCYAN',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009a5d5b03eb7b3005a5604427bd2f05cf73',1,'tty.h']]],
+  ['textcolor_5fltgray',['TEXTCOLOR_LTGRAY',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009ab08c4db74bfa9d8c64d8dbf157fb0c73',1,'tty.h']]],
+  ['textcolor_5fltgreen',['TEXTCOLOR_LTGREEN',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009acb776295719cc2d84038591d2ff6eb03',1,'tty.h']]],
+  ['textcolor_5fltmagenta',['TEXTCOLOR_LTMAGENTA',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009af2337bd1254ecba1d2388a65ec945a68',1,'tty.h']]],
+  ['textcolor_5fltred',['TEXTCOLOR_LTRED',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009a57b64e8597981eafa73d76bd6df58542',1,'tty.h']]],
+  ['textcolor_5fmagenta',['TEXTCOLOR_MAGENTA',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009a103140d060bd904c48f51571322a352f',1,'tty.h']]],
+  ['textcolor_5fred',['TEXTCOLOR_RED',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009ac2dd43849cd04297bb9fc4ebec6bc952',1,'tty.h']]],
+  ['textcolor_5fwhite',['TEXTCOLOR_WHITE',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009a13e931dffaad2aca5399c2b54d0beffb',1,'tty.h']]],
+  ['textcolor_5fyellow',['TEXTCOLOR_YELLOW',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009a70d282a5c96d07fe96fcbebe9ff391b1',1,'tty.h']]]
 ];

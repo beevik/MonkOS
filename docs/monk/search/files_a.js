@@ -1,9 +1,11 @@
 var searchData=
 [
-  ['table_2ec',['table.c',['../table_8c.html',1,'']]],
-  ['table_2eh',['table.h',['../table_8h.html',1,'']]],
-  ['timer_2ec',['timer.c',['../timer_8c.html',1,'']]],
-  ['timer_2eh',['timer.h',['../timer_8h.html',1,'']]],
-  ['tty_2ec',['tty.c',['../tty_8c.html',1,'']]],
-  ['tty_2eh',['tty.h',['../tty_8h.html',1,'']]]
+  ['segments_2eh',['segments.h',['../segments_8h.html',1,'']]],
+  ['shell_2ec',['shell.c',['../shell_8c.html',1,'']]],
+  ['shell_2eh',['shell.h',['../shell_8h.html',1,'']]],
+  ['stdio_2eh',['stdio.h',['../stdio_8h.html',1,'']]],
+  ['stdlib_2eh',['stdlib.h',['../stdlib_8h.html',1,'']]],
+  ['string_2eh',['string.h',['../string_8h.html',1,'']]],
+  ['syscall_2ec',['syscall.c',['../syscall_8c.html',1,'']]],
+  ['syscall_2eh',['syscall.h',['../syscall_8h.html',1,'']]]
 ];

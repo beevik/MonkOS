@@ -2,6 +2,9 @@ var searchData=
 [
   ['b',['B',['../dump_8c.html#a354872181757e4ebc8a0c38d1ed9d7e2',1,'dump.c']]],
   ['base',['base',['../acpi_8h.html#a56cff20b885b4449d0f9a0ffb41ab1aa',1,'acpi_mcfg_addr']]],
+  ['block',['block',['../heap_8c.html#a3371d00cac1f3ff0c209de7d958f08ca',1,'fblock_header_t']]],
+  ['block_5ffooter_5ft',['block_footer_t',['../heap_8c.html#structblock__footer__t',1,'']]],
+  ['block_5fheader_5ft',['block_header_t',['../heap_8c.html#structblock__header__t',1,'']]],
   ['boot_5farch',['boot_arch',['../acpi_8h.html#aad6774329620de2580dd69fac24da8c7',1,'acpi_fadt']]],
   ['brk',['brk',['../keyboard_8h.html#afd4b2258e3ca12ad01edc61000667709',1,'key']]],
   ['bsl',['BSL',['../keyboard_8c.html#a403a5d3d3c1422d27a56e5153f16c240',1,'keyboard.c']]],

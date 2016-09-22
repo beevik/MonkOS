@@ -1,10 +1,8 @@
 var searchData=
 [
   ['tab',['TAB',['../keyboard_8c.html#ad58a1fbfc85c7e4790fc55e654f50221',1,'keyboard.c']]],
-  ['table',['table',['../table_8c.html#a65822dfe2ea63eda5b664f6bafa2322b',1,'table.c']]],
-  ['table_2ec',['table.c',['../table_8c.html',1,'']]],
-  ['table_2eh',['table.h',['../table_8h.html',1,'']]],
-  ['term_5fpage',['term_page',['../acpi_8c.html#a7dd37aca0c98bf83bc4e6ee7e4348540',1,'btable_t::term_page()'],['../map_8c.html#a5adcdee306c93211d8b57f25c2dda87e',1,'kptable_t::term_page()']]],
+  ['tail',['tail',['../paging_8c.html#a2d42846061ffe8453fabb042607887f8',1,'pfdb']]],
+  ['term_5fpage',['term_page',['../acpi_8c.html#a7dd37aca0c98bf83bc4e6ee7e4348540',1,'btable_t']]],
   ['textcolor',['textcolor',['../tty_8c.html#a55cb4b4d9afaf8bf209c513c615528e2',1,'tty::textcolor()'],['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009',1,'textcolor():&#160;tty.h']]],
   ['textcolor_5fblack',['TEXTCOLOR_BLACK',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009aa8ded329f737c4265441091f4b4a1666',1,'tty.h']]],
   ['textcolor_5fblue',['TEXTCOLOR_BLUE',['../tty_8h.html#a17ccffe32877dcb4842b4163b9fec009ac66e3f688478bfa3dff676370150ad8c',1,'tty.h']]],
@@ -35,6 +33,7 @@ var searchData=
   ['timer_5fport_5fdata_5fch2',['TIMER_PORT_DATA_CH2',['../timer_8c.html#ab01b4798ea5712d39a6121c64449625c',1,'timer.c']]],
   ['tlcorner',['tlcorner',['../tty_8c.html#ae8a402240f8af2f28e2f3f5c0ff48927',1,'tty']]],
   ['toggle',['toggle',['../keyboard_8c.html#a067243058338a9a22a565422d28092f6',1,'keyboard.c']]],
+  ['total_5fbytes',['total_bytes',['../heap_8c.html#a343c0bdc823deb955b8c71878dcca54b',1,'heap.c']]],
   ['trap_5firq_5fkeyboard',['TRAP_IRQ_KEYBOARD',['../interrupt_8h.html#ac182fa4bc97c37eaa1b3a074488ca13e',1,'interrupt.h']]],
   ['trap_5firq_5ftimer',['TRAP_IRQ_TIMER',['../interrupt_8h.html#a6cb8f602c5d1a8ca21d1880a7a6547c0',1,'interrupt.h']]],
   ['tty',['tty',['../tty_8c.html#structtty',1,'tty_t'],['../tty_8c.html#a33c195557ae3c6c49e78394aa97077d9',1,'tty():&#160;tty.c']]],
@@ -55,5 +54,5 @@ var searchData=
   ['tty_5fset_5ftextcolor_5fbg',['tty_set_textcolor_bg',['../tty_8c.html#a1cf1fb6792ba812508128f86e1e90f9c',1,'tty_set_textcolor_bg(int id, textcolor_t bg):&#160;tty.c'],['../tty_8h.html#a1cf1fb6792ba812508128f86e1e90f9c',1,'tty_set_textcolor_bg(int id, textcolor_t bg):&#160;tty.c']]],
   ['tty_5fset_5ftextcolor_5ffg',['tty_set_textcolor_fg',['../tty_8c.html#a5c6b7d6c9f3fe77371658e10a8a9aa19',1,'tty_set_textcolor_fg(int id, textcolor_t fg):&#160;tty.c'],['../tty_8h.html#a5c6b7d6c9f3fe77371658e10a8a9aa19',1,'tty_set_textcolor_fg(int id, textcolor_t fg):&#160;tty.c']]],
   ['tty_5fsetpos',['tty_setpos',['../tty_8c.html#a20b9a36f37c519c4551580f33c916512',1,'tty_setpos(int id, screenpos_t pos):&#160;tty.c'],['../tty_8h.html#a20b9a36f37c519c4551580f33c916512',1,'tty_setpos(int id, screenpos_t pos):&#160;tty.c']]],
-  ['type',['type',['../paging_8c.html#a04c871f6b579252899dd7b673cfc54bc',1,'pf_t::type()'],['../acpi_8h.html#a806a2af8ead28f590d9657c0d4acb221',1,'acpi_madt_hdr::type()'],['../table_8h.html#a0c1056c756bf2eacad728ba1dfefe4c5',1,'memregion::type()']]]
+  ['type',['type',['../paging_8c.html#a04c871f6b579252899dd7b673cfc54bc',1,'pf_t::type()'],['../acpi_8h.html#a806a2af8ead28f590d9657c0d4acb221',1,'acpi_madt_hdr::type()'],['../pmap_8h.html#ae0ae06ee3c0e7368b319aa4aafc1a90e',1,'pmapregion::type()']]]
 ];

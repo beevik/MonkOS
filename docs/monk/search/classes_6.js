@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['page_5ft',['page_t',['../paging_8h.html#unionpage__t',1,'']]],
-  ['pagetable_5ft',['pagetable_t',['../paging_8h.html#structpagetable__t',1,'']]],
-  ['pf_5ft',['pf_t',['../paging_8c.html#structpf__t',1,'']]]
+  ['kbstate',['kbstate',['../keyboard_8c.html#structkbstate',1,'']]],
+  ['key',['key',['../keyboard_8h.html#structkey',1,'']]],
+  ['keylayout',['keylayout',['../keyboard_8h.html#structkeylayout',1,'']]]
 ];

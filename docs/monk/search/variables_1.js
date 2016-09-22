@@ -1,6 +1,7 @@
 var searchData=
 [
   ['base',['base',['../acpi_8h.html#a56cff20b885b4449d0f9a0ffb41ab1aa',1,'acpi_mcfg_addr']]],
+  ['block',['block',['../heap_8c.html#a3371d00cac1f3ff0c209de7d958f08ca',1,'fblock_header_t']]],
   ['boot_5farch',['boot_arch',['../acpi_8h.html#aad6774329620de2580dd69fac24da8c7',1,'acpi_fadt']]],
   ['brk',['brk',['../keyboard_8h.html#afd4b2258e3ca12ad01edc61000667709',1,'key']]],
   ['buf',['buf',['../keyboard_8c.html#a3017f508a0ccd1de9eb8de3a198f38a3',1,'kbstate']]],
