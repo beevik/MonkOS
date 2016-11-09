@@ -260,7 +260,7 @@ pgfree_recurse(page_t *page, int level)
     // until we reach the PT level.
     else {
         for (uint64_t e = 0; e < 512; e++) {
-            if (page->entry[e] & PF_SYSTEM)     // Never free system tables
+            if (page->entry[e] & PF_SYSTEM) // Never free system tables
                 continue;
             page_t *child = PGPTR(page->entry[e]);
             if (child == NULL)

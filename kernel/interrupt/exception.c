@@ -107,7 +107,7 @@ void
 exceptions_init()
 {
     for (int i = 0; i < 32; i++)
-        isr_set(i, isr_fatal);   // fatal for now. temporary.
+        isr_set(i, isr_fatal); // fatal for now. temporary.
     isr_set(0xff, isr_fatal);
 
     isr_set(EXCEPTION_BREAKPOINT, isr_breakpoint);
