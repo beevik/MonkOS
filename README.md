@@ -4,15 +4,15 @@ MonkOS
 MonkOS is an experimental 64-bit operating system for Intel and AMD
 processors. It is a mix of C and assembly language and is a work in progress.
 Currently, it consists of a BIOS boot loader, a virtual console system, an
-interrupt handling system, a paged memory manager, a few simple device
-drivers, and a primitive interactive shell. The boot loader is designed to
-launch the operating system from a cdrom.
+interrupt handling system, a paged memory manager, a heap allocator, a few
+simple device drivers, and a primitive interactive shell. The boot loader is
+designed to launch the operating system from a cdrom.
 
 ##Building
 
 The OS currently builds under linux using a cross-compiler.  There are two
 ways to build it: (1) by installing all the necessary tools on your system and
-running `make`, or (2) by using a ready-made docker container that  contains
+running `make`, or (2) by using a ready-made docker container that contains
 all the build tools you'll need.
 
 ###Building with local tools
@@ -20,7 +20,8 @@ all the build tools you'll need.
 To build with tools installed on your local system, you'll need to have
 the following software already installed:
 
-* gcc x86_64 cross-compiler for elf binaries (I used version 6.1)
+* gcc x86_64 cross-compiler for elf binaries (I have used versions 4.8, 5.3
+  and 6.1 successfully)
 * gnu binutils (I used version 2.26)
 * nasm assembler
 * genisoimage
@@ -94,12 +95,12 @@ $ make debug
 Then start a gdb debugger session by attaching gdb to the qemu debugger
 endpoint:
 
-```bash
+```
 $ gdb
 (gdb) set arch i386:x86-64
 (gdb) symbol-file build/monk.sys
 (gdb) target remote localhost:8864
-(gdb) layout source
+(gdb) layout src
 ```
 
 ##Other build options
