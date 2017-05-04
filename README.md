@@ -8,14 +8,14 @@ interrupt handling system, a paged memory manager, a heap allocator, a few
 simple device drivers, and a primitive interactive shell. The boot loader is
 designed to launch the operating system from a cdrom.
 
-##Building
+## Building
 
 The OS currently builds under linux using a cross-compiler.  There are two
 ways to build it: (1) by installing all the necessary tools on your system and
 running `make`, or (2) by using a ready-made docker container that contains
 all the build tools you'll need.
 
-###Building with local tools
+### Building with local tools
 
 To build with tools installed on your local system, you'll need to have
 the following software already installed:
@@ -49,7 +49,7 @@ $ make
 This results in a bootable cdrom ISO file called `monk.iso` in your build
 subdirectory.
 
-###Building with docker-ized tools
+### Building with docker-ized tools
 
 Because it can be a bit of a pain to build and install a cross-compiler, a
 docker container has been prepared, allowing you to avoid building the cross-compiler
@@ -68,7 +68,7 @@ the iso file (and all other intermediate output files) in your build
 subdirectory.  It behaves almost exactly as if you ran `make` using a cross-
 compiler installed locally on your system.
 
-##Running MonkOS
+## Running MonkOS
 
 There are several ways to run MonkOS once you have the iso file. The first and
 most time-consuming way is to burn it to a CD or DVD ROM using your favorite
@@ -103,7 +103,7 @@ $ gdb
 (gdb) layout src
 ```
 
-##Other build options
+## Other build options
 
 Run `make docs` to build nicely formatted documentation for MonkOS. You'll
 need doxygen installed on your system to do this.
@@ -140,13 +140,13 @@ To clean all generated dependencies files, use the cleandeps build:
 $ make cleandeps
 ```
 
-##Documentation
+## Documentation
 
 Please consult the
 [Doxygen-formatted documentation](https://beevik.github.io/MonkOS/docs/monk/index.html),
 which is part of the [MonkOS documentation set](https://beevik.github.io/MonkOS/).
 
-##Resources
+## Resources
 
 These are some of the resources I have relied on in my attempt to better
 understand the numerous and various aspects of bootloader and OS development:
@@ -175,7 +175,7 @@ understand the numerous and various aspects of bootloader and OS development:
 * [BareMetal OS](https://github.com/ReturnInfinity/BareMetal)
 * [IanOS](http://www.ijack.org.uk/)
 
-##License
+## License
 
 Use of this source code is governed by a BSD-style license that can be found
 in the [LICENSE](https://github.com/beevik/MonkOS/blob/master/LICENSE) file.
