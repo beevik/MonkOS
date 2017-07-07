@@ -20,8 +20,8 @@ all the build tools you'll need.
 To build with tools installed on your local system, you'll need to have
 the following software already installed:
 
-* gcc x86_64 cross-compiler for elf binaries (I have used versions 4.8, 5.3
-  and 6.1 successfully)
+* gcc x86_64 cross-compiler for elf binaries (I have used versions 4.8, 5.3,
+  6.3 and 7.1 successfully)
 * gnu binutils (I used version 2.26)
 * nasm assembler
 * genisoimage
