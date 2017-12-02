@@ -34,10 +34,7 @@ Most of these tools are available from standard linux package managers. The
 cross-compiler, however, is not. To build a cross-compiler, consult the
 instructions on [this page](http://wiki.osdev.org/GCC_Cross-Compiler). Make
 sure to also follow the [libgcc without
-red-zone](http://wiki.osdev.org/Libgcc_without_red_zone) instructions.  Note
-that the red-zone instructions are a bit out of date; if you are using a more
-recent version of gcc (such as 5.3 or greater), you'll need to modify the
-`gcc/config.gcc` file (not `gcc/config.cc`).
+red-zone](http://wiki.osdev.org/Libgcc_without_red_zone) instructions.
 
 Once you've installed all the tools and made sure the cross-compiler is in
 your path, run `make`.
@@ -151,8 +148,7 @@ which is part of the [MonkOS documentation set](https://beevik.github.io/MonkOS/
 These are some of the resources I have relied on in my attempt to better
 understand the numerous and various aspects of bootloader and OS development:
 
-* [Intel 64 and IA-32 Architectures: Software Developer’s Manual]
-  (https://www-ssl.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)
+* [Intel 64 and IA-32 Architectures: Software Developer’s Manual](https://www-ssl.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)
 * [The OsDev wiki](http://wiki.osdev.org/Main_Page)
   * [Bare Bones guide](http://wiki.osdev.org/Bare_Bones)
   * [Setting up long mode](http://wiki.osdev.org/Setting_Up_Long_Mode)
@@ -161,13 +157,10 @@ understand the numerous and various aspects of bootloader and OS development:
   * [PCI](http://wiki.osdev.org/PCI)
 * [The System V ABI](http://www.sco.com/developers/gabi/latest/contents.html)
   * [AMD64 supplement](http://www.x86-64.org/documentation/abi.pdf)
-* [The El Torito specification]
-  (http://download.intel.com/support/motherboards/desktop/sb/specscdrom.pdf)
-* [Hardware Level VGA and SVGA Video Programming Information Page]
-  (http://www.osdever.net/FreeVGA/vga/vgareg.htm)
+* [The El Torito specification](http://download.intel.com/support/motherboards/desktop/sb/specscdrom.pdf)
+* [Hardware Level VGA and SVGA Video Programming Information Page](http://www.osdever.net/FreeVGA/vga/vgareg.htm)
   * [CRT Controller Registers](http://www.osdever.net/FreeVGA/vga/crtcreg.htm)
-  * [Advanced Programmable Interrupt Controller]
-    (http://www.osdever.net/tutorials/view/advanced-programming-interrupt-controller)
+  * [Advanced Programmable Interrupt Controller](http://www.osdever.net/tutorials/view/advanced-programming-interrupt-controller)
 * [The PCI Database](http://pcidatabase.com/)
 * [Write your own operating system](http://geezer.osdevbrasil.net/osd/index.htm)
   * [PC keyboard](http://geezer.osdevbrasil.net/osd/kbd/index.htm)
