@@ -44,23 +44,22 @@ all the build tools you'll need.</p>
 the following software already installed:</p>
 
 <ul>
-<li>gcc x86_64 cross-compiler for elf binaries (I used version 6.1)</li>
-<li>gnu binutils (I used version 2.26)</li>
-<li>nasm assembler</li>
-<li>genisoimage</li>
-<li>exuberant-ctags (optional, for help with editing)</li>
-<li>gdb (optional, for debugging)</li>
-<li>qemu (optional, for testing)</li>
-<li>doxygen (optional)</li>
+  <li>gcc x86_64 cross-compiler for elf binaries (I have used versions 4.8, 5.3,
+  6.3, 7.3, and 8.1 successfully)</li>
+  <li>gnu binutils (I used version 2.30)</li>
+  <li>nasm assembler</li>
+  <li>genisoimage</li>
+  <li>exuberant-ctags (optional, for help with editing)</li>
+  <li>gdb (optional, for debugging)</li>
+  <li>qemu (optional, for testing)</li>
+  <li>doxygen (optional)</li>
 </ul>
 
 <p>Most of these tools are available from standard linux package managers. The
 cross-compiler, however, is not. To build a cross-compiler, consult the
 instructions on <a href="http://wiki.osdev.org/GCC_Cross-Compiler">this page</a>. Make
 sure to also follow the <a href="http://wiki.osdev.org/Libgcc_without_red_zone">libgcc without red-zone</a>
-instructions.  Note that the red-zone instructions are a bit out of date; if
-you are using a more recent version of gcc (such as 5.3 or greater), you'll need to
-modify the <code>gcc/config.gcc</code> file (not <code>gcc/config.cc</code>).</p>
+instructions.</p>
 
 <p>Once you've installed all the tools and made sure the cross-compiler is in
 your path, run <code>make</code>.</p>
@@ -73,7 +72,7 @@ subdirectory.</p>
 <h3>
 <a id="building-with-docker-ized-tools" class="anchor" href="#building-with-docker-ized-tools" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building with docker-ized tools</h3>
 
-<p>Because it can be a bit of a pain to build and install a cross-compiler, a
+<p>Because it can be a bit of a hassle to build and install a cross-compiler, a
 docker container has been prepared, allowing you to avoid building the cross-compiler
 yourself.  To run the docker-based build, make sure you have a recent
 version of docker installed on your system, add yourself to your system's
