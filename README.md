@@ -21,8 +21,8 @@ To build with tools installed on your local system, you'll need to have
 the following software already installed:
 
 * gcc x86_64 cross-compiler for elf binaries (I have used versions 4.8, 5.3,
-  6.3 and 7.2 successfully)
-* gnu binutils (I used version 2.29)
+  6.3, 7.3, and 8.1 successfully)
+* gnu binutils (I used version 2.30)
 * nasm assembler
 * genisoimage
 * exuberant-ctags (optional, for help with editing)
@@ -48,7 +48,7 @@ subdirectory.
 
 ### Building with docker-ized tools
 
-Because it can be a bit of a pain to build and install a cross-compiler, a
+Because it can be a bit of a hassle to build and install a cross-compiler, a
 docker container has been prepared, allowing you to avoid building the cross-compiler
 yourself.  To run the docker-based build, make sure you have a recent
 version of docker installed on your system, add yourself to your system's
