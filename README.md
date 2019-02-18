@@ -21,7 +21,7 @@ To build with tools installed on your local system, you'll need to have
 the following software already installed:
 
 * gcc x86_64 cross-compiler for elf binaries (I have used versions 4.8, 5.3,
-  6.3, 7.3, and 8.1 successfully)
+  6.3, 7.3, and 8.2 successfully)
 * gnu binutils (I used version 2.30)
 * nasm assembler
 * genisoimage
@@ -156,17 +156,18 @@ understand the numerous and various aspects of bootloader and OS development:
   * [PS/2 Keyboard](http://wiki.osdev.org/PS2_Keyboard)
   * [PCI](http://wiki.osdev.org/PCI)
 * [The System V ABI](http://www.sco.com/developers/gabi/latest/contents.html)
-  * [AMD64 supplement](http://www.x86-64.org/documentation/abi.pdf)
-* [The El Torito specification](http://download.intel.com/support/motherboards/desktop/sb/specscdrom.pdf)
+  * [AMD64 supplement](https://www.uclibc.org/docs/psABI-x86_64.pdf)
+* [The El Torito specification](https://pdos.csail.mit.edu/6.828/2014/readings/boot-cdrom.pdf)
 * [Hardware Level VGA and SVGA Video Programming Information Page](http://www.osdever.net/FreeVGA/vga/vgareg.htm)
   * [CRT Controller Registers](http://www.osdever.net/FreeVGA/vga/crtcreg.htm)
   * [Advanced Programmable Interrupt Controller](http://www.osdever.net/tutorials/view/advanced-programming-interrupt-controller)
-* [The PCI Database](http://pcidatabase.com/)
-* [Write your own operating system](http://geezer.osdevbrasil.net/osd/index.htm)
-  * [PC keyboard](http://geezer.osdevbrasil.net/osd/kbd/index.htm)
-* [The Xeos project](https://github.com/macmade/XEOS)
-* [BareMetal OS](https://github.com/ReturnInfinity/BareMetal)
-* [IanOS](http://www.ijack.org.uk/)
+* [PCI ID repository](https://pci-ids.ucw.cz/)
+* [Write your own operating system](https://web.archive.org/web/20160306003015/http://geezer.osdevbrasil.net/osd/index.htm)
+  * [PC keyboard](https://web.archive.org/web/20160322061251/http://geezer.osdevbrasil.net/osd/kbd/index.htm)
+* Other experimental operating systems
+  * [The Xeos project](https://github.com/macmade/XEOS)
+  * [BareMetal OS](https://gitlab.com/ReturnInfinity/BareMetal-OS)
+  * [IanOS](http://www.ijack.org.uk/)
 
 ## License
 
