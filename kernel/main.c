@@ -21,10 +21,6 @@
 #include <kernel/syscall/syscall.h>
 #include "shell.h"
 
-#if defined(__linux__)
-#    error "This code must be compiled with a cross-compiler."
-#endif
-
 #define TTY_CONSOLE  0
 
 void
