@@ -1,7 +1,7 @@
 # monk OS build tools
 
 FROM brett/gcc-cross-x86_64-elf
-MAINTAINER Brett Vickers
+LABEL org.opencontainers.image.authors="Brett Vickers"
 
 RUN set -x \
 	&& apt-get update \
